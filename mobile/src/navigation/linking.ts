@@ -17,6 +17,8 @@ export const linking: LinkingOptions<any> = {
           CitizenTabs: {
             screens: {
               CitizenDashboard: 'citizen/dashboard',
+              CivicAssistant: 'citizen/assistance',
+              CitizenMap: 'citizen/map',
               ReportIssue: 'citizen/report',
               ComplaintHistory: 'citizen/history',
               Notifications: 'citizen/alerts',

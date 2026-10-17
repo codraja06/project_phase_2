@@ -1,7 +1,13 @@
 # AI-Powered Civic Issue Detection and Smart Complaint Management System
 
-> **Final-Year Engineering Project — Phase 1**
-> Detects civic issues (potholes, road damage, garbage) from photos using YOLO object detection, pins them on a GPS map, submits them to a city authority, and enables the authority to track and resolve complaints through a status pipeline.
+> **Final-Year Engineering Project — Phase 1 + Phase 2**
+> Detects supported civic issues from photos using configured YOLO models, pins reports on a GPS map, submits them to a city authority, and enables the authority to track and resolve complaints through a status pipeline.
+
+The current upgrade adds independently configured detection models, citizen civic assistance,
+MongoDB-backed authority analytics, and an adaptive green/blue UI. Model availability depends
+on compatible trained weights; AI assistance depends on provider configuration. See
+[the design system](DESIGN.md), [model configuration](ai-service/models/MODEL_CONFIGURATION.md),
+and [Features 4–6 verification](FEATURES456_VERIFICATION.md).
 
 For internet deployment, follow the [Render deployment procedure](RENDER_DEPLOYMENT.md). It covers the API, private AI service, MongoDB Atlas, Cloudinary, and a new Android APK.
 
@@ -327,3 +333,158 @@ Pending → In Progress → Resolved
 - Zod validation on all API inputs
 - Generic error messages (no stack traces in production)
 - All secrets via environment variables — **never committed to git**
+# Phase 2: detection-based triage and complaint drafts
+
+Phase 2 extends the existing report workflow with three features. The technology stack,
+authentication, YOLO detections and bounding boxes, location selection, complaint statuses,
+and authority verification workflow are retained.
+
+1. **Severity estimate:** `/predict` in the Python service analyzes actual YOLO detections,
+   detection confidence, category, and bounding-box coverage relative to image dimensions.
+   It returns `Low`, `Medium`, or `High`, or a null level when evidence is insufficient.
+   The citizen analysis/review/detail screens and authority views show the estimate.
+   This is an **experimental rule-based interpretation of AI detections**, not a trained
+   severity model. It has not been validated for severity accuracy. Detection confidence
+   is not severity confidence; image coverage does not measure physical damage size.
+2. **Complaint priority:** Express calculates the score; client-supplied priority is ignored
+   on creation. Authority lists provide independent priority filters and priority/newest/oldest
+   sorting. Priority never changes complaint status or verification.
+3. **Complaint description:** the AI service verbalizes supported, confident detections,
+   their counts, and image-space coverage into a short draft. This uses deterministic
+   generation grounded in YOLO output, without an external language-model service.
+   Citizens can edit or restore the draft and review it before submission. No confident
+   detection means manual description entry. The description does not infer addresses,
+   physical dimensions, causes, injuries, obstruction, or unseen damage. Location remains
+   in the existing, separately confirmed GPS fields.
+
+## Configuration and use
+
+Use the existing configuration: backend `MONGODB_URI`, `JWT_SECRET`, `AI_SERVICE_URL`,
+`BACKEND_PUBLIC_URL`, optional Cloudinary variables, and mobile `EXPO_PUBLIC_API_URL`.
+No new runtime dependencies, paid APIs, or environment variables are required.
+Deploy the AI service, backend, and mobile/web app together to enable signed analysis.
+
+The detector loads these existing weights relative to `ai-service/`:
+
+- `models/pothole_roaddamage/best.pt`
+- `models/pothole_roaddamage/best_road.pt`
+- `models/garbage_overflow/best.pt`
+- `models/dead_animal_broken_tree/best.pt`
+
+The existing `MODEL_PATH` fallback supports a single trained YOLO model. Missing weights
+return an explicit service error; the citizen can still select a category and enter text.
+Weights are Git-ignored and must be supplied separately on a fresh checkout/deployment.
+
+Start the AI service from `ai-service` with
+`python -m uvicorn app.main:app --host 0.0.0.0 --port 8000`, the backend from `backend`
+with `npm run dev`, and the app from `mobile` with `npm start` or `npm run web`.
+Upload a photo, review detection and experimental severity, edit the description, confirm
+the incident location, and review the final report. Authorities can use **Priority** and
+**Sort complaints** controls in the Incident Registry. Refreshing or reopening a list
+recalculates age-dependent scores.
+
+## Policy, storage, and compatibility
+
+`ai-service/app/assessment.py` contains versioned policy `detection-triage-v1`.
+Only supported detections with confidence at least 0.60 and valid in-image boxes are used.
+Category base scores range from 15 to 40. Coverage adds 15 points at 10% or 30 at 30%.
+Scores below 35 yield Low, 35–59 Medium, and 60+ High. The highest severity across
+eligible detections wins. These transparent thresholds are engineering defaults and need
+evaluation against expert-labeled, representative images before operational reliance.
+
+`backend/src/services/triageService.ts` defines `triage-priority-v1`:
+
+- Severity contributes Low=10, Medium=35, High=65; unavailable severity contributes 25
+  and flags the complaint for review.
+- Category contributes 5–15. Each full unresolved day contributes 3, capped at 60.
+- Total is capped at 100. High Priority is 65+, Medium Priority is 30–64, Low Priority is below 30.
+- Resolved complaints have score 0 and accrue no attention score. Ties use oldest first.
+
+MongoDB stores `severity` (level, state, policy version, unvalidated flag, reason,
+model/category/confidence/coverage evidence, assessment timestamp and image hash),
+`priority`, `priorityScore`, `priorityMetadata`, and `generatedDescription`. `description`
+is always the final citizen-approved text. Creation stores a priority snapshot; API reads
+recalculate current age-dependent priority without rewriting existing records or timestamps.
+No migration, reseeding, or deletion is needed. Legacy reports display unavailable severity
+and receive a computed priority on reads. Their descriptions and existing stored data remain intact.
+
+Detection and upload endpoints return signed, user-bound `analysisToken` and `uploadToken`
+(24-hour expiry). Complaint creation checks that both refer to the same image bytes and
+uploaded URL, and stores service-generated evidence rather than client-edited analysis.
+If tokens expire, reanalyze the photo or choose **Continue without AI assessment** and
+submit the reviewed description manually. Legacy clients can still submit without tokens;
+their severity is unavailable. No uploaded image URL is fetched by the server for analysis.
+
+## Phase 2 verification
+
+Run backend tests with `cd backend` then `npm test`. Tests force an isolated local test
+database and cover evidence binding, manual fallback, persistence, role guards, and priority.
+From `ai-service`, run `python -m pytest -q`; assessment tests cover all severity levels,
+weak/invalid/missing evidence and descriptions, alongside existing detector tests.
+From `mobile`, run `npm run type-check`.
+
+See [PHASE2_VERIFICATION.md](PHASE2_VERIFICATION.md) for completed checks, file mapping,
+captured evidence, and verification limits. The opt-in real-service browser test is
+`mobile/tests/e2e/phase2-live.cjs`. It expects FastAPI on 8052, Express on 5052 with
+`MONGODB_URI=mongodb://127.0.0.1:27017/civictrack_phase2_e2e`,
+`AI_SERVICE_URL=http://127.0.0.1:8052`, `BACKEND_PUBLIC_URL=http://127.0.0.1:5052`,
+and local image storage (Cloudinary variables empty). Start Expo on 8081 with
+`EXPO_PUBLIC_API_URL=http://127.0.0.1:5052/api`. Set `PHASE2_TEST_IMAGE` to an absolute
+path to a real civic-issue photo, then run `node tests/e2e/phase2-live.cjs` from `mobile`.
+The test creates and cleans up its own accounts and complaints in that dedicated database.
+
+Integration tests establish software behavior; severity accuracy has not been measured. Before relying
+on severity decisions, evaluate a separate, expert-labeled dataset across categories,
+lighting, viewpoints and locations; measure per-class precision/recall, confusion matrices,
+uncertainty/abstention rates, and high-severity misses. Authorities retain final judgment.
+
+## Features 4–6: model routing, assistance and authority insights
+
+- **Detection models:** choose Automatic or a category in Report Issue. The server lists
+  actual compatible classes, runs the relevant loaded models, and returns real coordinates,
+  scores and model IDs. Missing or failed models provide clear fallback states. Configure
+  independent model paths, enable flags and thresholds using
+  [MODEL_CONFIGURATION.md](ai-service/models/MODEL_CONFIGURATION.md).
+- **Civic Assistance:** citizens can open Assistance from primary navigation or the sidebar,
+  ask about app workflows, and include their CIV reference to retrieve their recorded status.
+  Conversation history is private. Configure `CHAT_PROVIDER_URL`, `CHAT_PROVIDER_MODEL` and
+  optional `CHAT_PROVIDER_API_KEY` in the backend only. An unavailable provider produces a
+  clearly labeled built-in guide. See [CIVIC_ASSISTANCE.md](docs/CIVIC_ASSISTANCE.md).
+- **Authority insights:** Dashboard and Analytics use MongoDB aggregation for totals, status
+  counts, live priority, category frequency, submission-day trends, geographic distribution
+  and recent complaints. Apply date/category/status/search filters or open complaint lists
+  from metrics. Lists support priority sorting/filtering and 25-record pagination.
+- **Adaptive UI:** shared green/blue tokens, phone navigation, tablet rails, desktop
+  sidebars/headers, wide report panes and responsive charts/lists. See [DESIGN.md](DESIGN.md).
+
+The current streetlight/water-leakage models are unconfigured, and the supplied
+`best_road.pt` is a pothole-only model. A real AI assistance provider is also unconfigured.
+Those integration points are ready with explicit fallback states; they are not claimed
+as validated production capabilities. Existing reporting, GPS/maps, authentication,
+severity/priority/descriptions and authorized status updates remain available.
+
+[FEATURES456_VERIFICATION.md](FEATURES456_VERIFICATION.md) lists files changed, actual test
+results, configuration limits and commands to run the existing project.
+
+## Features 7–12: complaint operations
+
+- Citizen review checks nearby same-category unresolved reports and warns before submission.
+  Officers can confirm a duplicate with a recorded reason; reports remain separate.
+- The authority map groups actual complaint coordinates into filterable hotspot cells
+  and opens the underlying authorized reports.
+- Administrators maintain internal category-to-department rules in Officer Profile.
+  New reports use active rules; officers can reassign with a reason.
+- Officers can upload a completion photo, review or reject it, and explicitly confirm
+  resolution. Original evidence and new status history remain on the complaint.
+- Citizen and authority notification screens use recipient-owned MongoDB event records
+  with read/unread state. Push delivery is not configured.
+- Analytics adds unresolved counts, completed resolution durations, department counts
+  and UTC resolution trends. Overdue appears only when a service target is configured.
+
+See [OPERATIONS_FEATURES.md](docs/OPERATIONS_FEATURES.md) for endpoint shapes, exact
+formulas, security, thresholds, administrator provisioning, storage fields and tests.
+Set `DUPLICATE_RADIUS_METERS` and `DUPLICATE_LOOKBACK_DAYS` only if the local policy
+needs different warning thresholds. Set `RESOLUTION_TARGET_HOURS` only after the
+municipality establishes a service target. Existing backend, AI and Expo startup
+commands above are unchanged. The real provider and trained-model limitations noted
+above still apply.

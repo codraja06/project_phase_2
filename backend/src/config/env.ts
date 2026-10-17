@@ -20,6 +20,12 @@ export const env = {
   AI_SERVICE_URL: process.env.AI_SERVICE_URL || (process.env.AI_SERVICE_HOSTPORT ? `http://${process.env.AI_SERVICE_HOSTPORT}` : 'http://127.0.0.1:8000'),
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
   GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || '',
+  CHAT_PROVIDER_URL: process.env.CHAT_PROVIDER_URL || '',
+  CHAT_PROVIDER_API_KEY: process.env.CHAT_PROVIDER_API_KEY || '',
+  CHAT_PROVIDER_MODEL: process.env.CHAT_PROVIDER_MODEL || '',
+  DUPLICATE_RADIUS_METERS: Number(process.env.DUPLICATE_RADIUS_METERS || 120),
+  DUPLICATE_LOOKBACK_DAYS: Number(process.env.DUPLICATE_LOOKBACK_DAYS || 30),
+  RESOLUTION_TARGET_HOURS: process.env.RESOLUTION_TARGET_HOURS ? Number(process.env.RESOLUTION_TARGET_HOURS) : null,
   // Set this to your machine's LAN IP so local image URLs are accessible from physical devices
   // Example: BACKEND_PUBLIC_URL=http://192.168.1.105:5000
   BACKEND_PUBLIC_URL: process.env.BACKEND_PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://127.0.0.1:5000',

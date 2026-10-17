@@ -1,9 +1,11 @@
 import uvicorn
-from fastapi import FastAPI, UploadFile, File, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.schemas import PredictResponse, ErrorResponse
 from app.detector import detector_instance
+from app.assessment import assess
 
 app = FastAPI(
     title="AI Civic Issue Detection Service",
@@ -20,7 +22,7 @@ app.add_middleware(
 )
 
 import io
-from PIL import Image
+from PIL import Image, ImageOps
 
 @app.get("/health", status_code=status.HTTP_200_OK)
 def health_check():
@@ -32,6 +34,7 @@ def health_check():
         "loadedModels": list(detector_instance.models.keys()),
         "modelCount": len(detector_instance.models),
         "modelPath": settings.MODEL_PATH
+        ,"models": detector_instance.describe_models()
     }
 
 @app.post(
@@ -42,7 +45,7 @@ def health_check():
         400: {"model": ErrorResponse, "description": "Invalid Image Input"}
     }
 )
-async def predict_issue(image: UploadFile = File(...)):
+async def predict_issue(image: UploadFile = File(...), category: str = Form('auto')):
     # Check model availability first
     if not detector_instance.is_ready():
         raise HTTPException(
@@ -68,12 +71,21 @@ async def predict_issue(image: UploadFile = File(...)):
                 detail="Provided file must be a valid image."
             )
 
-        detections = detector_instance.detect(contents)
+        try:
+            detections, models_used, warnings = await run_in_threadpool(detector_instance.detect_with_metadata, contents, category)
+        except ValueError as error:
+            raise HTTPException(status_code=400, detail=str(error))
+        with Image.open(io.BytesIO(contents)) as source:
+            severity, description = assess(detections, *ImageOps.exif_transpose(source).size)
 
         return PredictResponse(
             detected=len(detections) > 0,
             message="Civic issue detection completed successfully" if len(detections) > 0 else "No supported civic issue detected automatically.",
-            detections=detections
+            detections=detections,
+            severity=severity,
+            generatedDescription=description,
+            modelsUsed=models_used,
+            warnings=warnings,
         )
     except HTTPException:
         raise

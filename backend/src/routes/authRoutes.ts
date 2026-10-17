@@ -3,6 +3,7 @@ import {
   register,
   login,
   googleAuth,
+  linkGoogle,
   logout,
   getMe,
   updateProfile,
@@ -28,6 +29,7 @@ router.get('/register', (req, res) => {
 router.post('/register', authRateLimiter, register);
 router.post('/login', authRateLimiter, login);
 router.post('/google', authRateLimiter, googleAuth);
+router.post('/google/link', authenticate, authRateLimiter, linkGoogle);
 router.post('/logout', authenticate, logout);
 router.get('/me', authenticate, getMe);
 router.put('/profile', authenticate, updateProfile);

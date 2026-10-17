@@ -17,7 +17,7 @@ import { TYPOGRAPHY } from '../theme/typography';
 import { StatusBadge } from './StatusBadge';
 import { formatDate } from '../utils/date';
 import { Card, CardContent } from './ui/Card';
-import { Badge } from './ui/Badge';
+import { TriageSummary } from './TriageSummary';
 
 interface ComplaintCardProps {
   complaint: Complaint;
@@ -53,8 +53,6 @@ export const ComplaintCard: React.FC<ComplaintCardProps> = ({
         .replace(/\b\w/g, (c) => c.toUpperCase());
 
   const complaintCode = complaint.complaintId || `#CIV${complaint._id.slice(-5).toUpperCase()}`;
-  const priority = complaint.priority || 'medium';
-  const isHighPriority = priority === 'urgent' || priority === 'high';
 
   const locationSummary = complaint.address
     ? complaint.address.split(',')[0].trim() || complaint.address
@@ -81,11 +79,11 @@ export const ComplaintCard: React.FC<ComplaintCardProps> = ({
         <View style={styles.headerRow}>
           <View style={styles.codePillGroup}>
             <Text style={styles.complaintCodeText}>{complaintCode}</Text>
-            {isHighPriority && <Badge label="URGENT" variant="destructive" animate />}
           </View>
           <StatusBadge status={complaint.status} size="sm" />
         </View>
 
+        <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} compact />
         {/* ─── Main Content: Thumbnail + Info ─── */}
         <View style={styles.contentRow}>
           {/* Thumbnail with error fallback */}
@@ -93,6 +91,7 @@ export const ComplaintCard: React.FC<ComplaintCardProps> = ({
             {complaint.imageUrl && !imgError ? (
               <Image
                 source={{ uri: complaint.imageUrl }}
+                accessibilityLabel="Citizen-submitted complaint photo"
                 style={styles.thumbnail}
                 resizeMode="cover"
                 onError={() => setImgError(true)}
@@ -179,8 +178,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   thumbnailWrapper: {
-    width: 80,
-    height: 80,
+    width: 88,
+    height: 96,
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
     backgroundColor: COLORS.backgroundNeutral,

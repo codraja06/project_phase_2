@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.full,
     justifyContent: 'center',
-    minHeight: 36,
+    minHeight: 44,
     borderWidth: 1.5,
     ...(Platform.OS === 'web' ? {
       cursor: 'pointer' as any,

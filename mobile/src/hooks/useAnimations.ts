@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 import {
   useSharedValue,
   useAnimatedStyle,
@@ -30,7 +30,8 @@ const TIMING_CONFIG = {
 // While we can fetch this per hook, fetching it globally once is often sufficient
 // for the initial mount, though it can change during runtime. We'll check per hook.
 
-let isReducedMotion = false;
+let isReducedMotion = Platform.OS === 'web' && typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+AccessibilityInfo.addEventListener('reduceMotionChanged', enabled => { isReducedMotion = enabled; });
 AccessibilityInfo.isReduceMotionEnabled().then(enabled => {
   isReducedMotion = enabled;
 });

@@ -10,6 +10,8 @@ import complaintRoutes from './routes/complaintRoutes';
 import authorityRoutes from './routes/authorityRoutes';
 import aiRoutes from './routes/aiRoutes';
 import uploadRoutes from './routes/uploadRoutes';
+import chatRoutes from './routes/chatRoutes';
+import managementRoutes from './routes/managementRoutes';
 
 const app = express();
 
@@ -36,6 +38,8 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/authority', authorityRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/management', managementRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

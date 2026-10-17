@@ -65,8 +65,9 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
 
 export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { token, role = 'citizen' } = req.body;
+    const { token, nonce, role = 'citizen' } = req.body;
     if (!token || typeof token !== 'string') throw new ApiError(401, 'A verified Google ID token is required.');
+    if (role !== 'citizen' && role !== 'authority') throw new ApiError(400, 'Invalid account role.');
     if (!env.GOOGLE_CLIENT_ID) throw new ApiError(503, 'Google sign-in is not configured. Please use email and password.');
     let identity;
     try {
@@ -76,6 +77,9 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
       throw new ApiError(401, 'Google authentication token verification failed.');
     }
     if (!identity?.email || !identity.email_verified || !identity.sub) throw new ApiError(401, 'A verified Google email is required.');
+    if (nonce !== undefined && (typeof nonce !== 'string' || identity.nonce !== nonce)) {
+      throw new ApiError(401, 'Google sign-in response could not be verified. Please try again.');
+    }
     const email = identity.email.toLowerCase().trim();
     let user = await User.findOne({ email });
     if (!user && role === 'authority') throw new ApiError(403, 'Officer accounts must be provisioned by your administrator.');
@@ -94,6 +98,41 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
         token: appToken,
       })
     );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const linkGoogle = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new ApiError(401, 'Unauthorized');
+    const { token, nonce } = req.body;
+    if (!token || typeof token !== 'string') throw new ApiError(401, 'A verified Google ID token is required.');
+    if (!env.GOOGLE_CLIENT_ID) throw new ApiError(503, 'Google sign-in is not configured.');
+
+    let identity;
+    try {
+      const ticket = await new OAuth2Client(env.GOOGLE_CLIENT_ID).verifyIdToken({ idToken: token, audience: env.GOOGLE_CLIENT_ID });
+      identity = ticket.getPayload();
+    } catch {
+      throw new ApiError(401, 'Google authentication token verification failed.');
+    }
+    if (!identity?.email || !identity.email_verified || !identity.sub) throw new ApiError(401, 'A verified Google email is required.');
+    if (nonce !== undefined && (typeof nonce !== 'string' || identity.nonce !== nonce)) {
+      throw new ApiError(401, 'Google sign-in response could not be verified. Please try again.');
+    }
+    if (identity.email.toLowerCase().trim() !== req.user.email) {
+      throw new ApiError(403, 'Choose the Google account with the same email as your CivicTrack account.');
+    }
+    if (req.user.googleId && req.user.googleId !== identity.sub) {
+      throw new ApiError(409, 'A different Google account is already linked.');
+    }
+    const linkedElsewhere = await User.exists({ googleId: identity.sub, _id: { $ne: req.user._id } });
+    if (linkedElsewhere) throw new ApiError(409, 'This Google account is already linked to another user.');
+
+    req.user.googleId = identity.sub;
+    await req.user.save();
+    res.status(200).json(new ApiResponse('Google account linked successfully', req.user));
   } catch (error) {
     next(error);
   }

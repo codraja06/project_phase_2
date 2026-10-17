@@ -96,3 +96,5 @@ skills/
 skills-lock.json
 data/skills/
 .audit-*.py
+# Local verification export (generated Android/web bundles).
+/mobile/dist-phase2/

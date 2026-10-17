@@ -28,3 +28,10 @@ This microservice provides automated object detection for civic issue images usi
    ```bash
    uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
    ```
+# Current multi-model configuration
+
+See [independent model configuration](models/MODEL_CONFIGURATION.md) and
+[the registry](models/registry.json) for the current loader, environment variables,
+category routing, actual class compatibility, and availability limits. `MODEL_PATH`
+remains a legacy fallback. The existing `best_road.pt` exposes a pothole class;
+road-damage, streetlight, and water-leakage inference require compatible weights.

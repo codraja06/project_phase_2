@@ -1,0 +1,1345 @@
+{
+  "checks": [
+    "Real citizen chat history, labeled provider-unavailable fallback, and account-scoped complaint lookup",
+    "Real analytics totals, trend data alternative and metric-to-filtered-complaint navigation",
+    "Mobile navigation opens by keyboard and closes with Escape",
+    "144 route/viewport checks across all eight requested widths, plus landscape"
+  ],
+  "results": [
+    {
+      "role": "auth",
+      "route": "citizen-login",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-login",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-login",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-login",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-login",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-login",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-login",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-login",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-register",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-register",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-register",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-register",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-register",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-register",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-register",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "citizen-register",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "authority-login",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "authority-login",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "authority-login",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "authority-login",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "authority-login",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "authority-login",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "authority-login",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "auth",
+      "route": "authority-login",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/dashboard",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/dashboard",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/dashboard",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/dashboard",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/dashboard",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/dashboard",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/dashboard",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/dashboard",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/report",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/report",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/report",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/report",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/report",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/report",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/report",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/report",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/history",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/history",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/history",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/history",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/history",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/history",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/history",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/history",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/map",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/map",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/map",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/map",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/map",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/map",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/map",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/map",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/alerts",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/alerts",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/alerts",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/alerts",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/alerts",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/alerts",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/alerts",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/alerts",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/assistance",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/assistance",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/assistance",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/assistance",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/assistance",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/assistance",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/assistance",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/assistance",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/profile",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/profile",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/profile",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/profile",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/profile",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/profile",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/profile",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/profile",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "citizen",
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/dashboard",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/dashboard",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/dashboard",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/dashboard",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/dashboard",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/dashboard",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/dashboard",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/dashboard",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaints",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaints",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaints",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaints",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaints",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaints",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaints",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaints",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/map",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/map",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/map",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/map",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/map",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/map",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/map",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/map",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/analytics",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/analytics",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/analytics",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/analytics",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/analytics",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/analytics",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/analytics",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/analytics",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/alerts",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/alerts",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/alerts",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/alerts",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/alerts",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/alerts",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/alerts",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/alerts",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/profile",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/profile",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/profile",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/profile",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/profile",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/profile",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/profile",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/profile",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 320,
+      "height": 640,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 375,
+      "height": 900,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 430,
+      "height": 900,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 768,
+      "height": 1024,
+      "documentWidth": 768,
+      "bodyWidth": 768,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 1024,
+      "height": 900,
+      "documentWidth": 1024,
+      "bodyWidth": 1024,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 1280,
+      "height": 900,
+      "documentWidth": 1280,
+      "bodyWidth": 1280,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "bodyWidth": 1440,
+      "font": "ionicons"
+    },
+    {
+      "role": "authority",
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "width": 1920,
+      "height": 900,
+      "documentWidth": 1920,
+      "bodyWidth": 1920,
+      "font": "ionicons"
+    }
+  ],
+  "errors": [],
+  "accessibility": [
+    {
+      "route": "citizen-login",
+      "violations": []
+    },
+    {
+      "route": "citizen-register",
+      "violations": []
+    },
+    {
+      "route": "authority-login",
+      "violations": []
+    },
+    {
+      "route": "citizen/assistance",
+      "violations": []
+    },
+    {
+      "route": "citizen/profile",
+      "violations": []
+    },
+    {
+      "route": "citizen/complaint/6ad37c8044ed73930de9b2b0",
+      "violations": []
+    },
+    {
+      "route": "authority/analytics",
+      "violations": []
+    },
+    {
+      "route": "authority/profile",
+      "violations": []
+    },
+    {
+      "route": "authority/complaint/6ad37c8044ed73930de9b2b0",
+      "violations": []
+    }
+  ]
+}

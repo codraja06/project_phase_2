@@ -49,9 +49,9 @@ export const SHADOWS = {
     }
   }),
   button: Platform.select({
-    web: { boxShadow: '0 4px 14px 0 rgba(128, 0, 32, 0.25)' },
+    web: { boxShadow: '0 4px 14px 0 rgba(190, 38, 56, 0.14)' },
     default: {
-      shadowColor: '#800020',
+      shadowColor: COLORS.primary,
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.22,
       shadowRadius: 8,
@@ -59,9 +59,9 @@ export const SHADOWS = {
     }
   }),
   buttonAccent: Platform.select({
-    web: { boxShadow: '0 4px 14px 0 rgba(245, 158, 11, 0.30)' },
+    web: { boxShadow: '0 4px 14px 0 rgba(152, 97, 11, 0.14)' },
     default: {
-      shadowColor: '#F59E0B',
+      shadowColor: COLORS.secondary,
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.25,
       shadowRadius: 8,
@@ -85,7 +85,7 @@ export const LAYOUT = {
   windowHeight: SCREEN_HEIGHT,
   isTablet: IS_TABLET,
   isSmallPhone: IS_SMALL_PHONE,
-  maxContentWidth: 1100,
+  maxContentWidth: 1520,
   maxFormWidth: 460,
   touchTargetMin: 48,
 };

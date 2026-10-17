@@ -1,3 +1,5 @@
+import { WorkspaceShell } from '../components/WorkspaceShell';
+import { PrimaryTabBar } from '../components/PrimaryTabBar';
 import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -37,10 +39,14 @@ const TAB_ITEMS: {
   { name: 'AuthorityProfile', label: 'Profile', icon: 'shield-outline', iconActive: 'shield' },
 ];
 
+import { NotificationBadge } from '../components/NotificationBadge';
+import { useUnreadCount } from '../hooks/useUnreadCount';
+
 // ─── Mobile Bottom Tab Bar ──────────────────────────────────────────────────
 const MobileBottomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, Platform.OS === 'ios' ? 20 : 8);
+  const { unreadCount } = useUnreadCount();
 
   return (
     <View style={[tabStyles.container, { paddingBottom: bottomPadding }]}>
@@ -50,6 +56,7 @@ const MobileBottomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, n
 
         const isFocused = state.index === index;
         const color = isFocused ? COLORS.secondary : 'rgba(255,255,255,0.55)';
+        const isNotif = route.name === 'AuthorityNotifications';
 
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -68,7 +75,14 @@ const MobileBottomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, n
             style={tabStyles.tab}
             activeOpacity={0.7}
           >
-            <Ionicons name={isFocused ? tabDef.iconActive : tabDef.icon} size={22} color={color} />
+            <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={isFocused ? tabDef.iconActive : tabDef.icon} size={22} color={color} />
+              {isNotif && unreadCount > 0 && (
+                <View style={{ position: 'absolute', top: -4, right: -8 }}>
+                  <NotificationBadge count={unreadCount} />
+                </View>
+              )}
+            </View>
             <Text style={[tabStyles.label, { color }]} numberOfLines={1}>{tabDef.label}</Text>
           </TouchableOpacity>
         );
@@ -106,7 +120,7 @@ const tabStyles = StyleSheet.create({
 
 // ─── Authority Tabs with Responsive Shell ────────────────────────────────────
 const AuthorityTabs = (_props: any) => {
-  const { isDesktop } = useBreakpoint();
+  const { isWide } = useBreakpoint();
   const [activeRoute, setActiveRoute] = useState<string>('AuthorityDashboard');
   const tabNavRef = useRef<any>(null);
 
@@ -118,11 +132,11 @@ const AuthorityTabs = (_props: any) => {
         setTimeout(() => setActiveRoute(currentRoute), 0);
       }
       // Desktop: sidebar replaces tab bar
-      if (isDesktop) return null;
-      return <MobileBottomTabBar {...props} />;
+      if (isWide) return null;
+      return <PrimaryTabBar {...props} routes={['AuthorityDashboard','AllComplaints','AuthorityMap','AuthorityAnalytics','AuthorityProfile']} />;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isDesktop, activeRoute]
+    [isWide, activeRoute]
   );
 
   const handleSidebarNavigate = useCallback((routeName: string) => {
@@ -130,22 +144,8 @@ const AuthorityTabs = (_props: any) => {
   }, []);
 
   return (
-    <View style={{ flex: 1, flexDirection: isDesktop ? 'row' : 'column' }}>
-      {/* Desktop Sidebar */}
-      {isDesktop && (
-        <AuthoritySidebar
-          activeRoute={activeRoute}
-          onNavigate={handleSidebarNavigate}
-        />
-      )}
-      
-      {/* Mobile Drawer */}
-      <MobileDrawer 
-        activeRoute={activeRoute}
-        onNavigate={handleSidebarNavigate}
-      />
-
-      {/* Tab Content */}
+    <WorkspaceShell role="authority" activeRoute={activeRoute} onNavigate={handleSidebarNavigate}>
+      <MobileDrawer activeRoute={activeRoute} onNavigate={handleSidebarNavigate} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Tab.Navigator
           tabBar={CustomTabBar}
@@ -163,24 +163,25 @@ const AuthorityTabs = (_props: any) => {
           <Tab.Screen name="AuthorityProfile" component={AuthorityProfileScreen as any} options={{ title: 'Profile' }} />
         </Tab.Navigator>
       </View>
-    </View>
+    </WorkspaceShell>
   );
 };
 
 // ─── Authority Stack Navigator ────────────────────────────────────────────────
+const AuthorityDetailWorkspace = (props: any) => <WorkspaceShell role="authority" activeRoute="AuthorityComplaintDetail" onNavigate={screen => props.navigation.navigate('AuthorityTabs', { screen })}><AuthorityDetailScreen {...props} /></WorkspaceShell>;
 export const AuthorityNavigator: React.FC = () => {
   return (
     <MobileMenuProvider>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: '#FFFFFF' },
+          headerStyle: { backgroundColor: COLORS.surface },
           headerShadowVisible: false,
           headerTintColor: COLORS.textPrimary,
           headerTitleStyle: { fontWeight: '700', fontSize: 18, color: COLORS.textPrimary },
         }}
       >
         <Stack.Screen name="AuthorityTabs" component={AuthorityTabs as any} options={{ headerShown: false }} />
-        <Stack.Screen name="AuthorityComplaintDetail" component={AuthorityDetailScreen} options={{ title: 'Complaint Details', headerShown: false }} />
+        <Stack.Screen name="AuthorityComplaintDetail" component={AuthorityDetailWorkspace} options={{ title: 'Complaint Details', headerShown: false }} />
       </Stack.Navigator>
     </MobileMenuProvider>
   );

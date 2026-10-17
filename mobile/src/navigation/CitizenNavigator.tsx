@@ -1,3 +1,7 @@
+import { WorkspaceShell } from '../components/WorkspaceShell';
+import { PrimaryTabBar } from '../components/PrimaryTabBar';
+import { CivicAssistantScreen } from '../screens/citizen/CivicAssistantScreen';
+import { CitizenMapScreen } from '../screens/citizen/CitizenMapScreen';
 import React, { useCallback, useRef, useState } from 'react';
 import { View, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,14 +22,18 @@ import { ProfileScreen } from '../screens/citizen/ProfileScreen';
 import { NotificationsScreen } from '../screens/citizen/NotificationsScreen';
 import { ComplaintDetailScreen } from '../screens/citizen/ComplaintDetailScreen';
 
+import { NotificationBadge } from '../components/NotificationBadge';
+import { useUnreadCount } from '../hooks/useUnreadCount';
+
 const Tab = createBottomTabNavigator<CitizenTabParamList>();
 const Stack = createNativeStackNavigator<CitizenStackParamList>();
 
 // ─── Citizen Tabs with Responsive Shell ──────────────────────────────────────
 const CitizenTabs = (_props: any) => {
   const insets = useSafeAreaInsets();
+  const { unreadCount } = useUnreadCount();
 
-  const { isDesktop } = useBreakpoint();
+  const { isWide } = useBreakpoint();
   const [activeRoute, setActiveRoute] = useState<string>('CitizenDashboard');
 
   // Ref to the Tab navigator's navigation object, populated by the custom tab bar
@@ -45,19 +53,11 @@ const CitizenTabs = (_props: any) => {
         setTimeout(() => setActiveRoute(currentRoute), 0);
       }
 
-      // Desktop: hide the bottom tab bar entirely
-      if (isDesktop) return null;
-
-      // Mobile/Tablet: render the standard bottom tab bar
-      return (
-        <BottomTabBar
-          {...props}
-          insets={insets}
-        />
-      );
+      if (isWide) return null;
+      return <PrimaryTabBar {...props} routes={['CitizenDashboard', 'ReportIssue', 'ComplaintHistory', 'CivicAssistant', 'CitizenProfile']} />;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isDesktop, activeRoute, insets.bottom]
+    [isWide, activeRoute, insets.bottom]
   );
 
   // Navigates between tabs from the sidebar
@@ -66,22 +66,13 @@ const CitizenTabs = (_props: any) => {
   }, []);
 
   return (
-    <View style={{ flex: 1, flexDirection: isDesktop ? 'row' : 'column' }}>
-      {/* Desktop Sidebar — hidden on mobile/tablet */}
-      {isDesktop && (
-        <CitizenSidebar
-          activeRoute={activeRoute}
-          onNavigate={handleSidebarNavigate}
-        />
-      )}
-
-      {/* Tab Content — takes remaining space */}
+    <WorkspaceShell role="citizen" activeRoute={activeRoute} onNavigate={handleSidebarNavigate}>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Tab.Navigator
           tabBar={CustomTabBar}
           screenOptions={({ route }: { route: { name: string } }) => ({
             headerStyle: {
-              backgroundColor: '#FFFFFF',
+              backgroundColor: COLORS.surface,
               borderBottomWidth: 1,
               borderBottomColor: COLORS.border,
             },
@@ -97,7 +88,7 @@ const CitizenTabs = (_props: any) => {
             tabBarItemStyle: { minWidth: 0 },
             tabBarInactiveTintColor: COLORS.textMuted,
             tabBarStyle: {
-              backgroundColor: '#FFFFFF',
+              backgroundColor: COLORS.surface,
               borderTopColor: COLORS.border,
               borderTopWidth: 1,
               paddingBottom: Math.max(insets.bottom, 8),
@@ -124,12 +115,25 @@ const CitizenTabs = (_props: any) => {
                 iconName = focused ? 'camera' : 'camera-outline';
               } else if (route.name === 'ComplaintHistory') {
                 iconName = focused ? 'document-text' : 'document-text-outline';
+              } else if (route.name === 'CivicAssistant') {
+                iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+              } else if (route.name === 'CitizenMap') {
+                iconName = focused ? 'map' : 'map-outline';
               } else if (route.name === 'Notifications') {
                 iconName = focused ? 'notifications' : 'notifications-outline';
               } else if (route.name === 'CitizenProfile') {
                 iconName = focused ? 'person' : 'person-outline';
               }
-              return <Ionicons name={iconName} size={22} color={color} />;
+              return (
+                <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name={iconName} size={22} color={color} />
+                  {route.name === 'Notifications' && unreadCount > 0 && (
+                    <View style={{ position: 'absolute', top: -4, right: -10 }}>
+                      <NotificationBadge count={unreadCount} />
+                    </View>
+                  )}
+                </View>
+              );
             },
           })}
         >
@@ -148,6 +152,8 @@ const CitizenTabs = (_props: any) => {
             component={ComplaintHistoryScreen as any}
             options={{ title: 'Complaints', headerShown: false }}
           />
+          <Tab.Screen name="CivicAssistant" component={CivicAssistantScreen as any} options={{ title: 'Civic Assistance', headerShown: false }} />
+          <Tab.Screen name="CitizenMap" component={CitizenMapScreen as any} options={{ title: 'Map', headerShown: false }} />
           <Tab.Screen
             name="Notifications"
             component={NotificationsScreen as any}
@@ -160,17 +166,18 @@ const CitizenTabs = (_props: any) => {
           />
         </Tab.Navigator>
       </View>
-    </View>
+    </WorkspaceShell>
   );
 };
 
 // ─── Citizen Stack Navigator ──────────────────────────────────────────────────
+const CitizenDetailWorkspace = (props: any) => <WorkspaceShell role="citizen" activeRoute="ComplaintDetail" onNavigate={screen => props.navigation.navigate('CitizenTabs', { screen })}><ComplaintDetailScreen {...props} /></WorkspaceShell>;
 export const CitizenNavigator: React.FC = () => {
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: COLORS.surface,
         },
         headerShadowVisible: false,
         headerTintColor: COLORS.textPrimary,
@@ -188,7 +195,7 @@ export const CitizenNavigator: React.FC = () => {
       />
       <Stack.Screen
         name="ComplaintDetail"
-        component={ComplaintDetailScreen}
+        component={CitizenDetailWorkspace}
         options={{
           title: 'Complaint Details',
           headerShown: false,

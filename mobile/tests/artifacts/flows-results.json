@@ -4,8 +4,8 @@
     "Citizen password change",
     "Notification preferences persist locally",
     "Photo upload, AI response, manual southern coordinate pin, submit, real returned ID and details",
-    "Authority verify, progress, resolution and cancel deletion at 320x390",
-    "Mobile map list selection opens the selected dossier"
+    "Authority verify, progress, resolution and absence of Purge Record at 320x390",
+    "Mobile hotspot record opens the selected dossier"
   ],
   "errors": []
 }

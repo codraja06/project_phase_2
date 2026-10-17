@@ -66,7 +66,7 @@ export const Button: React.FC<ButtonProps> = ({
       case 'secondary':
         return {
           ...base,
-          backgroundColor: isHovered ? COLORS.surface : '#FFFFFF',
+          backgroundColor: isHovered ? COLORS.surface : COLORS.surface,
           borderWidth: 1.5,
           borderColor: isHovered ? COLORS.borderStrong : COLORS.border,
           ...SHADOWS.card,
@@ -89,7 +89,7 @@ export const Button: React.FC<ButtonProps> = ({
       case 'outline':
         return {
           ...base,
-          backgroundColor: isHovered ? COLORS.primaryLight : '#FFFFFF',
+          backgroundColor: isHovered ? COLORS.primaryLight : COLORS.surface,
           borderWidth: 1.5,
           borderColor: COLORS.primary,
         };
@@ -116,7 +116,7 @@ export const Button: React.FC<ButtonProps> = ({
       case 'primary':
       case 'info':
       case 'danger':
-        return { ...base, color: '#FFFFFF' };
+        return { ...base, color: COLORS.surface };
       case 'secondary':
         return { ...base, color: COLORS.textPrimary };
       case 'outline':
@@ -150,7 +150,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'secondary' || variant === 'outline' || variant === 'ghost' ? COLORS.primary : '#FFFFFF'}
+          color={variant === 'secondary' || variant === 'outline' || variant === 'ghost' ? COLORS.primary : COLORS.surface}
           style={styles.spinner}
         />
       ) : (

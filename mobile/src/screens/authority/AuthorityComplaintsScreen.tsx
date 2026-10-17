@@ -1,6 +1,7 @@
 import { RequestError } from '../../components/RequestError';
+import { TriageSummary } from '../../components/TriageSummary';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,6 +20,7 @@ import Animated, { FadeInDown, FadeInUp, Layout, ZoomIn, FadeOut } from 'react-n
 import { authorityApi } from '../../api/authorityApi';
 import { Complaint } from '../../types/complaint';
 import { COLORS } from '../../theme/colors';
+import { BrandBackdrop } from '../../components/CivicVisuals';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SHADOWS } from '../../theme/index';
 import { SPACING } from '../../theme/spacing';
@@ -46,7 +48,6 @@ interface TableRowProps {
   complaint: Complaint;
   onPress: () => void;
   onVerify: (complaint: Complaint) => void;
-  onReject: (complaint: Complaint) => void;
   isSelected?: boolean;
   onToggleSelect?: () => void;
 }
@@ -55,7 +56,6 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
   complaint,
   onPress,
   onVerify,
-  onReject,
   isSelected,
   onToggleSelect,
 }) => {
@@ -109,7 +109,7 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
         <Ionicons
           name={isSelected ? 'checkbox' : 'square-outline'}
           size={18}
-          color={isSelected ? '#0F172A' : COLORS.textMuted}
+          color={isSelected ? COLORS.authorityPrimary : COLORS.textMuted}
         />
       </TouchableOpacity>
 
@@ -133,7 +133,6 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
       <TouchableOpacity style={styles.tableColTitle} onPress={onPress} activeOpacity={0.8}>
         <View style={styles.civRow}>
           <Text style={styles.complaintCodeText}>{complaintCode}</Text>
-          {isHighPriority && <Badge label="URGENT" variant="destructive" />}
           {isVerified ? (
             <Badge label="VERIFIED" variant="default" icon={<Ionicons name="shield-checkmark" size={10} color="#FFF" />} />
           ) : (
@@ -143,6 +142,8 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
         <Text style={styles.tableTitle} numberOfLines={1}>
           {complaint.title}
         </Text>
+        <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} compact />
+        <Text style={styles.tableDate} numberOfLines={2}>{complaint.description}</Text>
       </TouchableOpacity>
 
       <View style={styles.tableColComparison}>
@@ -179,7 +180,6 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
         {!isVerified && (
           <Button title="Verify" variant="outline" onPress={() => onVerify(complaint)} size="sm" style={{ marginRight: SPACING.xs, height: 32, paddingHorizontal: SPACING.sm }} />
         )}
-        <Button variant="ghost" onPress={() => onReject(complaint)} size="sm" style={{ width: 32, height: 32, paddingHorizontal: 0, marginRight: 4 }} icon={<Ionicons name="trash-outline" size={16} color={COLORS.error} />} />
         <Button variant="ghost" onPress={onPress} size="sm" style={{ width: 32, height: 32, paddingHorizontal: 0 }} icon={<Ionicons name="chevron-forward" size={16} color={COLORS.textPrimary} />} />
       </View>
     </View>
@@ -191,7 +191,6 @@ interface MobileCardProps {
   complaint: Complaint;
   onPress: () => void;
   onVerify: (complaint: Complaint) => void;
-  onReject: (complaint: Complaint) => void;
   isSelected?: boolean;
   onToggleSelect?: () => void;
 }
@@ -200,7 +199,6 @@ const MobileAuthorityCard: React.FC<MobileCardProps> = ({
   complaint,
   onPress,
   onVerify,
-  onReject,
   isSelected,
   onToggleSelect,
 }) => {
@@ -243,10 +241,9 @@ const MobileAuthorityCard: React.FC<MobileCardProps> = ({
         <View style={styles.mobileCardHeader}>
           <View style={styles.mobileCardHeaderLeft}>
             <TouchableOpacity onPress={onToggleSelect} style={styles.mobileCheckboxBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name={isSelected ? 'checkbox' : 'square-outline'} size={20} color={isSelected ? '#0F172A' : COLORS.textMuted} />
+              <Ionicons name={isSelected ? 'checkbox' : 'square-outline'} size={20} color={isSelected ? COLORS.authorityPrimary : COLORS.textMuted} />
             </TouchableOpacity>
             <Text style={styles.complaintCodeText}>{complaintCode}</Text>
-            {isHighPriority && <Badge label="HIGH" variant="destructive" />}
             {isVerified ? <Badge label="VERIFIED" variant="default" /> : <Badge label="UNVERIFIED" variant="outline" />}
           </View>
           <StatusBadge status={complaint.status} size="sm" />
@@ -263,11 +260,13 @@ const MobileAuthorityCard: React.FC<MobileCardProps> = ({
 
           <View style={styles.mobileCardContent}>
             <Text style={styles.mobileCardTitle} numberOfLines={2}>{complaint.title}</Text>
-            <Text style={styles.mobileCardLocation} numberOfLines={1}>📍 {complaint.address || 'GPS Coordinates logged'}</Text>
-            <Text style={styles.mobileCardCitizen} numberOfLines={1}>👤 {citizenName} {citizenContact ? `(${citizenContact})` : ''}</Text>
+            <Text style={styles.mobileCardLocation} numberOfLines={1}>{complaint.address || 'GPS Coordinates logged'}</Text>
+            <Text style={styles.mobileCardCitizen} numberOfLines={1}>{citizenName} {citizenContact ? `(${citizenContact})` : ''}</Text>
           </View>
         </TouchableOpacity>
 
+        <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} compact />
+        <Text style={styles.mobileCardLocation} numberOfLines={3}>{complaint.description}</Text>
         <View style={styles.mobileCompareBanner}>
           <View style={styles.mobileCompareCol}>
             <Text style={styles.mobileCompareLabel}>AI PREDICTION</Text>
@@ -286,7 +285,6 @@ const MobileAuthorityCard: React.FC<MobileCardProps> = ({
             {!isVerified && (
               <Button title="Verify" variant="outline" onPress={() => onVerify(complaint)} size="sm" style={{ height: 32, paddingHorizontal: SPACING.sm }} />
             )}
-            <Button variant="ghost" onPress={() => onReject(complaint)} size="sm" style={{ width: 32, height: 32, paddingHorizontal: 0 }} icon={<Ionicons name="trash-outline" size={14} color={COLORS.error} />} />
             <Button title="Dossier" variant="secondary" onPress={onPress} size="sm" style={{ height: 32 }} icon={<Ionicons name="chevron-forward" size={14} color={COLORS.textPrimary} />} />
           </View>
         </View>
@@ -297,43 +295,57 @@ const MobileAuthorityCard: React.FC<MobileCardProps> = ({
 
 // ─── Main Screen Component ───────────────────────────────────────────────────
 export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
+  const fetchRequest = useRef(0);
   const { toggleMenu } = useMobileMenu();
   const { isDesktop, isMobile } = useBreakpoint();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(route?.params?.search || '');
+  const [appliedSearch, setAppliedSearch] = useState(searchQuery);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 25 });
   const initialFilter = route?.params?.filter || 'all';
-  const [statusFilter, setStatusFilter] = useState<string>(initialFilter);
+  const [statusFilter, setStatusFilter] = useState<string>(initialFilter === 'urgent' ? 'all' : initialFilter);
+  const [priorityFilter, setPriorityFilter] = useState(initialFilter === 'urgent' ? 'high' : 'all');
+  const [sortBy, setSortBy] = useState('priority');
 
-  const [rejectModalVisible, setRejectModalVisible] = useState(false);
-  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => { const timer = setTimeout(() => setAppliedSearch(searchQuery), 300); return () => clearTimeout(timer); }, [searchQuery]);
+  useEffect(() => { setPage(1); }, [priorityFilter, sortBy, statusFilter, appliedSearch, route?.params?.from, route?.params?.to, route?.params?.category]);
+  useEffect(() => { setSearchQuery(route?.params?.search || ''); }, [route?.params?.search]);
 
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({ visible: false, message: '', type: 'success' });
 
   useEffect(() => {
-    if (route?.params?.filter) setStatusFilter(route.params.filter);
+    if (route?.params?.filter) {
+      setStatusFilter(route.params.filter === 'urgent' ? 'all' : route.params.filter);
+      setPriorityFilter(route.params.filter === 'urgent' ? 'high' : 'all');
+    }
   }, [route?.params?.filter]);
 
   useFocusEffect(
     React.useCallback(() => {
-      if (route?.params?.filter) setStatusFilter(route.params.filter);
       fetchComplaints();
-    }, [route?.params?.filter])
+    }, [route?.params?.filter, priorityFilter, sortBy, page, statusFilter, appliedSearch, route?.params?.from, route?.params?.to, route?.params?.category])
   );
 
   const fetchComplaints = async () => {
+    const request = ++fetchRequest.current;
     try {
       setLoading(true); setLoadError('');
-      const res = await authorityApi.getAllComplaints();
+      const date = new Date().toISOString().slice(0, 10);
+      const res = await authorityApi.getAllComplaints({ priority: priorityFilter, sortBy, page, limit: 25,
+        status: ['all','today'].includes(statusFilter) ? undefined : statusFilter, search: appliedSearch, category: route?.params?.category,
+        from: statusFilter === 'today' ? date : route?.params?.from, to: statusFilter === 'today' ? date : route?.params?.to });
+      if (request !== fetchRequest.current) return;
       setComplaints(res.complaints || []);
+      setPagination(res.pagination || { page: 1, pages: 1, total: res.complaints.length, limit: 25 });
     } catch (error) {
-      setLoadError((error as Error).message || 'Please check your connection and retry.');
+      if (request === fetchRequest.current) setLoadError((error as Error).message || 'Please check your connection and retry.');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (request === fetchRequest.current) { setLoading(false); setRefreshing(false); }
     }
   };
 
@@ -352,26 +364,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
     }
   };
 
-  const handleOpenReject = (item: Complaint) => {
-    setSelectedComplaint(item);
-    setRejectModalVisible(true);
-  };
 
-  const handleConfirmReject = async () => {
-    if (!selectedComplaint) return;
-    try {
-      setActionLoading(true);
-      await authorityApi.deleteComplaint(selectedComplaint._id);
-      setComplaints((prev) => prev.filter((c) => c._id !== selectedComplaint._id));
-      setRejectModalVisible(false);
-      setSelectedComplaint(null);
-      setToast({ visible: true, message: 'Complaint record purged successfully.', type: 'info' });
-    } catch (error: any) {
-      setToast({ visible: true, message: error.message || 'Unable to delete complaint.', type: 'error' });
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const filteredComplaints = useMemo(() => {
     return complaints.filter((c) => {
@@ -401,13 +394,30 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
   }, [complaints, statusFilter, searchQuery]);
 
   const statusOptions = [
-    { label: 'Today', value: 'today' },
-    { label: 'All Incidents', value: 'all', count: complaints.length },
-    { label: 'Pending', value: 'pending', count: complaints.filter((c) => (c.status || '').toLowerCase() === 'pending').length },
-    { label: 'In Progress', value: 'in_progress', count: complaints.filter((c) => (c.status || '').toLowerCase().includes('progress')).length },
-    { label: 'Resolved', value: 'resolved', count: complaints.filter((c) => (c.status || '').toLowerCase() === 'resolved').length },
-    { label: '🔥 High Priority', value: 'urgent', count: complaints.filter((c) => c.priority === 'urgent' || c.priority === 'high').length },
+    { label: 'Today', value: 'today' }, { label: 'All Incidents', value: 'all' },
+    { label: 'Pending', value: 'pending' }, { label: 'In Progress', value: 'in_progress' }, { label: 'Resolved', value: 'resolved' },
   ];
+  const paginationControls = <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16 }}>
+    <Button title="Previous page" variant="outline" size="sm" disabled={loading || page <= 1} onPress={() => { setSelectedIds([]); setPage(page - 1); }} />
+    <Text style={styles.tableDate}>Page {pagination.page} of {pagination.pages} · {pagination.total} reports</Text>
+    <Button title="Next page" variant="outline" size="sm" disabled={loading || page >= pagination.pages} onPress={() => { setSelectedIds([]); setPage(page + 1); }} />
+  </View>;
+  const priorityControls = <View>
+    {(route?.params?.from || route?.params?.to || (route?.params?.category && route.params.category !== 'all')) && <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+      <Text style={styles.tableDate}>Date range: {route?.params?.from || 'Any'} to {route?.params?.to || 'Any'} · Category: {route?.params?.category || 'All'}</Text>
+      <Button title="Clear date/category filters" variant="ghost" size="sm" onPress={() => navigation.setParams({ from: undefined, to: undefined, category: undefined })} />
+    </View>}
+    <Text style={styles.tableDate}>Priority</Text>
+    <FilterChipGroup options={[
+      { label: 'All priorities', value: 'all' }, { label: 'High Priority', value: 'high' },
+      { label: 'Medium Priority', value: 'medium' }, { label: 'Low Priority', value: 'low' },
+    ]} selectedValue={priorityFilter} onSelect={setPriorityFilter} />
+    <Text style={styles.tableDate}>Sort complaints</Text>
+    <FilterChipGroup options={[
+      { label: 'Priority first', value: 'priority' }, { label: 'Newest first', value: 'newest' },
+      { label: 'Oldest first', value: 'oldest' },
+    ]} selectedValue={sortBy} onSelect={setSortBy} />
+  </View>;
 
   const EmptyComponent = (
     <Animated.View entering={ZoomIn.delay(300)} style={styles.emptyContainer}>
@@ -506,9 +516,10 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
         <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
         <Animated.View entering={FadeInDown.duration(400)} style={styles.desktopHeader}>
+          <BrandBackdrop photo="bridge" opacity={.86} />
           <View>
             <Text style={styles.desktopTitle}>Incident Registry</Text>
-            <Text style={styles.desktopSubtitle}>Showing {filteredComplaints.length} of {complaints.length} civic issues</Text>
+            <Text style={styles.desktopSubtitle}>Showing {filteredComplaints.length} of {pagination.total} matching civic issues</Text>
           </View>
           <View style={styles.desktopControls}>
             <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search by ID, title, citizen..." style={styles.desktopSearch} />
@@ -517,6 +528,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
 
         <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.desktopFilterBar}>
           <FilterChipGroup options={statusOptions} selectedValue={statusFilter} onSelect={setStatusFilter} containerStyle={styles.desktopFilterChips} />
+          {priorityControls}
         </Animated.View>
 
         {renderBulkBar()}
@@ -550,18 +562,17 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
                   onToggleSelect={() => toggleSelect(item._id)}
                   onPress={() => navigation.navigate('AuthorityComplaintDetail', { complaintId: item._id })}
                   onVerify={handleVerify}
-                  onReject={handleOpenReject}
                 />
               </Animated.View>
             )}
             contentContainerStyle={styles.desktopListContent}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
             ListEmptyComponent={EmptyComponent}
+            ListFooterComponent={paginationControls}
             showsVerticalScrollIndicator={false}
           />
         )}
 
-        <ConfirmationDialog visible={rejectModalVisible} title="Reject / Purge Incident" message={`Permanently remove '${selectedComplaint?.title || 'this complaint'}' from the database?`} confirmText="Purge Record" confirmVariant="danger" loading={actionLoading} onConfirm={handleConfirmReject} onCancel={() => { setRejectModalVisible(false); setSelectedComplaint(null); }} />
         <Toast visible={toast.visible} message={toast.message} type={toast.type} onDismiss={() => setToast((prev) => ({ ...prev, visible: false }))} />
       </SafeAreaView>
     );
@@ -569,7 +580,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
 
   return (
     <View style={styles.safeAreaMobile}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
 
       <AuthorityMobileHeader 
         title="Incident Registry" 
@@ -583,6 +594,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
       <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.filterSection}>
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search incidents..." style={styles.searchBar} />
         <FilterChipGroup options={statusOptions} selectedValue={statusFilter} onSelect={setStatusFilter} containerStyle={styles.filterChips} />
+        {priorityControls}
       </Animated.View>
 
       {renderBulkBar()}
@@ -601,18 +613,17 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
                 onToggleSelect={() => toggleSelect(item._id)}
                 onPress={() => navigation.navigate('AuthorityComplaintDetail', { complaintId: item._id })}
                 onVerify={handleVerify}
-                onReject={handleOpenReject}
               />
             </Animated.View>
           )}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
           ListEmptyComponent={EmptyComponent}
+            ListFooterComponent={paginationControls}
           showsVerticalScrollIndicator={false}
         />
       )}
 
-      <ConfirmationDialog visible={rejectModalVisible} title="Purge Incident" message={`Remove '${selectedComplaint?.title || 'this complaint'}' from the database?`} confirmText="Purge Record" confirmVariant="danger" loading={actionLoading} onConfirm={handleConfirmReject} onCancel={() => { setRejectModalVisible(false); setSelectedComplaint(null); }} />
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onDismiss={() => setToast((prev) => ({ ...prev, visible: false }))} />
     </View>
   );
@@ -623,16 +634,16 @@ const styles = StyleSheet.create({
   safeAreaMobile: { flex: 1, backgroundColor: COLORS.background },
 
   // ── Desktop Table ──────────────────────────────────────────────────────────
-  desktopHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING['4xl'], paddingTop: SPACING['3xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.background },
-  desktopTitle: { ...TYPOGRAPHY.h1, color: COLORS.textPrimary },
-  desktopSubtitle: { ...TYPOGRAPHY.bodySmall, color: COLORS.textSecondary, fontWeight: '500', marginTop: SPACING.xs },
+  desktopHeader: { position: 'relative', overflow: 'hidden', minHeight: 140, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING['4xl'], paddingTop: SPACING['3xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.cinematic },
+  desktopTitle: { ...TYPOGRAPHY.h1, color: COLORS.onCinematic },
+  desktopSubtitle: { ...TYPOGRAPHY.bodySmall, color: '#F0DFDC', fontWeight: '500', marginTop: SPACING.xs },
   desktopControls: { width: 380 },
   desktopSearch: { marginBottom: 0 },
   desktopFilterBar: { paddingHorizontal: SPACING['4xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
   desktopFilterChips: { paddingVertical: SPACING.xs },
-  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING['4xl'], paddingVertical: SPACING.md, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING['4xl'], paddingVertical: SPACING.md, backgroundColor: COLORS.primaryDeep, borderBottomWidth: 2, borderBottomColor: COLORS.gold },
   tableThumbHeader: { width: 44, marginRight: 14 },
-  tableHeaderLabel: { ...TYPOGRAPHY.overline, color: COLORS.textSecondary },
+  tableHeaderLabel: { ...TYPOGRAPHY.overline, color: COLORS.onCinematic },
   desktopListContent: { paddingHorizontal: SPACING['4xl'], paddingTop: SPACING.md, paddingBottom: SPACING['6xl'] },
   tableRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, paddingVertical: SPACING.md, paddingHorizontal: SPACING.xl, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.borderLight, marginBottom: SPACING.sm, ...(Platform.OS === 'web' ? { transition: 'all 0.1s ease-in-out' as any } : {}) },
   tableRowHovered: { borderColor: COLORS.border, backgroundColor: COLORS.backgroundNeutral },
@@ -641,7 +652,7 @@ const styles = StyleSheet.create({
   tableThumbImg: { width: '100%', height: '100%' },
   tableThumbPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   tableColTitle: { flex: 2, marginRight: 14 },
-  civRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginBottom: 4 },
+  civRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: SPACING.xs, marginBottom: 4 },
   complaintCodeText: { ...TYPOGRAPHY.caption, fontWeight: '800', color: COLORS.textSecondary, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
   tableTitle: { ...TYPOGRAPHY.bodyBold, color: COLORS.textPrimary },
   tableColComparison: { flex: 1.5, marginRight: 14, justifyContent: 'center' },
@@ -658,15 +669,15 @@ const styles = StyleSheet.create({
   tableColActions: { width: 130, flexDirection: 'row', alignItems: 'center' },
   
   // ── Mobile ────────────────────────────────────────────────────────────────
-  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: Platform.OS === 'ios' ? SPACING.md : SPACING.lg, paddingBottom: SPACING.lg, backgroundColor: '#0F172A' },
+  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: Platform.OS === 'ios' ? SPACING.md : SPACING.lg, paddingBottom: SPACING.lg, backgroundColor: COLORS.authorityPrimary },
   backBtn: { width: 38, height: 38, borderRadius: BORDER_RADIUS.full, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', marginRight: SPACING.md },
-  headerTitle: { ...TYPOGRAPHY.h3, color: '#FFFFFF', flex: 1 },
+  headerTitle: { ...TYPOGRAPHY.h3, color: COLORS.surface, flex: 1 },
   countPill: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: BORDER_RADIUS.full },
-  countPillText: { ...TYPOGRAPHY.caption, fontWeight: '800', color: '#FFFFFF' },
+  countPillText: { ...TYPOGRAPHY.caption, fontWeight: '800', color: COLORS.surface },
   filterSection: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: SPACING.sm, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
   searchBar: { marginBottom: SPACING.sm },
   filterChips: { paddingVertical: SPACING.xs },
-  listContent: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: 110 },
+  listContent: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: 32 },
   mobileCard: { marginBottom: SPACING.md, padding: 0 },
   mobileCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.md, gap: SPACING.xs },
   mobileCardHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, flexWrap: 'wrap', flex: 1, minWidth: 0 },

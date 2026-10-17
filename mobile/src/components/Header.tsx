@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 12 : 14,
     paddingBottom: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     flexDirection: 'row',
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.background,
   },
   titleWrapper: {
     flex: 1,

@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? { cursor: 'pointer' as any } : {}),
   },
   outlineBtn: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 1.5,
     borderColor: COLORS.secondary, // Yellow border per theme
   },

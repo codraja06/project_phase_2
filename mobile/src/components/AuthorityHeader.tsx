@@ -15,13 +15,7 @@ interface AuthorityHeaderProps {
   showMenuToggle?: boolean;
 }
 
-const mockNotifications = [
-  { id: '1', priority: 'urgent', title: 'New pothole reported near City Center', time: '2 mins ago', read: false, icon: 'alert-circle', color: COLORS.error },
-  { id: '2', priority: 'high', title: 'Garbage overflow on Market Road', time: '18 mins ago', read: false, icon: 'warning', color: COLORS.warning },
-  { id: '3', priority: 'info', title: 'Incident CIV-129518 resolved', time: '1 hour ago', read: true, icon: 'checkmark-circle', color: COLORS.primary },
-  { id: '4', priority: 'high', title: 'Streetlight not working - Park Avenue', time: '2 hours ago', read: true, icon: 'warning', color: COLORS.warning },
-  { id: '5', priority: 'info', title: 'New complaint assigned to you', time: '2 hours ago', read: true, icon: 'document-text', color: COLORS.primary },
-];
+const initialNotifications: { id: string; priority: string; title: string; time: string; read: boolean; icon: string; color: string }[] = [];
 
 export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
   title,
@@ -35,7 +29,7 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { logout, user } = useAuth();
   const { toggleMenu } = useMobileMenu();
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState(initialNotifications);
   
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -250,7 +244,7 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
     ...(Platform.OS === 'web' ? { position: 'relative' } : {}),
@@ -269,7 +263,7 @@ const styles = StyleSheet.create({
   searchWrapperMobile: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F3ECE8',
     paddingHorizontal: 12,
     height: 40,
     borderRadius: BORDER_RADIUS.md,
@@ -310,7 +304,7 @@ const styles = StyleSheet.create({
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F3ECE8',
     paddingHorizontal: 12,
     height: 40,
     borderRadius: BORDER_RADIUS.md,
@@ -330,7 +324,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}),
   },
   shortcutKey: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
     borderRadius: 4,
@@ -354,7 +348,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
   },
   dateText: {
     ...TYPOGRAPHY.bodySmall,
@@ -372,12 +366,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
   iconBtnActive: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F3ECE8',
   },
   notificationBadge: {
     position: 'absolute',
@@ -390,12 +384,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: COLORS.surface,
   },
   notificationBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.surface,
   },
   
   // Notification Dropdown
@@ -405,7 +399,7 @@ const styles = StyleSheet.create({
     right: -12,
     width: 340,
     maxWidth: 'calc(100vw - 32px)' as any,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
@@ -450,13 +444,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   notifItemUnread: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.background,
   },
   notifIconWrapper: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -501,7 +495,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.borderLight,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.background,
     borderBottomLeftRadius: BORDER_RADIUS.lg,
     borderBottomRightRadius: BORDER_RADIUS.lg,
   },
@@ -531,7 +525,7 @@ const styles = StyleSheet.create({
     top: 50,
     right: 0,
     width: 240,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
@@ -542,7 +536,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.background,
     borderTopLeftRadius: BORDER_RADIUS.lg,
     borderTopRightRadius: BORDER_RADIUS.lg,
   },

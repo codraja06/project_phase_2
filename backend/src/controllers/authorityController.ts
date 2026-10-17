@@ -1,13 +1,18 @@
+import { analyticsQuery, analyticsFilter } from '../services/analyticsService';
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { Complaint, ComplaintStatus } from '../models/Complaint';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
 import { updateStatusSchema } from '../validators/complaintValidator';
+import { withPriority, priorityScoreExpression } from '../services/triageService';
+import { z } from 'zod';
+import { notifyUser } from '../services/notificationService';
 
 export const getAllComplaints = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { status, category, search, sortBy } = req.query;
+    const priority = z.enum(['low', 'medium', 'high', 'all']).optional().parse(req.query.priority);
     const filter: any = {};
 
     if (typeof status === 'string' && status !== 'All' && status !== 'all') {
@@ -15,7 +20,7 @@ export const getAllComplaints = async (req: AuthRequest, res: Response, next: Ne
       if (s === 'pending') filter.status = 'Pending';
       else if (s === 'in progress' || s === 'in_progress') filter.status = 'In Progress';
       else if (s === 'resolved') filter.status = 'Resolved';
-      else if (s === 'urgent' || s === 'high') filter.priority = { $in: ['high', 'urgent'] };
+      else if (s === 'urgent' || s === 'high') { /* Legacy link: apply calculated priority below. */ }
       else filter.status = status;
     }
     if (typeof category === 'string' && category !== 'All' && category !== 'all') {
@@ -31,32 +36,46 @@ export const getAllComplaints = async (req: AuthRequest, res: Response, next: Ne
       ];
     }
 
-    const sortOrder = sortBy === 'oldest' ? 1 : -1;
-
-    const complaints = await Complaint.find(filter)
-      .sort({ createdAt: sortOrder })
-      .populate('createdBy', 'name email phone');
-
-    const total = await Complaint.countDocuments();
-    const pending = await Complaint.countDocuments({ status: 'Pending' });
-    const inProgress = await Complaint.countDocuments({ status: 'In Progress' });
-    const resolved = await Complaint.countDocuments({ status: 'Resolved' });
-    const highPriority = await Complaint.countDocuments({ priority: { $in: ['high', 'urgent'] } });
-    const verifiedCount = await Complaint.countDocuments({ verified: true });
-
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const today = await Complaint.countDocuments({ createdAt: { $gte: startOfToday } });
-
-    const categories = ['pothole', 'road_damage', 'garbage', 'garbage_overflow', 'broken_streetlight', 'drainage', 'drainage_problem', 'water_leakage', 'dead_animal', 'broken_tree'];
-    const categoryStats: Record<string, number> = {};
-    for (const cat of categories) {
-      categoryStats[cat] = await Complaint.countDocuments({ category: cat });
+    const page = z.coerce.number().int().min(1).optional().parse(req.query.page);
+    const limit = z.coerce.number().int().min(1).max(100).optional().parse(req.query.limit) || 25;
+    const now = new Date();
+    const priorityFilter = priority && priority !== 'all' ? priority :
+      (status === 'urgent' || status === 'high') ? 'high' : undefined;
+    const conditions: any = { ...filter, ...(priorityFilter ? { calculatedPriority: priorityFilter } : {}) };
+    if (req.query.from || req.query.to) {
+      const dates = analyticsQuery.parse({ from: req.query.from, to: req.query.to });
+      Object.assign(conditions, analyticsFilter(dates));
     }
+    const ordering: any = sortBy === 'priority' ? { priorityScore: -1, createdAt: 1, _id: 1 } : { createdAt: sortBy === 'oldest' ? 1 : -1, _id: 1 };
+    const [aggregate] = await Complaint.aggregate([
+      { $addFields: { priorityScore: priorityScoreExpression(now) } },
+      { $addFields: { calculatedPriority: { $switch: { branches: [
+        { case: { $gte: ['$priorityScore', 65] }, then: 'high' }, { case: { $gte: ['$priorityScore', 30] }, then: 'medium' },
+      ], default: 'low' } } } },
+      { $facet: {
+        records: [{ $match: conditions }, { $sort: ordering }, ...(page ? [{ $skip: (page - 1) * limit }, { $limit: limit }] : []), { $project: { calculatedPriority: 0 } }],
+        filteredCount: [{ $match: conditions }, { $count: 'total' }],
+        totals: [{ $group: { _id: null, total: { $sum: 1 },
+          pending: { $sum: { $cond: [{ $eq: ['$status','Pending'] },1,0] } },
+          inProgress: { $sum: { $cond: [{ $eq: ['$status','In Progress'] },1,0] } },
+          resolved: { $sum: { $cond: [{ $eq: ['$status','Resolved'] },1,0] } },
+          highPriority: { $sum: { $cond: [{ $eq: ['$calculatedPriority','high'] },1,0] } },
+          verifiedCount: { $sum: { $cond: ['$verified',1,0] } },
+          today: { $sum: { $cond: [{ $gte: ['$createdAt',new Date(now.toISOString().slice(0,10))] },1,0] } },
+        } }],
+        categoryGroups: [{ $group: { _id: '$category', count: { $sum: 1 } } }],
+      } },
+    ]);
+    const populated = await Complaint.populate(aggregate.records as any[], { path: 'createdBy', select: 'name email phone' });
+    const complaints = populated.map((c: any) => withPriority(c, now));
+    const { total = 0, pending = 0, inProgress = 0, resolved = 0, highPriority = 0, verifiedCount = 0, today = 0 } = aggregate.totals[0] || {};
+    const categoryStats = Object.fromEntries(aggregate.categoryGroups.map((c: any) => [c._id, c.count]));
+    const filteredTotal = aggregate.filteredCount[0]?.total || 0;
 
     res.status(200).json(
       new ApiResponse('All complaints retrieved for authority', {
         complaints,
+        pagination: { page: page || 1, limit: page ? limit : filteredTotal, total: filteredTotal, pages: page ? Math.max(1, Math.ceil(filteredTotal / limit)) : 1 },
         stats: {
           total,
           pending,
@@ -83,7 +102,7 @@ export const getAuthorityComplaintById = async (req: AuthRequest, res: Response,
       throw new ApiError(404, 'Complaint not found');
     }
 
-    res.status(200).json(new ApiResponse('Complaint detail for authority', complaint));
+    res.status(200).json(new ApiResponse('Complaint detail for authority', withPriority(complaint)));
   } catch (error) {
     next(error);
   }
@@ -103,7 +122,7 @@ export const updateComplaintStatus = async (req: AuthRequest, res: Response, nex
 
     // Idempotent: If already in target status, return 200 without error
     if (currentStatus === targetStatus) {
-      return res.status(200).json(new ApiResponse('Complaint is already in requested status', complaint));
+      return res.status(200).json(new ApiResponse('Complaint is already in requested status', withPriority(complaint)));
     }
 
     // Resolved records are final and cannot be reverted
@@ -127,13 +146,22 @@ export const updateComplaintStatus = async (req: AuthRequest, res: Response, nex
       );
     }
 
+    if (targetStatus === 'Resolved' && complaint.completionImageUrl && complaint.completionReview !== 'accepted') {
+      throw new ApiError(409, 'Review the submitted repair evidence before resolving this complaint.');
+    }
+
+    const changedAt = new Date();
+
     const updated = await Complaint.findOneAndUpdate(
       { _id: id, status: currentStatus },
-      { $set: { status: targetStatus, ...(targetStatus === 'Resolved' ? { resolvedAt: new Date() } : {}) } },
+      { $set: { status: targetStatus, ...(targetStatus === 'Resolved' ? { resolvedAt: changedAt } : {}) },
+        $push: { statusHistory: { status: targetStatus, at: changedAt, by: req.user!._id } } },
       { new: true, runValidators: true }
     );
     if (!updated) throw new ApiError(409, 'This complaint changed. Refresh before trying again.');
-    res.status(200).json(new ApiResponse('Complaint status updated successfully', updated));
+    await notifyUser(updated.createdBy, { complaintId: updated._id, eventKey: `${updated._id}:status:${targetStatus}`,
+      title: `Complaint ${targetStatus}`, message: `${updated.complaintId} is now ${targetStatus}.` });
+    res.status(200).json(new ApiResponse('Complaint status updated successfully', withPriority(updated)));
   } catch (error) {
     next(error);
   }
@@ -172,7 +200,7 @@ export const verifyComplaint = async (req: AuthRequest, res: Response, next: Nex
 
     await complaint.save();
 
-    res.status(200).json(new ApiResponse('Complaint verified by authority', complaint));
+    res.status(200).json(new ApiResponse('Complaint verified by authority', withPriority(complaint)));
   } catch (error) {
     next(error);
   }

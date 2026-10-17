@@ -9,7 +9,7 @@ import { useWindowDimensions } from 'react-native';
  */
 export const BREAKPOINTS = {
   tablet: 768,
-  desktop: 1024,
+  desktop: 1200,
 } as const;
 
 export interface BreakpointResult {

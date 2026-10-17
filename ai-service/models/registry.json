@@ -1,0 +1,8 @@
+[
+  {"id":"pothole","path":"models/pothole_roaddamage/best.pt","pathEnv":"POTHOLE_MODEL_PATH","categories":["pothole"],"confidence":0.25},
+  {"id":"road_damage","path":"models/pothole_roaddamage/best_road.pt","pathEnv":"ROAD_DAMAGE_MODEL_PATH","categories":["road_damage","pothole"],"confidence":0.25},
+  {"id":"garbage_overflow","path":"models/garbage_overflow/best.pt","pathEnv":"GARBAGE_MODEL_PATH","categories":["garbage","garbage_overflow"],"confidence":0.25},
+  {"id":"dead_animal_broken_tree","path":"models/dead_animal_broken_tree/best.pt","pathEnv":"OTHER_CIVIC_MODEL_PATH","categories":["dead_animal","broken_tree"],"confidence":0.25},
+  {"id":"streetlight","path":"models/streetlight/best.pt","pathEnv":"STREETLIGHT_MODEL_PATH","categories":["broken_streetlight"],"confidence":0.4},
+  {"id":"water_leakage","path":"models/water_leakage/best.pt","pathEnv":"WATER_LEAKAGE_MODEL_PATH","categories":["water_leakage","drainage","drainage_problem"],"confidence":0.4}
+]

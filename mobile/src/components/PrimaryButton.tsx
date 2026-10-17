@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   text: {
-    color: '#FFFFFF',
+    color: COLORS.surface,
     fontWeight: '800',
     letterSpacing: 0.3,
   },

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { complaintApi } from '../../api/complaintApi';
 import { Complaint } from '../../types/complaint';
 import { COLORS } from '../../theme/colors';
+import { BrandBackdrop, CivicHero } from '../../components/CivicVisuals';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SHADOWS } from '../../theme/index';
 import { SPACING } from '../../theme/spacing';
@@ -138,6 +139,7 @@ export const ComplaintHistoryScreen = ({ navigation, route }: any) => {
 
         {/* Desktop Header */}
         <Animated.View entering={FadeInDown.duration(400)} style={styles.desktopHeader}>
+          <BrandBackdrop photo="bridge" opacity={.81} />
           <View style={styles.desktopHeaderLeft}>
             <Text style={styles.desktopTitle}>My Complaints</Text>
             <Text style={styles.desktopSubtitle}>
@@ -170,11 +172,11 @@ export const ComplaintHistoryScreen = ({ navigation, route }: any) => {
           <FlatList
             data={filteredComplaints}
             keyExtractor={(item) => item._id}
-            numColumns={2}
-            key="desktop-2col"
-            columnWrapperStyle={styles.desktopColumnWrapper}
+            numColumns={isDesktop ? 2 : 1}
+            key={isDesktop ? 'desktop-2col' : 'tablet-1col'}
+            columnWrapperStyle={isDesktop ? styles.desktopColumnWrapper : undefined}
             renderItem={({ item, index }) => (
-              <Animated.View entering={FadeInUp.delay(150 + index * 50)} style={styles.desktopCardWrapper}>
+              <Animated.View entering={FadeInUp.delay(150 + index * 50)} style={isDesktop ? styles.desktopCardWrapper : { width: '100%' }}>
                 <ComplaintCard
                   complaint={item}
                   onPress={() =>
@@ -252,6 +254,7 @@ export const ComplaintHistoryScreen = ({ navigation, route }: any) => {
             </Animated.View>
           )}
           contentContainerStyle={styles.listContent}
+          ListHeaderComponent={<View style={{ marginBottom: 16 }}><CivicHero compact photo="bridge" eyebrow="YOUR REPORTS / YOUR PROGRESS" title="Every report has a story." description="Follow your submissions and their latest recorded status." /></View>}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -274,7 +277,12 @@ const styles = StyleSheet.create({
 
   // Desktop Styles
   desktopHeader: {
+    position: 'relative',
+    overflow: 'hidden',
+    minHeight: 150,
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING['4xl'],
@@ -285,10 +293,10 @@ const styles = StyleSheet.create({
     flex: 1},
   desktopTitle: {
     ...TYPOGRAPHY.h1,
-    color: COLORS.textPrimary},
+    color: COLORS.onCinematic},
   desktopSubtitle: {
     ...TYPOGRAPHY.bodySmall,
-    color: COLORS.textSecondary,
+    color: '#F0DFDC',
     fontWeight: '500',
     marginTop: SPACING.xs},
   desktopControls: {
@@ -362,7 +370,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.lg,
-    paddingBottom: 100},
+    paddingBottom: 32},
   emptyContainer: {
     padding: SPACING['5xl'],
     alignItems: 'center',
@@ -399,5 +407,5 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     marginTop: SPACING.xl},
   emptyReportBtnText: {
-    ...TYPOGRAPHY.bodySmall, color: '#FFFFFF',
+    ...TYPOGRAPHY.bodySmall, color: COLORS.surface,
     fontWeight: '700'}});

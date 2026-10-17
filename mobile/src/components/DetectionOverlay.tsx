@@ -97,8 +97,8 @@ export const DetectionOverlay: React.FC<DetectionOverlayProps> = ({
   );
 
   return (
-    <View style={[styles.wrapper, { height }]} onLayout={handleLayout}>
-      <View style={styles.container}>
+    <View style={[styles.wrapper, { height }]}>
+      <View style={styles.container} onLayout={handleLayout}>
         {!imageLoaded && !imageError && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={COLORS.primary} />
@@ -147,6 +147,7 @@ export const DetectionOverlay: React.FC<DetectionOverlayProps> = ({
             return (
               <View
                 key={`bbox-${index}-${item.category || 'defect'}`}
+                testID={`detection-box-${index}`}
                 style={[
                   styles.boundingBox,
                   {
@@ -252,7 +253,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3.5,
     borderRadius: BORDER_RADIUS.xs,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderColor: 'rgba(242, 193, 78, 0.6)',
   },
   hudText: {
     color: '#E2E8F0',
@@ -263,22 +264,22 @@ const styles = StyleSheet.create({
   boundingBox: {
     position: 'absolute',
     borderWidth: 2,
-    borderColor: '#10B981',
-    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    borderColor: COLORS.gold,
+    backgroundColor: 'rgba(242, 193, 78, 0.10)',
     borderRadius: 4,
   },
   tagBadge: {
     position: 'absolute',
     top: -14,
     alignSelf: 'center',
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.primaryDark,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
     ...SHADOWS.sm,
   },
   tagText: {
-    color: '#FFFFFF',
+    color: COLORS.surface,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.2,
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 6,
     height: 6,
-    borderColor: '#FFFFFF',
+    borderColor: COLORS.surface,
   },
   cornerTL: {
     top: -1,
@@ -314,6 +315,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 2,
   },
   toggleBtn: {
+    minHeight: 44,
     position: 'absolute',
     bottom: 10,
     right: 10,
@@ -327,7 +329,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   toggleBtnText: {
-    color: '#FFFFFF',
+    color: COLORS.surface,
     fontSize: 11,
     fontWeight: '700',
   },

@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { env } from '../config/env';
 import { ApiError } from '../utils/apiError';
+import { SeverityAssessment } from './triageService';
 
 export interface DetectionResult {
   category: string;
@@ -18,15 +19,20 @@ export interface DetectionResult {
 }
 
 export interface PredictResponse {
+  severity?: SeverityAssessment;
+  generatedDescription?: string | null;
+  modelsUsed?: string[];
+  warnings?: string[];
   detected: boolean;
   message?: string;
   detections: DetectionResult[];
 }
 
-export const detectCivicIssue = async (filePath: string): Promise<PredictResponse> => {
+export const detectCivicIssue = async (filePath: string, category = 'auto'): Promise<PredictResponse> => {
   try {
     const formData = new FormData();
     const filename = path.basename(filePath) || 'civic_issue.jpg';
+    formData.append('category', category);
     formData.append('image', fs.createReadStream(filePath), {
       filename,
       contentType: 'image/jpeg',
@@ -60,4 +66,11 @@ export const detectCivicIssue = async (filePath: string): Promise<PredictRespons
     }
     throw new ApiError(500, `AI Service error: ${error.message}`);
   }
+};
+
+export const getDetectionModels = async () => {
+  try {
+    const response = await axios.get(`${env.AI_SERVICE_URL}/health`, { timeout: 5000 });
+    return { available: Boolean(response.data.modelConfigured), models: response.data.models || [] };
+  } catch { return { available: false, models: [], message: 'Model availability could not be checked. You can still enter a report manually.' }; }
 };

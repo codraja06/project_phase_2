@@ -9,6 +9,7 @@ import { SPACING } from '../../theme/spacing';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SHADOWS } from '../../theme/index';
 import { CivicTrackLogo } from '../../components/CivicTrackLogo';
+import { BrandBackdrop } from '../../components/CivicVisuals';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
@@ -23,6 +24,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <BrandBackdrop photo="city" opacity={.74} />
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
       {/* Clean White Background for App Launch */}
@@ -57,7 +59,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
         </Animated.View>
 
         <Animated.View entering={FadeIn.delay(1600)}>
-          <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: SPACING['3xl'] }} />
+          <ActivityIndicator size="small" color={COLORS.gold} style={{ marginTop: SPACING['3xl'] }} />
         </Animated.View>
       </Animated.View>
     </View>
@@ -70,31 +72,31 @@ const styles = StyleSheet.create({
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.backgroundNeutral,
+    backgroundColor: COLORS.cinematic,
   },
   contentCard: {
     width: '88%',
-    maxWidth: 380,
-    backgroundColor: COLORS.surface,
+    maxWidth: 520,
+    backgroundColor: 'rgba(44,16,27,.62)',
     borderRadius: BORDER_RADIUS.xl,
     paddingVertical: SPACING['5xl'],
     paddingHorizontal: SPACING['3xl'],
     alignItems: 'center',
     ...SHADOWS.card,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: '#744335',
   },
   logoBadgeContainer: {
     marginBottom: SPACING.lg,
   },
   appName: {
     ...TYPOGRAPHY.display,
-    color: COLORS.textPrimary,
+    color: COLORS.onCinematic,
     marginTop: SPACING.md,
     marginBottom: SPACING.xs,
   },
   badgePill: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: COLORS.gold,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.full,
@@ -102,11 +104,11 @@ const styles = StyleSheet.create({
   },
   badgePillText: {
     ...TYPOGRAPHY.overline,
-    color: COLORS.primary,
+    color: COLORS.cinematic,
   },
   tagline: {
     ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
+    color: '#F0DFDC',
     textAlign: 'center',
     marginBottom: SPACING.lg,
   },
@@ -117,7 +119,7 @@ const styles = StyleSheet.create({
   },
   pillarText: {
     ...TYPOGRAPHY.overline,
-    color: COLORS.textMuted,
+    color: COLORS.gold,
   },
   pillarDot: {
     fontSize: 14,

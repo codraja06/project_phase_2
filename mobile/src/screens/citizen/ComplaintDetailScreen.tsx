@@ -6,6 +6,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Image,
+  Platform,
   RefreshControl,
   StatusBar,
   TouchableOpacity} from 'react-native';
@@ -26,6 +28,7 @@ import { DetectionOverlay } from '../../components/DetectionOverlay';
 import { Timeline } from '../../components/Timeline';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { StatusBadge } from '../../components/StatusBadge';
+import { TriageSummary } from '../../components/TriageSummary';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { formatDate } from '../../utils/date';
 
@@ -130,6 +133,8 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
       </Animated.View>
 
       <ScrollView
+        {...(Platform.OS === 'web' ? { tabIndex: 0 as const } : {})}
+        accessibilityLabel="Complaint details content"
         style={styles.container}
         contentContainerStyle={isWide ? styles.desktopScrollContent : styles.scrollContent}
         refreshControl={
@@ -141,12 +146,12 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ padding: 16 }}><MapLocationPicker latitude={complaint.latitude} longitude={complaint.longitude} address={complaint.address} interactive={false} showCard={false} height={220} /></View>
         {isWide ? (
           /* Desktop/Tablet Two-Column Layout */
           <View style={styles.desktopContainer}>
             {/* Left Column: Visual Media & Geographic Pin */}
             <View style={styles.desktopLeftCol}>
+              <View style={{ marginBottom: 16 }}><MapLocationPicker latitude={complaint.latitude} longitude={complaint.longitude} address={complaint.address} interactive={false} showCard={false} height={220} /></View>
               <Animated.View entering={FadeInUp.delay(100)}>
                 <DetectionOverlay
                   imageUri={complaint.imageUrl}
@@ -202,6 +207,7 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                 </Animated.View>
 
                 <Animated.Text entering={FadeInUp.delay(200)} style={styles.title}>{complaint.title}</Animated.Text>
+                <TriageSummary severity={complaint.severity} />
 
                 {/* Tags Row */}
                 <Animated.View entering={FadeInUp.delay(300)} style={styles.tagRow}>
@@ -283,7 +289,9 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                 <Text style={styles.dateText}>{formattedDate}</Text>
               </Animated.View>
 
+              <MapLocationPicker latitude={complaint.latitude} longitude={complaint.longitude} address={complaint.address} interactive={false} showCard={false} height={220} />
               <Animated.Text entering={FadeInUp.delay(300)} style={styles.title}>{complaint.title}</Animated.Text>
+              <TriageSummary severity={complaint.severity} />
 
               {/* Tags */}
               <Animated.View entering={FadeInUp.delay(400)} style={styles.tagRow}>
@@ -340,6 +348,19 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
             </View>
           </View>
         )}
+        <View style={{ maxWidth: 1440, width: '100%', alignSelf: 'center', padding: 16, gap: 8, backgroundColor: COLORS.surface, marginTop: 12, borderRadius: 10 }}>
+          <Text style={{ color: COLORS.textPrimary, fontSize: 17, fontWeight: '700' }}>Routing and repair</Text>
+          <Text style={{ color: COLORS.textSecondary }}>Assigned department: {complaint.assignedDepartment || 'Awaiting assignment'}</Text>
+          {!!complaint.duplicateReference && <Text style={{ color: COLORS.textSecondary }}>Authority linked this report to earlier complaint {complaint.duplicateReference}. Your report remains in the system.</Text>}
+          {!!complaint.completionImageUrl && <>
+            <Text style={{ color: COLORS.textSecondary }}>Repair photo: {complaint.completionReview || 'awaiting review'}. A photo alone does not confirm repair.</Text>
+            <View style={{ flexDirection: isWide ? 'row' : 'column', gap: 12 }}>
+              <View style={{ flex: 1 }}><Text style={{ color: COLORS.textPrimary }}>Original report</Text><Image source={{ uri: complaint.imageUrl }} accessibilityLabel="Original complaint photo" style={{ height: 190, width: '100%', resizeMode: 'contain' }} /></View>
+              <View style={{ flex: 1 }}><Text style={{ color: COLORS.textPrimary }}>Submitted completion</Text><Image source={{ uri: complaint.completionImageUrl }} accessibilityLabel="Submitted repair completion photo" style={{ height: 190, width: '100%', resizeMode: 'contain' }} /></View>
+            </View>
+          </>}
+          {complaint.statusHistory?.length ? complaint.statusHistory.map((event, index) => <Text key={`${index}-${event.at}`} style={{ color: COLORS.textSecondary }}>{event.status} · {new Date(event.at).toLocaleString()}</Text>) : null}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -390,7 +411,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: SPACING['4xl'],
     alignItems: 'flex-start',
-    maxWidth: 1100,
+    maxWidth: 1440,
     alignSelf: 'center',
     width: '100%'},
   desktopLeftCol: {

@@ -21,6 +21,7 @@ import { Input, PasswordInput } from '../../components/Input';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
 import { CivicTrackLogo } from '../../components/CivicTrackLogo';
+import { BrandBackdrop } from '../../components/CivicVisuals';
 import { COLORS } from '../../theme/colors';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SPACING } from '../../theme/spacing';
@@ -118,13 +119,14 @@ export const AuthorityLoginScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.desktopContainer}>
             {/* Left Branding Side */}
             <View style={styles.brandingSide}>
+              <BrandBackdrop photo="bridge" opacity={.67} />
               <Animated.View entering={FadeIn.duration(1000)} style={styles.brandingContent}>
                 <View style={styles.brandingIcon}>
                   <CivicTrackLogo size="lg" showText={false} />
                 </View>
-                <Text style={styles.brandingTitle}>Municipal Operations Command</Text>
+                <Text style={styles.brandingTitle}>{'Civic service.\nVisible progress.'}</Text>
                 <Text style={styles.brandingSubtitle}>
-                  Access jurisdictional triage, automated defect verification, and field dispatch workflows.
+                  Review citizen evidence, organise attention, and keep your community informed as work progresses.
                 </Text>
               </Animated.View>
               <Animated.View entering={FadeInUp.delay(500)} style={styles.brandingFooter}>
@@ -247,6 +249,7 @@ export const AuthorityLoginScreen: React.FC<Props> = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.mobileHeader}>
+              <BrandBackdrop photo="bridge" opacity={.72} />
               <Animated.View entering={FadeInDown.delay(100)}>
                 <TouchableOpacity hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityRole="button" accessibilityLabel="Back"
                   style={styles.backBtnMobile}
@@ -373,16 +376,16 @@ export const AuthorityLoginScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.authorityDark },
+  safeArea: { flex: 1, backgroundColor: COLORS.primaryLight },
   // Desktop
   desktopContainer: { flex: 1, flexDirection: 'row' },
-  brandingSide: { flex: 1.2, backgroundColor: COLORS.authorityDark, padding: SPACING['7xl'], justifyContent: 'center', alignItems: 'center', position: 'relative' },
-  brandingContent: { justifyContent: 'center', alignItems: 'center' },
+  brandingSide: { flex: 1.2, backgroundColor: COLORS.primaryLight, padding: 36, justifyContent: 'center', alignItems: 'flex-start', position: 'relative', overflow: 'hidden' },
+  brandingContent: { justifyContent: 'center', alignItems: 'flex-start', maxWidth: 520 },
   brandingIcon: { marginBottom: SPACING['3xl'], alignItems: 'center' },
-  brandingTitle: { ...TYPOGRAPHY.display, color: '#FFFFFF', marginBottom: SPACING.lg, textAlign: 'center' },
-  brandingSubtitle: { ...TYPOGRAPHY.h3, color: COLORS.authoritySurface, lineHeight: 28, maxWidth: 420, textAlign: 'center' },
+  brandingTitle: { ...TYPOGRAPHY.display, color: COLORS.onCinematic, fontSize: 42, lineHeight: 49, marginBottom: SPACING.lg, textAlign: 'left', letterSpacing: -1.2 },
+  brandingSubtitle: { ...TYPOGRAPHY.body, color: '#F0DFDC', lineHeight: 25, maxWidth: 420, textAlign: 'left' },
   brandingFooter: { position: 'absolute', bottom: SPACING['4xl'] },
-  brandingFooterText: { ...TYPOGRAPHY.caption, color: COLORS.slateMuted },
+  brandingFooterText: { ...TYPOGRAPHY.caption, color: COLORS.gold },
   authSide: { flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center' },
   authWrapper: { width: '100%', maxWidth: 460, paddingHorizontal: SPACING['3xl'], paddingVertical: SPACING['5xl'] },
   backBtnDesktop: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING['4xl'], alignSelf: 'flex-start' },
@@ -392,11 +395,11 @@ const styles = StyleSheet.create({
   
   // Mobile
   mobileContainer: { flexGrow: 1, backgroundColor: COLORS.background, paddingBottom: SPACING['4xl'] },
-  mobileHeader: { backgroundColor: COLORS.authorityDark, padding: SPACING['3xl'], paddingTop: SPACING.xl, paddingBottom: SPACING['4xl'], borderBottomLeftRadius: 32, borderBottomRightRadius: 32, alignItems: 'center' },
+  mobileHeader: { backgroundColor: COLORS.primaryLight, padding: SPACING['3xl'], paddingTop: SPACING.xl, paddingBottom: SPACING['4xl'], borderBottomLeftRadius: 20, borderBottomRightRadius: 20, alignItems: 'center', overflow: 'hidden', position: 'relative' },
   backBtnMobile: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING['3xl'], backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm, borderRadius: BORDER_RADIUS.xl, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  backBtnTextMobile: { ...TYPOGRAPHY.caption, color: '#FFFFFF', fontWeight: '700', marginLeft: SPACING.xs },
-  mobileTitle: { ...TYPOGRAPHY.h1, color: '#FFFFFF', marginBottom: SPACING.xs },
-  mobileSubtitle: { ...TYPOGRAPHY.body, color: COLORS.authoritySurface },
+  backBtnTextMobile: { ...TYPOGRAPHY.caption, color: COLORS.primary, fontWeight: '700', marginLeft: SPACING.xs },
+  mobileTitle: { ...TYPOGRAPHY.h1, color: COLORS.onCinematic, marginBottom: SPACING.xs },
+  mobileSubtitle: { ...TYPOGRAPHY.body, color: COLORS.gold },
   mobileBody: { padding: SPACING['2xl'], marginTop: -20 },
 
   // Shared
@@ -414,7 +417,7 @@ const styles = StyleSheet.create({
   serverPillText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.surface,
   },
   errorActionLink: {
     fontSize: 12,

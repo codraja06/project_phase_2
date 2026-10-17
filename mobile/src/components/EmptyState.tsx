@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { View, Text, Image, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { Button } from './Button';
+import { CIVIC_PHOTOS } from './CivicVisuals';
 
 interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -23,6 +24,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   return (
     <View style={[styles.container, style]}>
+      <Image source={CIVIC_PHOTOS.bridge} accessible={false} style={{ width: '100%', maxWidth: 400, height: 110, borderRadius: 10, marginBottom: 18 }} resizeMode="cover" />
       <View style={styles.iconCircle}>
         <Ionicons name={icon} size={36} color={COLORS.slateMedium} />
       </View>
@@ -46,7 +48,7 @@ const styles = StyleSheet.create({
     padding: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1.5,
     borderColor: COLORS.border,

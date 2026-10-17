@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.xl,
     paddingVertical: 32,
     paddingHorizontal: 20,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     flexShrink: 1,
     textAlign: 'center',
-    color: '#FFFFFF',
+    color: COLORS.surface,
     fontSize: 13.5,
     fontWeight: '800',
     letterSpacing: 0.4,

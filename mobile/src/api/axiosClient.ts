@@ -74,7 +74,9 @@ axiosClient.interceptors.response.use(
   },
   async (error: AxiosError<any>) => {
     const attemptedUrl = safeEndpoint(error.config?.baseURL, error.config?.url);
-    const isLoginEndpoint = error.config?.url?.includes('/auth/login');
+    const isCredentialEndpoint = ['/auth/login', '/auth/google'].some(
+      endpoint => error.config?.url === endpoint || error.config?.url?.startsWith(`${endpoint}/`)
+    );
 
     let userFriendlyMessage = 'An unexpected error occurred. Please try again.';
 
@@ -83,8 +85,8 @@ axiosClient.interceptors.response.use(
       const responseData = error.response.data;
 
       // Only invoke unauthorized callback on session expiration for protected endpoints,
-      // never on intentional login credential verification failures.
-      if (status === 401 && !isLoginEndpoint) {
+      // never when Google or password credentials are being verified.
+      if (status === 401 && !isCredentialEndpoint) {
         await storageService.clearSession();
         if (onUnauthorizedCallback) {
           onUnauthorizedCallback();
@@ -92,7 +94,9 @@ axiosClient.interceptors.response.use(
       }
 
       // Extract meaningful server error message
-      if (status >= 500) {
+      if (status === 503 && (isCredentialEndpoint || error.config?.url === '/ai/detect') && typeof responseData?.message === 'string') {
+        userFriendlyMessage = responseData.message;
+      } else if (status >= 500) {
         userFriendlyMessage = 'Backend server encountered an error. Please try again later.';
       } else if (typeof responseData?.message === 'string') {
         userFriendlyMessage = responseData.message;

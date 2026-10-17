@@ -4,8 +4,12 @@ import { ENDPOINTS } from '../constants/endpoints';
 import { AIDetectResponse } from '../types/ai';
 
 export const aiApi = {
-  async detectIssue(imageUri: string): Promise<AIDetectResponse> {
+  async getModels(): Promise<{ available: boolean; models: { id: string; state: string; categories?: string[] }[]; message?: string }> {
+    const response: any = await axiosClient.get('/ai/models'); return response.data;
+  },
+  async detectIssue(imageUri: string, category = 'auto'): Promise<AIDetectResponse> {
     const formData = new FormData();
+    formData.append('category', category);
 
     if (Platform.OS === 'web') {
       // On web, imageUri is a blob:// URL - fetch it as a blob and append
@@ -42,10 +46,19 @@ export const aiApi = {
       detected: aiResult.detected ?? false,
       message: aiResult.message || envelope?.message || 'AI detection completed.',
       detections: aiResult.detections || [],
+      severity: aiResult.severity,
+      generatedDescription: aiResult.generatedDescription,
+      analysisToken: aiResult.analysisToken,
+      warnings: aiResult.warnings || [],
+      modelsUsed: aiResult.modelsUsed || [],
     };
   },
 
   async uploadImage(imageUri: string): Promise<string> {
+    return (await this.uploadImageWithEvidence(imageUri)).imageUrl;
+  },
+
+  async uploadImageWithEvidence(imageUri: string): Promise<{ imageUrl: string; uploadToken: string }> {
     const formData = new FormData();
 
     if (Platform.OS === 'web') {
@@ -74,6 +87,6 @@ export const aiApi = {
     // Read imageUrl from envelope.data (the inner data payload)
     const imageUrl = envelope?.data?.imageUrl;
     if (typeof imageUrl !== 'string' || !/^https?:\/\//i.test(imageUrl)) throw new Error('Image upload did not return a permanent URL. Please retry.');
-    return imageUrl;
+    return { imageUrl, uploadToken: envelope?.data?.uploadToken || '' };
   },
 };

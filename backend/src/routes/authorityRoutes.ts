@@ -8,11 +8,13 @@ import {
 } from '../controllers/authorityController';
 import { authenticate } from '../middleware/auth';
 import { authorizeRoles } from '../middleware/rbac';
+import { getAnalytics } from '../controllers/analyticsController';
 
 const router = Router();
 
 router.use(authenticate);
 router.use(authorizeRoles('authority'));
+router.get('/analytics', getAnalytics);
 
 router.get('/complaints', getAllComplaints);
 router.get('/complaints/:id', getAuthorityComplaintById);

@@ -67,9 +67,12 @@ export const CitizenSidebar: React.FC<CitizenSidebarProps> = ({
     <View style={styles.sidebar}>
       {/* Brand Header */}
       <View style={styles.logoArea}>
-        <CivicTrackLogo size="sm" showText={true} showTagline={false} />
-        <View style={styles.portalTag}>
-          <Text style={styles.portalTagText}>CITIZEN PORTAL</Text>
+        <CivicTrackLogo size="sm" showText={false} />
+        <View style={styles.brandText}>
+          <Text style={styles.brandName}>Civic Track</Text>
+          <View style={styles.portalTag}>
+            <Text style={styles.portalTagText}>CITIZEN PORTAL</Text>
+          </View>
         </View>
       </View>
 
@@ -146,20 +149,31 @@ export const CitizenSidebar: React.FC<CitizenSidebarProps> = ({
 const styles = StyleSheet.create({
   sidebar: {
     width: 260,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRightWidth: 1.5,
     borderRightColor: COLORS.border,
     flexDirection: 'column',
     ...SHADOWS.card,
   },
   logoArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 22,
     paddingTop: 24,
     paddingBottom: 16,
+  },
+  brandText: {
+    marginLeft: 12,
     alignItems: 'flex-start',
   },
+  brandName: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.5,
+  },
   portalTag: {
-    marginTop: 8,
+    marginTop: 4,
     backgroundColor: COLORS.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 3,

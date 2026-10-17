@@ -1,0 +1,36 @@
+import React, { useEffect, useState } from 'react';
+import { Text, TextInput, View } from 'react-native';
+import { managementApi, DepartmentRule } from '../api/managementApi';
+import { COLORS } from '../theme/colors';
+import { Button } from './ui/Button';
+
+const input = { minHeight: 44, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 10, color: COLORS.textPrimary, flexGrow: 1, minWidth: 150 } as const;
+export const DepartmentMappingManager = () => {
+  const [rules, setRules] = useState<DepartmentRule[]>([]), [category, setCategory] = useState(''), [department, setDepartment] = useState('');
+  const [error, setError] = useState(''), [busy, setBusy] = useState(false);
+  const load = async () => { try { setRules(await managementApi.getDepartments()); setError(''); } catch (e: any) { setError(e.message || 'Mappings unavailable.'); } };
+  useEffect(() => { void load(); }, []);
+  const save = async () => {
+    setBusy(true);
+    try { await managementApi.saveDepartment(category.trim().toLowerCase(), department.trim()); setCategory(''); setDepartment(''); await load(); }
+    catch (e: any) { setError(e.message || 'Could not save mapping.'); }
+    finally { setBusy(false); }
+  };
+  return <View style={{ backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.borderLight, borderTopWidth: 3, borderTopColor: COLORS.gold, borderRadius: 12, padding: 18, gap: 12 }}>
+    <Text style={{ fontSize: 18, fontWeight: '700', color: COLORS.textPrimary }}>Department routing rules</Text>
+    <Text style={{ color: COLORS.textSecondary }}>Administrator-managed local mappings. New reports use the matching active rule. Existing assignments remain unchanged until an officer reassigns them.</Text>
+    {!!error && <Text accessibilityRole="alert" style={{ color: COLORS.error }}>{error}</Text>}
+    {rules.length ? rules.map(rule => <View key={rule.category} style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+      <Text style={{ color: COLORS.textPrimary, flexGrow: 1 }}>{rule.category.replace(/_/g, ' ')} → {rule.department}{rule.enabled ? '' : ' (disabled)'}</Text>
+      <Button title={rule.enabled ? 'Disable' : 'Enable'} variant="outline" size="sm" disabled={busy} onPress={async () => {
+        setBusy(true); try { await managementApi.saveDepartment(rule.category, rule.department, !rule.enabled); await load(); }
+        catch (e: any) { setError(e.message || 'Could not update mapping.'); } finally { setBusy(false); }
+      }} />
+    </View>) : <Text style={{ color: COLORS.textSecondary }}>No mappings configured. New reports will remain unassigned.</Text>}
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      <TextInput accessibilityLabel="Issue category mapping" style={input} placeholder="Category key, e.g. pothole" value={category} autoCapitalize="none" onChangeText={setCategory} />
+      <TextInput accessibilityLabel="Department mapping name" style={input} placeholder="Department name" value={department} onChangeText={setDepartment} />
+    </View>
+    <Button title={busy ? 'Saving…' : 'Save routing rule'} disabled={busy || category.trim().length < 2 || department.trim().length < 2} onPress={save} />
+  </View>;
+};

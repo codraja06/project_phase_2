@@ -13,7 +13,21 @@ export interface DetectionResult {
 }
 
 export interface AIDetectResponse {
+  warnings?: string[];
+  modelsUsed?: string[];
+  severity?: SeverityAssessment;
+  generatedDescription?: string;
+  analysisToken?: string;
   detected: boolean;
   message?: string;
   detections: DetectionResult[];
+}
+
+export interface SeverityAssessment {
+  level: 'Low' | 'Medium' | 'High' | null;
+  state: 'estimated' | 'uncertain' | 'unavailable';
+  method: string;
+  validated: boolean;
+  reason: string;
+  evidence: { category: string; detectionConfidence: number; imageCoverage: number; model: string }[];
 }

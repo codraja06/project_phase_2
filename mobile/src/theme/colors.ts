@@ -1,7 +1,7 @@
 /**
  * CivicTrack Design System — Color Palette
  * 
- * TVK Flag-Inspired Identity: Deep Crimson (#B71C1C) + Golden Amber (#F59E0B)
+ * CivicTrack original TVK-inspired identity: vermilion, maroon and warm gold.
  * Enhanced with proper WCAG AA contrast ratios and dark mode support.
  *
  * Contrast requirements (WCAG 2.1 AA):
@@ -13,61 +13,65 @@
 // ─── Light Mode Palette ────────────────────────────────────────────────────────
 
 export const LIGHT_COLORS = {
-  // Primary: Deep Crimson Red (Flag inspired)
-  primary: '#B71C1C',
-  primaryDark: '#7F1416',
-  primaryDeep: '#5C0E0E',
-  primaryLight: '#FEF2F2',
-  primarySurface: '#FEE2E2',
-  primaryHover: '#991B1B',
-  primaryGlow: 'rgba(183, 28, 28, 0.16)',
+  // Primary actions and selected navigation
+  primary: '#BE2638',
+  primaryDark: '#901B30',
+  primaryDeep: '#5B1226',
+  primaryLight: '#FCECEF',
+  primarySurface: '#F5D4DA',
+  primaryHover: '#A41F32',
+  primaryGlow: 'rgba(190, 38, 56, 0.14)',
 
-  // Secondary / Accent: Golden Amber (Flag inspired — tuned for readability)
-  secondary: '#D97706',
-  secondaryDark: '#B45309',
-  secondaryDeep: '#92400E',
-  secondaryLight: '#FFFBEB',
-  secondarySurface: '#FEF3C7',
-  secondaryHover: '#B45309',
-  secondaryGlow: 'rgba(217, 119, 6, 0.18)',
+  // Gold on light surfaces uses a dark ochre for readable text
+  secondary: '#98610B',
+  secondaryDark: '#744807',
+  secondaryDeep: '#593606',
+  secondaryLight: '#FFF4D7',
+  secondarySurface: '#F8E4AA',
+  secondaryHover: '#744807',
+  secondaryGlow: 'rgba(242, 193, 78, 0.18)',
+  gold: '#F2C14E',
+  goldLight: '#FFF4D7',
+  cinematic: '#2C101B',
+  onCinematic: '#FFF9F1',
 
   // Authority Command Accents
-  authorityPrimary: '#0F172A',
-  authorityDark: '#020617',
-  authorityLight: '#F1F5F9',
-  authoritySurface: '#E2E8F0',
+  authorityPrimary: '#411426',
+  authorityDark: '#2C101B',
+  authorityLight: '#F8ECF0',
+  authoritySurface: '#ECD5DE',
   authorityGlow: 'rgba(15, 23, 42, 0.12)',
 
   // Neutrals (Zinc scale — warmer than pure gray)
-  darkCharcoal: '#18181B',
+  darkCharcoal: '#281E23',
   slateDark: '#27272A',
-  slateMedium: '#3F3F46',
-  slateMuted: '#52525B',
-  slateLight: '#A1A1AA',
+  slateMedium: '#65565C',
+  slateMuted: '#74636B',
+  slateLight: '#F3ECE8',
 
   // Backgrounds & Surfaces
-  background: '#FAFAF9',
-  backgroundNeutral: '#F5F5F4',
+  background: '#FAF6F2',
+  backgroundNeutral: '#F3ECE8',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
-  cardHover: '#FAFAF9',
-  cardBorder: '#E4E4E7',
+  cardHover: '#FFF9F5',
+  cardBorder: '#E9DED8',
 
-  // Typography — all meet WCAG AA on #FAFAF9 background
-  textPrimary: '#18181B',    // 15.4:1 contrast on #FAFAF9
-  textSecondary: '#3F3F46',  // 9.6:1
-  textMuted: '#52525B',      // 6.7:1
-  textInverse: '#FAFAF9',
-  textLink: '#B71C1C',       // 5.9:1
+  // Warm ink and readable secondary text on light surfaces
+  textPrimary: '#281E23',
+  textSecondary: '#65565C',
+  textMuted: '#74636B',
+  textInverse: '#FFF9F1',
+  textLink: '#BE2638',
 
   // Borders
-  border: '#D4D4D8',
-  borderLight: '#E4E4E7',
-  borderStrong: '#A1A1AA',
+  border: '#DACBC5',
+  borderLight: '#E9DED8',
+  borderStrong: '#BEAAA4',
   borderMaroon: '#FECACA',
   borderYellow: '#FDE68A',
-  divider: '#E4E4E7',
+  divider: '#E9DED8',
 
   // Status: Semantic colors — each pair tested for contrast
   pending: '#D97706',           // Amber
@@ -137,6 +141,10 @@ export const DARK_COLORS: typeof LIGHT_COLORS = {
   secondarySurface: '#2A2210',
   secondaryHover: '#FBBF24',
   secondaryGlow: 'rgba(245, 158, 11, 0.20)',
+  gold: '#F2C14E',
+  goldLight: '#30250F',
+  cinematic: '#2C101B',
+  onCinematic: '#FFF9F1',
 
   authorityPrimary: '#E2E8F0',
   authorityDark: '#F8FAFC',

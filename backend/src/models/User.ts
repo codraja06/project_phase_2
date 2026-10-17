@@ -12,6 +12,7 @@ export interface IUser extends Document {
   googleId?: string;
   avatar?: string;
   role: UserRole;
+  isAdmin?: boolean;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -26,6 +27,7 @@ const UserSchema = new Schema<IUser>(
     googleId: { type: String, sparse: true },
     avatar: { type: String, default: '' },
     role: { type: String, enum: ['citizen', 'authority'], default: 'citizen' },
+    isAdmin: { type: Boolean, default: false },
   },
   {
     timestamps: true,

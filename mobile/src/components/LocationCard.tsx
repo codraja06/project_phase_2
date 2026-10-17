@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,

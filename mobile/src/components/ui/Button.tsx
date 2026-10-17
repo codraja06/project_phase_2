@@ -45,7 +45,7 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   accessibilityLabel,
 }) => {
-  const { onPressIn, onPressOut, animatedStyle } = usePressAnimation(0.96);
+  const { onPressIn, onPressOut, animatedStyle } = usePressAnimation(0.99);
 
   const getContainerStyle = (pressed: boolean, hovered: boolean): ViewStyle => {
     const base: ViewStyle = {
@@ -64,7 +64,7 @@ export const Button: React.FC<ButtonProps> = ({
     } else if (size === 'sm') {
       base.paddingHorizontal = 12;
       base.paddingVertical = 8;
-      base.minHeight = 36;
+      base.minHeight = 44;
     } else if (size === 'lg') {
       base.paddingHorizontal = 32;
       base.paddingVertical = 16;
@@ -113,7 +113,7 @@ export const Button: React.FC<ButtonProps> = ({
     switch (variant) {
       case 'default':
       case 'destructive':
-        base.color = '#FFFFFF';
+        base.color = COLORS.surface;
         break;
       case 'outline':
       case 'ghost':
@@ -151,7 +151,7 @@ export const Button: React.FC<ButtonProps> = ({
         {loading ? (
           <ActivityIndicator
             size="small"
-            color={variant === 'default' || variant === 'destructive' ? '#FFFFFF' : COLORS.primary}
+            color={variant === 'default' || variant === 'destructive' ? COLORS.surface : COLORS.primary}
             style={styles.spinner}
           />
         ) : (

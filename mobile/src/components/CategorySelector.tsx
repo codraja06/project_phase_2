@@ -5,9 +5,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { categoryPhoto } from './CivicVisuals';
 
 export interface CategoryItem {
   key: string;
@@ -96,6 +98,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
               onPress={() => onSelectCategory(item.key)}
               activeOpacity={0.75}
             >
+              {/pothole|road|garbage|water|streetlight|drain/.test(item.key) && <Image source={categoryPhoto(item.key)} accessible={false} resizeMode="cover" style={{ width: 42, height: 46, borderRadius: 7, marginRight: 8 }} />}
               <View
                 style={[
                   styles.categoryIconCircle,
@@ -105,7 +108,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                 <Ionicons
                   name={item.icon}
                   size={18}
-                  color={isSelected ? '#FFFFFF' : COLORS.primary}
+                  color={isSelected ? COLORS.surface : COLORS.primary}
                 />
               </View>
               <Text
@@ -225,10 +228,10 @@ const styles = StyleSheet.create({
   categoryCard: {
     flexBasis: '47%',
     flexGrow: 1,
-    minWidth: 140,
+    minWidth: 220,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,
@@ -277,7 +280,7 @@ const styles = StyleSheet.create({
   },
   customInput: {
     height: 48,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,

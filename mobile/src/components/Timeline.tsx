@@ -145,7 +145,7 @@ export const Timeline: React.FC<TimelineProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
     padding: 18,
     borderWidth: 1.5,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primaryLight,
   },
   circleUpcoming: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 2,
     borderColor: COLORS.border,
   },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
   },
   innerDot: {
     width: 6,

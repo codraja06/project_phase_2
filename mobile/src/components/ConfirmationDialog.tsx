@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   dialogCard: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1.5,
     borderColor: COLORS.border,

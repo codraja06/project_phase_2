@@ -16,7 +16,9 @@ import {
 import Animated, { FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
+import { CivicHero, PhotoCredits } from '../../components/CivicVisuals';
 import { authApi } from '../../api/authApi';
+import { googleAuthService } from '../../services/googleAuth';
 import { Input, PasswordInput } from '../../components/Input';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
@@ -32,10 +34,11 @@ import { TYPOGRAPHY } from '../../theme/typography';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { useMobileMenu } from '../../contexts/MobileMenuContext';
 import { AuthorityMobileHeader } from '../../components/AuthorityMobileHeader';
+import { DepartmentMappingManager } from '../../components/DepartmentMappingManager';
 
 export const AuthorityProfileScreen = ({ navigation }: any) => {
   const { toggleMenu } = useMobileMenu();
-  const { isDesktop } = useBreakpoint();
+  const { isWide: isDesktop } = useBreakpoint();
   const { user, logout, updateUser } = useAuth();
 
   const { complaints, loading: statsLoading, error: statsError, refresh: refreshStats } = useComplaintSummary('officer');
@@ -52,6 +55,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [linkingGoogle, setLinkingGoogle] = useState(false);
 
   const handleUpdateProfile = async () => {
     try {
@@ -90,6 +94,26 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleLinkGoogle = async () => {
+    if (user?.googleId) {
+      showMessage('Google Connected', 'This officer account is already linked to Google.');
+      return;
+    }
+    if (linkingGoogle) return;
+    try {
+      setLinkingGoogle(true);
+      const updated = await googleAuthService.linkGoogle();
+      updateUser(updated);
+      showMessage('Google Connected', 'You can now use Continue with Google on the Officer Portal.');
+    } catch (error: any) {
+      if (!error.message?.toLowerCase().includes('cancelled')) {
+        showMessage('Could Not Connect Google', error.message || 'Please try again.');
+      }
+    } finally {
+      setLinkingGoogle(false);
+    }
+  };
+
   const handleDispatchSupport = () => {
     showMessage(
       'Municipal Operations Dispatch',
@@ -125,6 +149,14 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
           sub: 'Change officer authentication password',
           onPress: () => setChangePasswordVisible(true),
         },
+        {
+          icon: 'logo-google' as const,
+          iconBg: COLORS.primaryLight,
+          iconColor: COLORS.primary,
+          label: user?.googleId ? 'Google Account Connected' : 'Connect Google Account',
+          sub: user?.googleId ? 'Use Google at your next sign-in' : 'Link this officer account for Google sign-in',
+          onPress: handleLinkGoogle,
+        },
       ],
     },
     {
@@ -135,7 +167,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
           iconBg: COLORS.backgroundNeutral,
           iconColor: COLORS.textSecondary,
           label: 'Operations Dispatch Desk',
-          sub: '1800-CITY-OPS • Internal Ext: #4402',
+          sub: 'Contact your department administrator',
           onPress: handleDispatchSupport,
         },
         {
@@ -160,7 +192,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
 
   return (
     <View style={isDesktop ? styles.safeArea : styles.safeAreaMobile}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
 
       {!isDesktop && (
         <AuthorityMobileHeader title="Officer Dossier" />
@@ -171,6 +203,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
         contentContainerStyle={isDesktop ? styles.desktopContent : styles.mobileContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={{ marginBottom: 20 }}><CivicHero compact photo="coast" eyebrow="CIVICTRACK / OFFICER ACCOUNT" title="Service starts with accountability." description="Manage your profile and municipal workspace preferences." /></View>
         {isDesktop && (
           <Animated.View entering={FadeInDown.duration(400)} style={styles.desktopHeader}>
             <TouchableOpacity style={styles.backBtn} onPress={toggleMenu}>
@@ -194,7 +227,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
                     <Badge label="MUNICIPAL AUTHORITY" variant="default" icon={<Ionicons name="shield-checkmark" size={10} color="#FFF" />} />
                     <Text style={styles.profileEmail}>{user?.email || 'officer@city.gov'}</Text>
                   </View>
-                  <Text style={styles.profileLocality}>Department of Operations</Text>
+                  <Text style={styles.profileLocality}>Authorized authority account</Text>
                 </View>
               </View>
               <Button
@@ -222,7 +255,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
         )}
         <Animated.View entering={FadeInUp.delay(200)} style={styles.statsGrid}>
           {[
-            { label: 'Queue', value: count(), color: '#0F172A' },
+            { label: 'Queue', value: count(), color: COLORS.authorityPrimary },
             { label: 'Pending', value: count('Pending'), color: COLORS.pending },
             { label: 'Resolved', value: count('Resolved'), color: COLORS.resolved },
             { label: 'High Priority', value: statsLoading || statsError ? '—' : String(complaints.filter(c => c.priority === 'urgent' || c.priority === 'high').length), color: COLORS.error },
@@ -266,6 +299,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
           ))}
         </View>
 
+        {user?.isAdmin && <DepartmentMappingManager />}
         <Animated.View entering={FadeInUp.delay(500)}>
           <Text style={styles.sectionHeader}>Session</Text>
           <Card style={{ borderColor: COLORS.errorBorder }}>
@@ -285,6 +319,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
 
           <Text style={styles.footerVersion}>CivicTrack v1.0.0 • Operations Portal</Text>
         </Animated.View>
+        <PhotoCredits />
       </ScrollView>
 
       {/* Edit Profile Modal */}
@@ -371,20 +406,20 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0F172A' },
+  safeArea: { flex: 1, backgroundColor: COLORS.authorityPrimary },
   safeAreaMobile: { flex: 1, backgroundColor: COLORS.backgroundNeutral },
   container: { flex: 1, backgroundColor: COLORS.backgroundNeutral },
-  desktopContent: { padding: SPACING['5xl'], maxWidth: 900, alignSelf: 'center', width: '100%' },
+  desktopContent: { padding: 24, maxWidth: 1280, alignSelf: 'center', width: '100%' },
   mobileContent: { padding: SPACING.lg, paddingBottom: 100 },
-  desktopHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING['4xl'], backgroundColor: '#0F172A', padding: SPACING.xl, borderRadius: BORDER_RADIUS.lg, ...SHADOWS.card },
+  desktopHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING['4xl'], backgroundColor: COLORS.authorityPrimary, padding: SPACING.xl, borderRadius: BORDER_RADIUS.lg, ...SHADOWS.card },
   backBtn: { width: 38, height: 38, borderRadius: BORDER_RADIUS.full, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', marginRight: SPACING.md },
-  headerTitle: { ...TYPOGRAPHY.h3, color: '#FFFFFF' },
+  headerTitle: { ...TYPOGRAPHY.h3, color: COLORS.surface },
   profileHeaderCard: { marginBottom: SPACING.xl },
   profileHeaderDesktop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: SPACING.xl },
   profileHeaderMobile: { flexDirection: 'column', padding: SPACING.lg },
   profileHeaderLeft: { flexDirection: 'row', alignItems: 'center' },
-  avatarContainer: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', marginRight: SPACING.lg },
-  avatarText: { ...TYPOGRAPHY.h3, color: '#FFFFFF' },
+  avatarContainer: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.authorityPrimary, alignItems: 'center', justifyContent: 'center', marginRight: SPACING.lg },
+  avatarText: { ...TYPOGRAPHY.h3, color: COLORS.surface },
   profileInfo: { flex: 1, minWidth: 0 },
   profileName: { ...TYPOGRAPHY.h4, color: COLORS.textPrimary, marginBottom: 4 },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: 4, flexWrap: 'wrap' },

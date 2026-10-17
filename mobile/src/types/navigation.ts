@@ -8,6 +8,8 @@ export type AuthStackParamList = {
 };
 
 export type CitizenTabParamList = {
+  CivicAssistant: undefined;
+  CitizenMap: undefined;
   CitizenDashboard: undefined;
   ReportIssue: { initialCategory?: string } | undefined;
   ComplaintHistory: { filter?: string; search?: string; days?: number } | undefined;
@@ -22,7 +24,7 @@ export type CitizenStackParamList = {
 
 export type AuthorityTabParamList = {
   AuthorityDashboard: undefined;
-  AllComplaints: { filter?: string } | undefined;
+  AllComplaints: { filter?: string; from?: string; to?: string; category?: string; search?: string } | undefined;
   AuthorityMap: undefined;
   AuthorityAnalytics: undefined;
   AuthorityNotifications: undefined;

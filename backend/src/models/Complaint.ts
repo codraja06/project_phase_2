@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { SeverityAssessment } from '../services/triageService';
 
 export type ComplaintCategory =
   | 'pothole'
@@ -51,11 +52,30 @@ export interface IComplaint extends Document {
   address: string;
   status: ComplaintStatus;
   priority: ComplaintPriority;
+  severity?: SeverityAssessment;
+  priorityScore?: number;
+  priorityMetadata?: Record<string, any>;
+  generatedDescription?: string;
   createdBy: mongoose.Types.ObjectId;
   citizenId?: mongoose.Types.ObjectId;
   officerId?: mongoose.Types.ObjectId | null;
   verified: boolean;
   resolvedAt?: Date | null;
+  duplicateOf?: mongoose.Types.ObjectId | null;
+  duplicateConfirmedAt?: Date | null;
+  duplicateConfirmedBy?: mongoose.Types.ObjectId | null;
+  duplicateReason?: string;
+  assignedDepartment?: string;
+  assignedAt?: Date | null;
+  assignedBy?: mongoose.Types.ObjectId | null;
+  completionImageUrl?: string;
+  completionSubmittedAt?: Date | null;
+  completionSubmittedBy?: mongoose.Types.ObjectId | null;
+  completionReview?: 'pending' | 'accepted' | 'rejected' | null;
+  completionReviewedAt?: Date | null;
+  completionReviewedBy?: mongoose.Types.ObjectId | null;
+  completionReviewNote?: string;
+  statusHistory?: { status: ComplaintStatus; at: Date; by?: mongoose.Types.ObjectId }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -113,10 +133,51 @@ const ComplaintSchema = new Schema<IComplaint>(
       enum: ['low', 'medium', 'high', 'urgent'],
       default: 'medium',
     },
+    severity: { type: new Schema({
+      level: { type: String, enum: ['Low', 'Medium', 'High', null], default: null },
+      state: { type: String, enum: ['estimated', 'uncertain', 'unavailable'], required: true },
+      method: { type: String, required: true },
+      validated: { type: Boolean, default: false },
+      reason: { type: String, required: true },
+      assessedAt: { type: String },
+      imageHash: { type: String },
+      evidence: [new Schema({
+        category: { type: String, required: true },
+        detectionConfidence: { type: Number, min: 0, max: 1, required: true },
+        imageCoverage: { type: Number, min: 0, max: 1, required: true },
+        model: { type: String, required: true },
+      }, { _id: false })],
+    }, { _id: false }) },
+    priorityScore: { type: Number, min: 0, max: 100 },
+    priorityMetadata: { type: new Schema({
+      method: { type: String, required: true },
+      calculatedAt: { type: Date, required: true },
+      severityScore: { type: Number, min: 0, max: 100 },
+      ageScore: { type: Number, min: 0, max: 60 },
+      categoryScore: { type: Number, min: 0, max: 100 },
+      reviewRequired: { type: Boolean },
+      resolved: { type: Boolean },
+    }, { _id: false }) },
+    generatedDescription: { type: String, default: '' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     officerId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     verified: { type: Boolean, default: false },
     resolvedAt: { type: Date, default: null },
+    duplicateOf: { type: Schema.Types.ObjectId, ref: 'Complaint', default: null },
+    duplicateConfirmedAt: { type: Date, default: null },
+    duplicateConfirmedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    duplicateReason: { type: String, trim: true, default: '' },
+    assignedDepartment: { type: String, trim: true, default: '' },
+    assignedAt: { type: Date, default: null },
+    assignedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    completionImageUrl: { type: String, default: '' },
+    completionSubmittedAt: { type: Date, default: null },
+    completionSubmittedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    completionReview: { type: String, enum: ['pending', 'accepted', 'rejected', null], default: null },
+    completionReviewedAt: { type: Date, default: null },
+    completionReviewedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    completionReviewNote: { type: String, trim: true, default: '' },
+    statusHistory: [{ _id: false, status: { type: String, enum: ['Pending', 'In Progress', 'Resolved'], required: true }, at: { type: Date, required: true }, by: { type: Schema.Types.ObjectId, ref: 'User' } }],
   },
   {
     timestamps: true,
@@ -124,6 +185,15 @@ const ComplaintSchema = new Schema<IComplaint>(
     toObject: { virtuals: true },
   }
 );
+
+ComplaintSchema.index({ createdAt: -1 });
+ComplaintSchema.index({ status: 1, createdAt: -1 });
+ComplaintSchema.index({ category: 1, createdAt: -1 });
+ComplaintSchema.index({ createdBy: 1, createdAt: -1 });
+ComplaintSchema.index({ category: 1, status: 1, createdAt: -1 });
+ComplaintSchema.index({ assignedDepartment: 1, resolvedAt: -1 });
+ComplaintSchema.index({ latitude: 1, longitude: 1, createdAt: -1 });
+ComplaintSchema.index({ duplicateOf: 1 });
 
 // Virtual citizenId pointing to createdBy
 ComplaintSchema.virtual('citizenId').get(function () {

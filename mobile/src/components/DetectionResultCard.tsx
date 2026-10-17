@@ -62,7 +62,7 @@ export const DetectionResultCard: React.FC<DetectionResultCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1.5,
     borderColor: COLORS.border,

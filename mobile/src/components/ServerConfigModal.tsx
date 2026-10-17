@@ -372,6 +372,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.surface,
   },
 });

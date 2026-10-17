@@ -1,3 +1,4 @@
+import { FilterChipGroup } from '../../components/FilterChip';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -19,13 +20,16 @@ import { CitizenTabParamList } from '../../types/navigation';
 import { aiApi } from '../../api/aiApi';
 import { complaintApi } from '../../api/complaintApi';
 import { locationService } from '../../services/location';
-import { DetectionResult } from '../../types/ai';
+import { managementApi, DuplicateMatch } from '../../api/managementApi';
+import { CivicHero } from '../../components/CivicVisuals';
+import { AIDetectResponse, DetectionResult, SeverityAssessment } from '../../types/ai';
 import { Complaint } from '../../types/complaint';
 import { ImagePickerCamera } from '../../components/ImagePickerCamera';
 import { DetectionOverlay } from '../../components/DetectionOverlay';
 import { MapLocationPicker } from '../../components/MapLocationPicker';
 import { CategorySelector } from '../../components/CategorySelector';
-import { DescriptionEditor, getDefaultDescription } from '../../components/DescriptionEditor';
+import { DescriptionEditor } from '../../components/DescriptionEditor';
+import { TriageSummary } from '../../components/TriageSummary';
 import { LocationCard } from '../../components/LocationCard';
 import { SuccessModal } from '../../components/SuccessModal';
 import { Button } from '../../components/ui/Button';
@@ -42,8 +46,11 @@ type Props = NativeStackScreenProps<CitizenTabParamList, 'ReportIssue'>;
 type Step = 'capture' | 'ai_analysis' | 'location' | 'review';
 
 export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop, isWide } = useBreakpoint();
   const imageRequest = useRef(0);
+  const [detectionMode, setDetectionMode] = useState('auto');
+  const [modelNotice, setModelNotice] = useState('');
+  const [modelAvailability, setModelAvailability] = useState('Checking detection model availability…');
   const [locationConfirmed, setLocationConfirmed] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>('capture');
 
@@ -55,6 +62,10 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
   const [aiConfidence, setAiConfidence] = useState<number>(0);
   const [aiDetectedClass, setAiDetectedClass] = useState<string>('');
   const [aiDetected, setAiDetected] = useState<boolean>(false);
+  const [severity, setSeverity] = useState<SeverityAssessment>();
+  const [generatedDescription, setGeneratedDescription] = useState('');
+  const [analysisToken, setAnalysisToken] = useState('');
+  const [uploadToken, setUploadToken] = useState('');
 
   // Category & Description
   const [selectedCategory, setSelectedCategory] = useState<string>('pothole');
@@ -73,14 +84,26 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [createdComplaint, setCreatedComplaint] = useState<Complaint | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
+  const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatch[]>([]);
+  const [duplicateCheckMessage, setDuplicateCheckMessage] = useState('');
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
 
   useEffect(() => () => { if (localImageUri?.startsWith('blob:')) URL.revokeObjectURL(localImageUri); }, [localImageUri]);
+
+  useEffect(() => {
+    let active = true;
+    aiApi.getModels().then(result => {
+      if (!active) return;
+      const categories = [...new Set(result.models.filter(model => model.state === 'ready').flatMap(model => model.categories || []))];
+      setModelAvailability(categories.length ? `Available detection classes: ${categories.map(category => category.replace(/_/g, ' ')).join(', ')}. Other categories can be reported manually.` : result.message || 'No compatible detection models are currently available. Manual reporting remains available.');
+    }).catch(() => { if (active) setModelAvailability('Model availability could not be checked. Manual reporting remains available.'); });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     fetchCurrentLocation();
     if (route.params?.initialCategory) {
       setSelectedCategory(route.params.initialCategory);
-      setDescription(getDefaultDescription(route.params.initialCategory));
     }
   }, [route.params?.initialCategory]);
 
@@ -114,21 +137,32 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
     setAiConfidence(0);
     setAiDetectedClass('');
     setAiDetected(false);
+    setSeverity(undefined);
+    setGeneratedDescription('');
+    setAnalysisToken('');
+    setUploadToken('');
+    setDescription('');
     setErrorMessage(null);
     animateStepChange('ai_analysis');
 
     try {
       setDetectingAI(true);
-      const [detectRes, uploadUrl] = await Promise.all([
-        aiApi.detectIssue(uri).catch((e) => {
+      const [detectRes, upload] = await Promise.all([
+        aiApi.detectIssue(uri, detectionMode).catch((e): AIDetectResponse => {
           console.warn('AI detection service warning:', e.message);
           return { detected: false, detections: [], message: e.message };
         }),
-        aiApi.uploadImage(uri).catch((e) => { if (request === imageRequest.current) setErrorMessage(e.message); return ''; }),
+        aiApi.uploadImageWithEvidence(uri).catch((e) => { if (request === imageRequest.current) setErrorMessage(e.message); return { imageUrl: '', uploadToken: '' }; }),
       ]);
 
       if (request !== imageRequest.current) return;
-      setServerImageUrl(uploadUrl);
+      setServerImageUrl(upload.imageUrl);
+      setUploadToken(upload.uploadToken);
+      setModelNotice((detectRes.warnings || []).join(' ') || (!detectRes.detected ? detectRes.message || '' : `Models used: ${(detectRes.modelsUsed || []).join(', ')}`));
+      setSeverity(detectRes.severity);
+      setAnalysisToken(detectRes.analysisToken || '');
+      setGeneratedDescription(detectRes.generatedDescription || '');
+      setDescription(detectRes.generatedDescription || '');
 
       if (detectRes && detectRes.detected && detectRes.detections && detectRes.detections.length > 0) {
         setAiDetections(detectRes.detections);
@@ -141,18 +175,16 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
         setSelectedCategory(mappedCategory);
         const genTitle = `${topDetection.category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} Issue`;
         setTitle(genTitle);
-        setDescription(getDefaultDescription(mappedCategory, address));
       } else {
         setAiDetected(false);
         setSelectedCategory('other');
         setTitle('Civic Hazard Reported');
-        setDescription(getDefaultDescription('other', address));
       }
     } catch (error: any) {
       setAiDetected(false);
       setSelectedCategory('other');
       setTitle('Civic Hazard Reported');
-      setDescription(getDefaultDescription('pothole', address));
+      setDescription('');
     } finally {
       if (request === imageRequest.current) setDetectingAI(false);
     }
@@ -162,10 +194,15 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
     setSelectedCategory(cat);
     const catLabel = cat.replace(/_/g, ' ').toUpperCase();
     setTitle(`${catLabel.charAt(0) + catLabel.slice(1).toLowerCase()} Hazard Reported`);
-    setDescription(getDefaultDescription(cat, address));
   };
 
   const handleRetake = () => {
+    setDuplicateMatches([]);
+    setDuplicateCheckMessage('');
+    setSeverity(undefined);
+    setGeneratedDescription('');
+    setAnalysisToken('');
+    setUploadToken('');
     imageRequest.current++;
     setDetectingAI(false);
     setLocalImageUri(null);
@@ -178,6 +215,22 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
     setDescription('');
     setTitle('');
     animateStepChange('capture');
+  };
+
+  const reviewPossibleDuplicates = async () => {
+    setCheckingDuplicates(true);
+    setDuplicateMatches([]);
+    setDuplicateCheckMessage('');
+    try {
+      const result = await managementApi.checkDuplicates({ category: selectedCategory, latitude, longitude });
+      setDuplicateMatches(result.matches);
+      if (result.matches.length) setDuplicateCheckMessage(result.reason);
+    } catch {
+      setDuplicateCheckMessage('Nearby report check is unavailable. You can still submit your report.');
+    } finally {
+      setCheckingDuplicates(false);
+      animateStepChange('review');
+    }
   };
 
   const handleBackStep = () => {
@@ -214,8 +267,12 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
 
       // Ensure image is uploaded if it's still a local file or blob
       let finalImageUrl = serverImageUrl || localImageUri || '';
+      let finalUploadToken = uploadToken;
       if (localImageUri && (!serverImageUrl || serverImageUrl.startsWith('blob:') || serverImageUrl.startsWith('file:') || serverImageUrl.startsWith('ph:'))) {
-        finalImageUrl = await aiApi.uploadImage(localImageUri);
+        const upload = await aiApi.uploadImageWithEvidence(localImageUri);
+        finalImageUrl = upload.imageUrl;
+        finalUploadToken = upload.uploadToken;
+        setUploadToken(finalUploadToken);
         setServerImageUrl(finalImageUrl);
       }
       if (!/^https?:\/\//i.test(finalImageUrl)) throw new Error('Image upload failed. Please retry.');
@@ -249,7 +306,8 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
         latitude,
         longitude,
         address: address || 'Captured Location',
-        priority: aiConfidence > 0.85 ? 'high' : 'medium'};
+        analysisToken: analysisToken || undefined,
+        uploadToken: finalUploadToken || undefined};
 
       const result = await complaintApi.createComplaint(payload);
       setCreatedComplaint(result);
@@ -322,7 +380,16 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          <View style={styles.mainWrapper}>
+          {currentStep === 'capture' && <View style={{ width: '100%', marginBottom: 20 }}><CivicHero compact photo="bridge" eyebrow="PHOTO / LOCATION / ACTION" title="Make the issue visible." description="A clear photo and a precise location help your authority understand what needs attention." /></View>}
+          <View style={[styles.reportWorkspace, isWide && styles.reportWorkspaceWide]}>
+            {isWide && <View style={styles.evidencePane}>
+              <Text style={styles.evidenceEyebrow}>YOUR REPORT / EVIDENCE</Text>
+              <Text style={styles.evidenceTitle}>Make the issue clear.</Text>
+              <Text style={styles.evidenceText}>A photo, an accurate location and your observations help the authority assess the report.</Text>
+              {localImageUri ? <DetectionOverlay imageUri={localImageUri} detections={aiDetections} confidence={aiConfidence} height={360} /> : <View style={styles.evidenceEmpty}><Ionicons name="camera-outline" size={44} color={COLORS.primary} /><Text style={styles.evidenceText}>Your issue photo and detection results will appear here.</Text></View>}
+              <Text style={styles.evidenceText}>Experimental severity requires review. You approve the final description; authorities verify the issue and control its status.</Text>
+            </View>}
+          <View style={[styles.mainWrapper, isWide && styles.mainWrapperWide]}>
             {errorMessage ? (
               <Animated.View entering={FadeIn.duration(300)} style={styles.errorBanner}>
                 <Ionicons name="alert-circle" size={18} color={COLORS.error} style={{ marginRight: SPACING.xs }} />
@@ -333,6 +400,13 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* STEP 1: CAPTURE */}
             {currentStep === 'capture' && (
               <Animated.View entering={FadeInDown} exiting={FadeOut} style={styles.stepContainer}>
+                <Text style={styles.reviewSectionLabel}>DETECTION MODE</Text>
+                <FilterChipGroup options={[
+                  { label: 'Automatic', value: 'auto' }, { label: 'Pothole', value: 'pothole' }, { label: 'Road damage', value: 'road_damage' },
+                  { label: 'Garbage', value: 'garbage' }, { label: 'Streetlight', value: 'broken_streetlight' }, { label: 'Water leakage', value: 'water_leakage' },
+                ]} selectedValue={detectionMode} onSelect={setDetectionMode} />
+                <Text style={styles.evidenceText}>Automatic runs all available models. A selected category requires compatible trained weights. You can always enter details manually.</Text>
+                <Text accessibilityLiveRegion="polite" style={styles.evidenceText}>{modelAvailability}</Text>
                 <ImagePickerCamera imageUri={localImageUri} onImageSelected={handleImageSelected} onRetakeImage={handleRetake} />
               </Animated.View>
             )}
@@ -356,14 +430,19 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                         <Text style={styles.errorText}>AI could not identify this issue automatically. Please select a category below.</Text>
                       </Animated.View>
                     )}
-                    <Animated.View entering={FadeInUp.delay(100)}>
+                    <Animated.View entering={FadeInUp.delay(100)} style={isWide ? { display: 'none' } : undefined}>
                       <DetectionOverlay imageUri={localImageUri} detections={aiDetections} confidence={aiConfidence} height={260} />
                     </Animated.View>
                     <Animated.View entering={FadeInUp.delay(200)}>
+                      {!!modelNotice && <Text accessibilityLiveRegion="polite" style={styles.evidenceText}>{modelNotice}</Text>}
+                      <TriageSummary severity={severity} />
                       <CategorySelector selectedCategory={selectedCategory} onSelectCategory={handleSelectCategory} customCategory={customCategory} onChangeCustomCategory={setCustomCategory} aiDetected={aiDetected} aiClass={aiDetectedClass} aiConfidence={aiConfidence} />
                     </Animated.View>
                     <Animated.View entering={FadeInUp.delay(300)}>
-                      <DescriptionEditor category={selectedCategory} customCategory={customCategory} description={description} onChangeDescription={setDescription} address={address} />
+                      <DescriptionEditor category={selectedCategory} customCategory={customCategory} description={description} onChangeDescription={setDescription} address={address} generatedDescription={generatedDescription} />
+                      {analysisToken && <Button title="Continue without AI assessment" variant="ghost" onPress={() => {
+                        setAnalysisToken(''); setSeverity(undefined); setGeneratedDescription('');
+                      }} />}
                     </Animated.View>
                     
                     <Animated.View entering={FadeInUp.delay(400)} style={styles.buttonRow}>
@@ -410,7 +489,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                       <LocationCard address={address} latitude={latitude} longitude={longitude} onRefreshLocation={fetchCurrentLocation} />
                     </Animated.View>
                     <Animated.View entering={FadeInUp.delay(300)}>
-                      <Button title="Confirm Location & Review" disabled={!locationConfirmed} onPress={() => animateStepChange('review')} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
+                      <Button title={checkingDuplicates ? 'Checking nearby reports…' : 'Confirm Location & Review'} disabled={!locationConfirmed || checkingDuplicates} loading={checkingDuplicates} onPress={reviewPossibleDuplicates} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
                     </Animated.View>
                   </>
                 )}
@@ -423,6 +502,15 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                 <Card style={styles.reviewCard}>
                   <CardContent style={styles.reviewContent}>
                     <Text style={styles.reviewCardTitle}>Incident Summary</Text>
+                    <TriageSummary severity={severity} />
+                    {!!duplicateCheckMessage && <View accessibilityRole="alert" style={{ backgroundColor: COLORS.pendingLight, padding: 12, borderRadius: 8, marginVertical: 12 }}>
+                      <Text style={{ color: COLORS.pendingDark, fontWeight: '700' }}>{duplicateMatches.length ? 'Possible duplicate reports nearby' : 'Nearby report check'}</Text>
+                      <Text style={{ color: COLORS.textPrimary, marginTop: 4 }}>{duplicateCheckMessage}</Text>
+                      {duplicateMatches.map((match, index) => <Text key={`${index}-${match.distanceMeters}`} style={{ color: COLORS.textPrimary, marginTop: 6 }}>
+                        {match.complaintId || 'Another citizen’s report'} · about {match.distanceMeters} m away · {match.status}
+                      </Text>)}
+                      {duplicateMatches.length > 0 && <Text style={{ color: COLORS.textSecondary, marginTop: 6 }}>You can continue if this is a distinct issue or you have useful additional evidence.</Text>}
+                    </View>}
                     <View style={styles.reviewThumbRow}>
                       {localImageUri ? <Image source={{ uri: localImageUri }} style={styles.reviewThumb} /> : null}
                       <View style={{ flex: 1 }}>
@@ -452,6 +540,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
               </Animated.View>
             )}
           </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -472,7 +561,7 @@ const styles = StyleSheet.create({
   stepCircleCurrent: { backgroundColor: COLORS.primary },
   stepCircleDone: { backgroundColor: COLORS.primaryDark },
   stepNumText: { ...TYPOGRAPHY.caption, fontWeight: '800', color: COLORS.textSecondary },
-  stepNumTextCurrent: { color: '#FFFFFF' },
+  stepNumTextCurrent: { color: COLORS.surface },
   stepLabel: { ...TYPOGRAPHY.caption, fontSize: 10, fontWeight: '600', color: COLORS.textMuted, textAlign: 'center' },
   stepLabelCurrent: { color: COLORS.primary, fontWeight: '800' },
   stepLabelDone: { color: COLORS.textPrimary, fontWeight: '700' },
@@ -480,6 +569,14 @@ const styles = StyleSheet.create({
   stepLineDone: { backgroundColor: COLORS.primary },
   scrollContent: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: SPACING['5xl'] },
   scrollContentDesktop: { paddingTop: SPACING['3xl'], paddingBottom: SPACING['7xl'] },
+  reportWorkspace: { width: '100%', maxWidth: 1440, alignSelf: 'center', gap: 28 },
+  reportWorkspaceWide: { flexDirection: 'row', alignItems: 'flex-start' },
+  evidencePane: { flex: 1, minWidth: 0, backgroundColor: COLORS.surface, padding: 24, borderWidth: 1, borderColor: COLORS.borderLight, borderRadius: 12, gap: 18 },
+  evidenceEyebrow: { color: COLORS.primary, fontSize: 10, letterSpacing: 1, fontWeight: '700' },
+  evidenceTitle: { color: COLORS.textPrimary, fontSize: 29, lineHeight: 37, letterSpacing: -.7, fontWeight: '600' },
+  evidenceText: { color: COLORS.textSecondary, fontSize: 13, lineHeight: 21, marginBottom: 12 },
+  evidenceEmpty: { minHeight: 240, padding: 28, gap: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primaryLight, borderRadius: 8 },
+  mainWrapperWide: { flex: 1.15, maxWidth: 800, minWidth: 0 },
   mainWrapper: { width: '100%', maxWidth: 640, alignSelf: 'center' },
   stepContainer: { width: '100%' },
   errorBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.errorLight, padding: SPACING.lg, borderRadius: BORDER_RADIUS.md, marginBottom: SPACING.xl, borderWidth: 1, borderColor: COLORS.errorBorder },

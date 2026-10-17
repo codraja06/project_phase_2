@@ -84,7 +84,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1.5,
     borderColor: COLORS.border,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   avatarWrapper: {
     padding: 3,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: 38,
     marginBottom: 10,
     ...SHADOWS.sm,

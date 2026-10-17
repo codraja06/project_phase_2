@@ -22,11 +22,23 @@ export const authApi = {
 
   async googleLogin(payload: {
     token?: string;
+    nonce?: string;
     role?: 'citizen' | 'authority';
     userInfo?: { email: string; name: string; picture?: string; id?: string };
   }): Promise<{ user: User; token: string }> {
     const envelope: any = await axiosClient.post(ENDPOINTS.AUTH.GOOGLE, payload);
+    if (envelope?.success !== true || !envelope.data?.user || typeof envelope.data.token !== 'string' || !envelope.data.token) {
+      throw new Error('Google login service returned an invalid response. Please try again later.');
+    }
     return envelope.data; // { user, token }
+  },
+
+  async linkGoogle(payload: { token: string; nonce?: string }): Promise<User> {
+    const envelope: any = await axiosClient.post('/auth/google/link', payload);
+    if (envelope?.success !== true || !envelope.data?.googleId) {
+      throw new Error('Google account linking returned an invalid response. Please try again later.');
+    }
+    return envelope.data;
   },
 
   async logout(): Promise<void> {

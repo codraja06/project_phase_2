@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.button,
   },
   retryBtnText: {
-    color: '#FFFFFF',
+    color: COLORS.surface,
     fontSize: 13,
     fontWeight: '700',
   },

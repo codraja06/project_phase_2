@@ -5,7 +5,9 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  googleId?: string;
   role: UserRole;
+  isAdmin?: boolean;
   createdAt: string;
   updatedAt: string;
 }

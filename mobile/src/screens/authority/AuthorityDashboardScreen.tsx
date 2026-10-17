@@ -1,646 +1,796 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
   RefreshControl,
-
   StatusBar,
-  Platform,
-  TextInput,
-  useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { authorityApi } from '../../api/authorityApi';
-import { Complaint, ComplaintStats } from '../../types/complaint';
+import { managementApi, HotspotCluster } from '../../api/managementApi';
+import { Complaint } from '../../types/complaint';
+import { AnalyticsData } from '../../types/analytics';
 import { COLORS } from '../../theme/colors';
-import { BORDER_RADIUS } from '../../theme/radius';
-import { SHADOWS } from '../../theme/index';
-import { SPACING } from '../../theme/spacing';
-import { TYPOGRAPHY } from '../../theme/typography';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
-import { useMobileMenu } from '../../contexts/MobileMenuContext';
-import { ComplaintCard } from '../../components/ComplaintCard';
-import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { AuthorityMobileHeader } from '../../components/AuthorityMobileHeader';
-import { Card, CardContent } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
+import { useAuth } from '../../hooks/useAuth';
+import { AdaptiveGrid } from '../../components/AdaptiveGrid';
 import { Button } from '../../components/ui/Button';
+import { StatusBadge } from '../../components/StatusBadge';
+import { TriageSummary } from '../../components/TriageSummary';
+import { BarChart, SparkLine, MiniDonut } from '../../components/BarChart';
+import { SkeletonStatCard, SkeletonList } from '../../components/SkeletonLoader';
+import { AuthorityMobileHeader } from '../../components/AuthorityMobileHeader';
+import { formatDate } from '../../utils/date';
+import { CivicHero } from '../../components/CivicVisuals';
 
-const FILTER_PILLS = [
-  { id: 'all', label: 'All Activity' },
-  { id: 'urgent', label: 'Urgent / High' },
-  { id: 'pothole', label: 'Potholes' },
-  { id: 'garbage', label: 'Garbage' },
-  { id: 'water', label: 'Water / Drain' },
-  { id: 'streetlight', label: 'Streetlights' },
-];
+const today = () => new Date().toISOString().slice(0, 10);
+const daysAgo = (days: number) => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
 
 export const AuthorityDashboardScreen = ({ navigation }: any) => {
-  const { isDesktop, isTablet, isWide, isMobile, width } = useBreakpoint();
-  const { toggleMenu } = useMobileMenu();
+  const { user } = useAuth();
+  const { isWide, isDesktop, width } = useBreakpoint();
+
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [hotspots, setHotspots] = useState<HotspotCluster[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [stats, setStats] = useState<ComplaintStats>({
-    total: 0,
-    pending: 0,
-    inProgress: 0,
-    resolved: 0,
-    highPriority: 0,
-    today: 0,
-    categoryStats: {},
-  });
 
-  const fetchDashboardData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      setLoading(true); setError('');
-      const res = await authorityApi.getAllComplaints();
-      const list = res.complaints || [];
-      setAllComplaints(list);
-      setStats(res.stats || {
-        total: list.length,
-        pending: list.filter((c: Complaint) => (c.status || '').toLowerCase() === 'pending').length,
-        inProgress: list.filter((c: Complaint) => (c.status || '').toLowerCase().includes('progress')).length,
-        resolved: list.filter((c: Complaint) => (c.status || '').toLowerCase() === 'resolved').length,
-        highPriority: list.filter((c: Complaint) => c.priority === 'high' || c.priority === 'urgent').length,
-        today: 0,
-      });
-    } catch (error) {
-      setError((error as Error).message || 'Reports are unavailable.');
+      setError('');
+      const [analyticsRes, complaintsRes, hotspotsRes] = await Promise.all([
+        authorityApi.getAnalytics({ from: daysAgo(7), to: today(), status: 'all', category: 'all' }),
+        authorityApi.getAllComplaints({ limit: 15, page: 1 }),
+        managementApi.getHotspots({}).catch(() => ({ clusters: [] })),
+      ]);
+
+      setAnalytics(analyticsRes);
+      setComplaints(complaintsRes.complaints || []);
+      setHotspots(hotspotsRes.clusters || []);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load command center data.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchDashboardData();
-    }, [])
+      void loadData();
+    }, [loadData])
   );
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchDashboardData();
-  };
+  // Triage queue: items that are either Pending or marked High/Urgent priority
+  const triageQueue = useMemo(() => {
+    return complaints.filter(
+      c =>
+        c.status === 'Pending' ||
+        c.priority === 'urgent' ||
+        c.severity?.level === 'High' ||
+        (c.priorityScore ?? 0) >= 70
+    ).slice(0, 6);
+  }, [complaints]);
 
-  const displayedComplaints = useMemo(() => {
-    let filtered = allComplaints;
-    if (activeFilter === 'urgent') {
-      filtered = filtered.filter(
-        (c) => c.priority === 'urgent' || c.priority === 'high'
-      );
-    } else if (activeFilter === 'pothole') {
-      filtered = filtered.filter(
-        (c) => (c.category || '').toLowerCase().includes('pothole') || (c.category || '').toLowerCase().includes('road')
-      );
-    } else if (activeFilter === 'garbage') {
-      filtered = filtered.filter((c) => (c.category || '').toLowerCase().includes('garbage'));
-    } else if (activeFilter === 'water') {
-      filtered = filtered.filter(
-        (c) => (c.category || '').toLowerCase().includes('water') || (c.category || '').toLowerCase().includes('drain')
-      );
-    } else if (activeFilter === 'streetlight') {
-      filtered = filtered.filter((c) => (c.category || '').toLowerCase().includes('light'));
-    }
-    return filtered.filter(c => `${c.title} ${c.complaintId || c._id} ${c.address}`.toLowerCase().includes(search.trim().toLowerCase()));
-  }, [allComplaints, activeFilter, search]);
+  // Operational metrics
+  const summary = analytics?.summary;
+  const trendCounts = (analytics?.trends || []).map(t => t.count);
 
-  const categoryCounts = useMemo(() => {
-    let pothole = 0; let garbage = 0; let water = 0; let streetlight = 0;
-    allComplaints.forEach((c) => {
-      const cat = (c.category || '').toLowerCase();
-      if (cat.includes('pothole') || cat.includes('road')) pothole++;
-      else if (cat.includes('garbage')) garbage++;
-      else if (cat.includes('water') || cat.includes('drain')) water++;
-      else if (cat.includes('light')) streetlight++;
-    });
-    return { pothole, garbage, water, streetlight };
-  }, [allComplaints]);
+  const activeBacklog = (summary?.pending ?? 0) + (summary?.inProgress ?? 0);
+  const urgentCount = summary?.highPriority ?? 0;
+  const resolvedCount = summary?.resolved ?? 0;
+  const totalCount = summary?.total ?? 0;
 
-  const durations = allComplaints.filter(c => c.status === 'Resolved' && c.resolvedAt && Date.parse(c.resolvedAt) >= Date.parse(c.createdAt)).map(c => (Date.parse(c.resolvedAt!) - Date.parse(c.createdAt)) / 3600000);
-  const average = durations.length ? `${(durations.reduce((a,b) => a+b,0) / durations.length).toFixed(1)}h` : '—';
-  const verifiedPct = allComplaints.length ? `${Math.round(allComplaints.filter(c => c.verified).length / allComplaints.length * 100)}%` : '—';
-  if (error) return <View style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 16 }}><Text accessibilityRole="alert">{error}</Text><Button title="Retry" onPress={fetchDashboardData} /></View>;
+  const resolutionRate = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 0;
 
-  if (loading && !refreshing) {
-    return <LoadingSpinner message="Initializing Command Center..." />;
-  }
+  return (
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="dark-content" />
+      {!isWide && <AuthorityMobileHeader title="Command Center" />}
 
-  // ─── Responsive padding ─────────────────────────────────────────────────────
-  const screenPadding = isMobile ? (width < 360 ? 12 : 16) : isTablet ? 20 : 24;
-  // KPI grid: 2 columns on mobile, 3 on tablet, 6 on desktop
-  const kpiColumns = isMobile ? 2 : 3;
-  const kpiGap = isMobile ? (width < 360 ? 8 : 12) : 12;
-
-  const KPI_DATA = [
-    { label: 'Total Incidents', count: stats.total, filter: 'all', color: '#C91C24', icon: 'layers' as const },
-    { label: 'Pending Triage', count: stats.pending, filter: 'pending', color: '#F59E0B', icon: 'time' as const },
-    { label: 'Under Repair', count: stats.inProgress, filter: 'in_progress', color: '#3B82F6', icon: 'construct' as const },
-    { label: 'Resolved', count: stats.resolved, filter: 'resolved', color: '#10B981', icon: 'checkmark-circle' as const },
-    { label: 'High Priority', count: stats.highPriority || 0, filter: 'urgent', color: '#C91C24', icon: 'alert-circle' as const },
-    { label: "Today's Intake", count: stats.today || 0, filter: 'today', color: '#8B5CF6', icon: 'calendar' as const },
-  ];
-
-  if (!isDesktop) {
-    return (
-      <View style={s.safeAreaMobile}>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
-        <View style={{ flex: 1, backgroundColor: COLORS.backgroundNeutral }}>
-          <AuthorityMobileHeader
-            title="Command Center"
-            subtitle="Triage & dispatch hub"
-            rightNode={
-              <TouchableOpacity style={s.mobileHeaderIcon} accessibilityLabel="Notifications" accessibilityRole="button" onPress={() => navigation.navigate('AuthorityNotifications')}>
-                <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
-
-              </TouchableOpacity>
-            }
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, isWide && { padding: 24 }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              void loadData();
+            }}
+            colors={[COLORS.primary]}
           />
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ padding: screenPadding, paddingBottom: 120 }}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#38BDF8']} tintColor="#38BDF8" />}
+        }
+      >
+        <CivicHero compact photo="bridge" eyebrow="CIVICTRACK / MUNICIPAL OPERATIONS" title="Turn reports into visible progress." description="Review evidence, focus attention and keep citizens informed." />
+        {/* Header row */}
+        <View style={styles.header}>
+          <View style={{ flex: 1, minWidth: 240 }}>
+            <View style={styles.statusPill}>
+              <View style={styles.statusIndicatorLive} />
+              <Text style={styles.statusText}>MUNICIPAL COMPLAINT WORKSPACE</Text>
+            </View>
+            <Text accessibilityRole="header" style={styles.title}>
+              Operational Command Center
+            </Text>
+            <Text style={styles.subtitle}>
+              Municipal incident triage, active fieldwork, and velocity monitoring.
+            </Text>
+          </View>
+
+          <View style={styles.headerButtons}>
+            <Button
+              title="All Complaints"
+              variant="outline"
+              icon={<Ionicons name="list-outline" size={16} color={COLORS.textPrimary} />}
+              onPress={() => navigation.navigate('AllComplaints')}
+            />
+            <Button
+              title="Incident Map"
+              variant="default"
+              icon={<Ionicons name="map-outline" size={16} color="#FFFFFF" />}
+              onPress={() => navigation.navigate('AuthorityMap')}
+            />
+          </View>
+        </View>
+
+        {/* Hotspot Alert Banner if clusters found */}
+        {hotspots.length > 0 && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="View hotspot clusters on map"
+            style={styles.hotspotBanner}
+            onPress={() => navigation.navigate('AuthorityMap')}
+            activeOpacity={0.85}
           >
-            {/* Operational KPIs */}
-            <Text style={[s.sectionLabel, { marginTop: 16, marginBottom: 12, color: COLORS.textSecondary }]}>OPERATIONAL KPIs</Text>
-            <View style={[s.kpiGrid, { gap: kpiGap }]}>
-              {KPI_DATA.map((stat, i) => (
-                <Card key={i} interactive onPress={() => navigation.navigate('AllComplaints', { filter: stat.filter })}
-                  style={[s.kpiCard, { flexBasis: isMobile ? (width < 360 ? '46%' : '47%') : `${(100 / kpiColumns) - 2}%` }]}>
-                  <View style={s.kpiContent}>
-                    <View style={[s.kpiIconCircle, { backgroundColor: `${stat.color}15`, marginBottom: 8 }]}>
-                      <Ionicons name={stat.icon} size={width < 360 ? 16 : 18} color={stat.color} />
-                    </View>
-                    <Text style={[s.kpiCount, { fontSize: width < 360 ? 18 : 22 }]}>{stat.count}</Text>
-                    <Text style={s.kpiLabel} numberOfLines={1}>{stat.label}</Text>
-                  </View>
-                </Card>
+            <View style={styles.hotspotIconWrap}>
+              <Ionicons name="warning-outline" size={22} color="#B45309" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.hotspotTitle}>
+                {hotspots.length} Geographic Hotspot Cluster{hotspots.length === 1 ? '' : 's'} Detected
+              </Text>
+              <Text style={styles.hotspotSub}>
+                Multiple incidents clustered in close proximity. Tap to inspect coordinate density on Incident Map.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#B45309" />
+          </TouchableOpacity>
+        )}
+
+        {/* Error state */}
+        {error ? (
+          <View accessibilityRole="alert" style={styles.errorBox}>
+            <Ionicons name="alert-circle" size={24} color={COLORS.error} />
+            <Text style={styles.errorText}>{error}</Text>
+            <Button title="Retry" variant="outline" onPress={loadData} />
+          </View>
+        ) : loading && !analytics ? (
+          <View style={{ gap: 16 }}>
+            <AdaptiveGrid minWidth={140} maxColumns={4} gap={12}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonStatCard key={i} />
               ))}
-            </View>
-
-            {/* SLA Card */}
-            <Card style={[s.slaCard, { marginTop: 16 }]}>
-              <CardContent style={{ padding: 16 }}>
-                <View style={s.slaHeader}>
-                  <Text style={s.slaTitle}>Resolution & Verification</Text>
-                  <Text style={s.slaBadge}>Service data</Text>
+            </AdaptiveGrid>
+            <SkeletonList count={3} />
+          </View>
+        ) : (
+          <>
+            {/* KPI Cards Grid */}
+            <AdaptiveGrid minWidth={140} maxColumns={isDesktop ? 4 : 2} gap={12}>
+              {/* Urgent Action Card */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Urgent queue: ${urgentCount} reports`}
+                onPress={() => navigation.navigate('AllComplaints', { filter: 'urgent' })}
+                style={[styles.kpiCard, urgentCount > 0 && styles.kpiUrgent]}
+              >
+                <View style={styles.kpiTop}>
+                  <View style={[styles.kpiIcon, { backgroundColor: '#FEE2E2' }]}>
+                    <Ionicons name="flame-outline" size={20} color="#DC2626" />
+                  </View>
+                  <Text style={styles.kpiBadge}>ACTION REQ</Text>
                 </View>
-                <View style={s.slaMetrics}>
-                  <View style={s.slaMetric}>
-                    <Text style={s.slaMetricVal}>{average}</Text>
-                    <Text style={s.slaMetricLabel}>Avg</Text>
-                  </View>
-                  <View style={s.slaDivider} />
-                  <View style={s.slaMetric}>
-                    <Text style={s.slaMetricVal}>—</Text>
-                    <Text style={s.slaMetricLabel}>SLA unavailable</Text>
-                  </View>
-                  <View style={s.slaDivider} />
-                  <View style={s.slaMetric}>
-                    <Text style={[s.slaMetricVal, { color: COLORS.resolved }]}>{verifiedPct}</Text>
-                    <Text style={s.slaMetricLabel}>Verified</Text>
-                  </View>
-                </View>
-                {/* Incident Distribution Mobile */}
-                <Text style={s.distTitle}>INCIDENT DISTRIBUTION</Text>
-                {[
-                  { label: 'Potholes', count: categoryCounts.pothole, color: COLORS.error },
-                  { label: 'Garbage', count: categoryCounts.garbage, color: COLORS.pending },
-                  { label: 'Streetlight', count: categoryCounts.streetlight, color: COLORS.info },
-                ].map((cat, i) => (
-                  <View key={i} style={s.distRow}>
-                    <Text style={s.distLabel}>{cat.label}: {cat.count}</Text>
-                    <View style={s.distBarBg}>
-                      <View style={[s.distBarFill, { width: `${stats.total ? Math.min(100, Math.round((cat.count / stats.total) * 100)) : 0}%`, backgroundColor: cat.color }]} />
-                    </View>
-                  </View>
-                ))}
-              </CardContent>
-            </Card>
+                <Text style={[styles.kpiValue, { color: '#DC2626' }]}>{urgentCount}</Text>
+                <Text style={styles.kpiLabel}>Urgent Priority Triage</Text>
+              </TouchableOpacity>
 
-            {/* Banner */}
-            <View style={[s.banner, { marginTop: 12 }]}>
-              <Text style={s.bannerTitle}>Cleaner Neighborhoods</Text>
-              <Text style={s.bannerSub}>REPORT • TRACK • RESOLVE</Text>
-            </View>
-
-            {/* Incident Queue */}
-            <View style={{ marginTop: 24 }}>
-              <View style={s.queueHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.queueTitle}>Incident Queue</Text>
-                  <Text style={s.queueSub}>Live reports from citizens.</Text>
+              {/* Active Backlog */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Active backlog: ${activeBacklog} reports`}
+                onPress={() => navigation.navigate('AllComplaints', { filter: 'pending' })}
+                style={styles.kpiCard}
+              >
+                <View style={styles.kpiTop}>
+                  <View style={[styles.kpiIcon, { backgroundColor: '#FEF3C7' }]}>
+                    <Ionicons name="time-outline" size={20} color="#D97706" />
+                  </View>
+                  {trendCounts.length > 2 && (
+                    <SparkLine data={trendCounts.slice(-7)} width={46} height={18} color="#D97706" />
+                  )}
                 </View>
-                <Button variant="link" title="View All →" onPress={() => navigation.navigate('AllComplaints')} />
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 12 }} contentContainerStyle={{ gap: 6 }}>
-                {FILTER_PILLS.map((pill) => (
-                  <TouchableOpacity key={pill.id} style={[s.filterPill, activeFilter === pill.id && s.filterPillActive]} onPress={() => setActiveFilter(pill.id)}>
-                    <Text style={[s.filterPillText, activeFilter === pill.id && s.filterPillTextActive]}>
-                      {pill.label}{pill.id === 'all' ? ` (${displayedComplaints.length})` : ''}
+                <Text style={styles.kpiValue}>{activeBacklog}</Text>
+                <Text style={styles.kpiLabel}>Active Workload</Text>
+              </TouchableOpacity>
+
+              {/* In Progress */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`In progress: ${summary?.inProgress ?? 0} reports`}
+                onPress={() => navigation.navigate('AllComplaints', { filter: 'in_progress' })}
+                style={styles.kpiCard}
+              >
+                <View style={styles.kpiTop}>
+                  <View style={[styles.kpiIcon, { backgroundColor: '#DBEAFE' }]}>
+                    <Ionicons name="construct-outline" size={20} color="#2563EB" />
+                  </View>
+                  <Ionicons name="arrow-forward-outline" size={16} color={COLORS.textMuted} />
+                </View>
+                <Text style={[styles.kpiValue, { color: '#2563EB' }]}>{summary?.inProgress ?? 0}</Text>
+                <Text style={styles.kpiLabel}>In Progress & Fieldwork</Text>
+              </TouchableOpacity>
+
+              {/* Resolved / Velocity */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Resolved rate: ${resolutionRate}%`}
+                onPress={() => navigation.navigate('AuthorityAnalytics')}
+                style={styles.kpiCard}
+              >
+                <View style={styles.kpiTop}>
+                  <View style={[styles.kpiIcon, { backgroundColor: '#DCFCE7' }]}>
+                    <Ionicons name="checkmark-done-outline" size={20} color="#16A34A" />
+                  </View>
+                  <Text style={[styles.kpiBadge, { color: '#16A34A', backgroundColor: '#DCFCE7' }]}>
+                    {resolutionRate}% RATE
+                  </Text>
+                </View>
+                <Text style={[styles.kpiValue, { color: '#16A34A' }]}>{resolvedCount}</Text>
+                <Text style={styles.kpiLabel}>Resolved in 7 Days</Text>
+              </TouchableOpacity>
+            </AdaptiveGrid>
+
+            {/* Split Grid: Triage Queue + 7-Day Velocity */}
+            <AdaptiveGrid minWidth={360} maxColumns={2} gap={16}>
+              {/* Triage Queue */}
+              <View style={styles.panel}>
+                <View style={styles.panelHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.panelTitle}>Priority Triage Queue</Text>
+                    <Text style={styles.panelSubtitle}>
+                      High-severity complaints awaiting assignment or action.
                     </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-              <View style={{ display: 'flex', flexDirection: 'column' }}>
-                {displayedComplaints.length > 0 ? displayedComplaints.map((item, index) => (
-                  <Animated.View key={item._id} entering={FadeInUp.delay(200 + Math.min(index * 50, 500))}>
-                    <ComplaintCard complaint={item} showCitizenInfo={true} onPress={() => navigation.navigate('AuthorityComplaintDetail', { complaintId: item._id })} style={{ marginBottom: 10, borderRadius: 12 }} />
-                  </Animated.View>
-                )) : (
-                  <View style={s.emptyState}>
-                    <Ionicons name="shield-checkmark-outline" size={40} color={COLORS.textMuted} />
-                    <Text style={s.emptyTitle}>No matching incidents</Text>
-                    <Text style={s.emptySub}>Queue is clear for this category.</Text>
+                  </View>
+                  <Button
+                    title="View All"
+                    variant="link"
+                    onPress={() => navigation.navigate('AllComplaints', { filter: 'pending' })}
+                  />
+                </View>
+
+                {triageQueue.length === 0 ? (
+                  <View style={styles.emptyQueue}>
+                    <Ionicons name="shield-checkmark" size={32} color="#16A34A" />
+                    <Text style={styles.emptyQueueTitle}>All priority items triaged</Text>
+                    <Text style={styles.emptyQueueSub}>
+                      No pending critical incidents requiring immediate officer attention.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ gap: 10 }}>
+                    {triageQueue.map(c => (
+                      <TouchableOpacity
+                        key={c._id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Triage incident ${c.complaintId || c.title}`}
+                        onPress={() => navigation.navigate('AuthorityComplaintDetail', { complaintId: c._id })}
+                        style={styles.triageItem}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.triageTop}>
+                          <Text style={styles.triageId}>{c.complaintId || c._id.slice(-6).toUpperCase()}</Text>
+                          <StatusBadge status={c.status} size="sm" />
+                        </View>
+                        <Text style={styles.triageTitle} numberOfLines={1}>
+                          {c.title || c.category.replace(/_/g, ' ')}
+                        </Text>
+                        <TriageSummary
+                          severity={c.severity}
+                          priority={c.priority}
+                          score={c.priorityScore}
+                          compact
+                        />
+                        <View style={styles.triageMeta}>
+                          <View style={styles.metaRow}>
+                            <Ionicons name="location-outline" size={13} color={COLORS.textMuted} />
+                            <Text style={styles.metaText} numberOfLines={1}>
+                              {c.address || 'Address provided via GPS'}
+                            </Text>
+                          </View>
+                          <Text style={styles.metaDate}>{formatDate(c.createdAt)}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
                   </View>
                 )}
               </View>
-            </View>
-          </ScrollView>
-        </View>
-      </View>
-    );
-  }
 
-  return (
-    <SafeAreaView style={s.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
-
-      {isDesktop ? (
-        // ─── Desktop/Tablet: fixed container ────────────────────────────────
-        <View style={s.desktopFixedContainer}>
-          <View style={[s.scrollContent, { padding: screenPadding, flex: 1, display: 'flex', flexDirection: 'column' }]}>
-            {/* Header */}
-            <View style={s.headerBar}>
-              <View style={{ flex: 1 }}>
-                <View style={{ marginBottom: 6 }}>
-                  <Badge label="MUNICIPAL OPS" variant="secondary" icon={<Ionicons name="shield-checkmark" size={12} color={COLORS.textPrimary} />} />
-                </View>
-                <Text style={s.headerTitle}>Command Center</Text>
-                <Text style={s.headerSubtitle}>Real-time triage and resolution dispatch hub.</Text>
-              </View>
-              <View style={s.headerActions}>
-                <View style={s.headerSearch}>
-                  <Ionicons name="search" size={16} color={COLORS.slateMuted} />
-                  <TextInput
-                    style={s.headerSearchInput}
-                    value={search}
-                    onChangeText={setSearch}
-                    accessibilityLabel="Search incidents"
-                    placeholder="Search incidents..."
-                    placeholderTextColor={COLORS.slateMuted}
+              {/* 7-Day Velocity Chart & Resolution Summary */}
+              <View style={styles.panel}>
+                <View style={styles.panelHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.panelTitle}>7-Day Intake Velocity</Text>
+                    <Text style={styles.panelSubtitle}>Daily submission volume across all municipal sectors.</Text>
+                  </View>
+                  <Button
+                    title="Analytics"
+                    variant="link"
+                    onPress={() => navigation.navigate('AuthorityAnalytics')}
                   />
                 </View>
-                <TouchableOpacity style={s.headerIconBtn} accessibilityLabel="Notifications" accessibilityRole="button" onPress={() => navigation.navigate('AuthorityNotifications')}>
-                  <Ionicons name="notifications-outline" size={20} color={COLORS.textPrimary} />
 
-                </TouchableOpacity>
-                <TouchableOpacity style={s.avatarBtn} accessibilityRole="button" accessibilityLabel="Officer profile" onPress={() => navigation.navigate('AuthorityProfile')}>
-                  <Ionicons name="person" size={18} color={COLORS.primaryDark} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Desktop body: two columns */}
-            <View style={[s.desktopBody, { flex: 1, minHeight: 0 }]}>
-              {/* Left column */}
-              <View style={s.desktopLeftCol}>
-                <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
-                {/* KPI Section */}
-                <View style={s.sectionHeaderRow}>
-                  <Text style={s.sectionLabel}>OPERATIONAL KPIs</Text>
-                </View>
-                <View style={[s.kpiGrid, { gap: 12 }]}>
-                  {KPI_DATA.map((stat, i) => (
-                    <Card key={i} interactive onPress={() => navigation.navigate('AllComplaints', { filter: stat.filter })}
-                      style={[s.kpiCard, { flexBasis: `${(100 / kpiColumns) - 2}%` }]}>
-                      <View style={s.kpiContent}>
-                        <View style={[s.kpiIconCircle, { backgroundColor: `${stat.color}15` }]}>
-                          <Ionicons name={stat.icon} size={18} color={stat.color} />
-                        </View>
-                        <Text style={s.kpiCount}>{stat.count}</Text>
-                        <Text style={s.kpiLabel} numberOfLines={1}>{stat.label}</Text>
-                      </View>
-                    </Card>
-                  ))}
-                </View>
-
-                {/* SLA Card */}
-                <Card style={s.slaCard}>
-                  <CardContent style={{ padding: SPACING.xl }}>
-                    <View style={s.slaHeader}>
-                      <Text style={s.slaTitle}>Resolution & Verification</Text>
-                      <Text style={s.slaBadge}>Service data</Text>
-                    </View>
-                    <View style={s.slaMetrics}>
-                      <View style={s.slaMetric}>
-                        <Text style={s.slaMetricVal}>{average}</Text>
-                        <Text style={s.slaMetricLabel}>Avg Resolution</Text>
-                      </View>
-                      <View style={s.slaDivider} />
-                      <View style={s.slaMetric}>
-                        <Text style={s.slaMetricVal}>—</Text>
-                        <Text style={s.slaMetricLabel}>SLA unavailable</Text>
-                      </View>
-                      <View style={s.slaDivider} />
-                      <View style={s.slaMetric}>
-                        <Text style={[s.slaMetricVal, { color: COLORS.resolved }]}>{verifiedPct}</Text>
-                        <Text style={s.slaMetricLabel}>Verified</Text>
-                      </View>
-                    </View>
-                    {/* Incident Distribution */}
-                    <Text style={s.distTitle}>INCIDENT DISTRIBUTION</Text>
-                    {[
-                      { label: 'Potholes', count: categoryCounts.pothole, color: COLORS.error },
-                      { label: 'Garbage', count: categoryCounts.garbage, color: COLORS.pending },
-                      { label: 'Streetlight', count: categoryCounts.streetlight, color: COLORS.info },
-                    ].map((cat, i) => (
-                      <View key={i} style={s.distRow}>
-                        <Text style={s.distLabel}>{cat.label}: {cat.count}</Text>
-                        <View style={s.distBarBg}>
-                          <View style={[s.distBarFill, { width: `${stats.total ? Math.min(100, Math.round((cat.count / stats.total) * 100)) : 0}%`, backgroundColor: cat.color }]} />
-                        </View>
-                      </View>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                {/* Banner */}
-                <View style={s.banner}>
-                  <Text style={s.bannerTitle}>Cleaner Neighborhoods • Stronger Communities</Text>
-                  <Text style={s.bannerSub}>REPORT • TRACK • RESOLVE</Text>
-                </View>
-                </ScrollView>
-              </View>
-
-              {/* Right column — Incident Queue */}
-              <View style={[s.desktopRightCol, { flex: 1, display: 'flex', flexDirection: 'column' }]}>
-                <View style={s.queueHeader}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.queueTitle}>Incident Queue</Text>
-                    <Text style={s.queueSub}>Live incident reports from citizens.</Text>
+                {analytics?.trends && analytics.trends.length > 0 ? (
+                  <View style={{ marginTop: 8, marginBottom: 16 }}>
+                    <BarChart
+                      data={analytics.trends.slice(-7).map(t => ({
+                        label: t.date.slice(5),
+                        value: t.count,
+                      }))}
+                      height={150}
+                      showValues
+                    />
                   </View>
-                  <Button variant="link" title="Manage Queue →" onPress={() => navigation.navigate('AllComplaints')} />
+                ) : (
+                  <Text style={styles.emptyQueueSub}>No trend intake recorded for this period.</Text>
+                )}
+
+                {/* Resolution Summary Row */}
+                <View style={styles.resolutionRow}>
+                  <MiniDonut
+                    resolved={summary?.resolved ?? 0}
+                    total={summary?.total ?? 1}
+                    size={54}
+                  />
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.resolutionTitle}>
+                      {resolutionRate}% Overall Resolution Rate
+                    </Text>
+                    <Text style={styles.resolutionSub}>
+                      {summary?.averageResolutionHours != null
+                        ? `Avg completion time: ${summary.averageResolutionHours.toFixed(1)} hours.`
+                        : 'Tracking resolution turnaround times across assigned departments.'}
+                    </Text>
+                  </View>
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 12 }} contentContainerStyle={{ gap: 6 }}>
-                  {FILTER_PILLS.map((pill) => (
-                    <TouchableOpacity key={pill.id} style={[s.filterPill, activeFilter === pill.id && s.filterPillActive]} onPress={() => setActiveFilter(pill.id)}>
-                      <Text style={[s.filterPillText, activeFilter === pill.id && s.filterPillTextActive]}>
-                        {pill.label}{pill.id === 'all' ? ` (${displayedComplaints.length})` : ''}
-                      </Text>
+
+                {/* Quick Department Shortcuts */}
+                <View style={styles.quickActions}>
+                  <Text style={styles.quickActionLabel}>QUICK SHORTCUTS</Text>
+                  <View style={styles.shortcutRow}>
+                    <TouchableOpacity
+                      style={styles.chipButton}
+                      onPress={() => navigation.navigate('AllComplaints', { category: 'pothole' })}
+                    >
+                      <Ionicons name="car-outline" size={14} color={COLORS.primary} />
+                      <Text style={styles.chipText}>Potholes</Text>
                     </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
-                  {displayedComplaints.length > 0 ? displayedComplaints.map((item, index) => (
-                    <Animated.View key={item._id} entering={FadeInUp.delay(200 + Math.min(index * 50, 500))}>
-                      <ComplaintCard complaint={item} showCitizenInfo={true} onPress={() => navigation.navigate('AuthorityComplaintDetail', { complaintId: item._id })} style={{ marginBottom: 10, borderRadius: 12 }} />
-                    </Animated.View>
-                  )) : (
-                    <View style={s.emptyState}>
-                      <Ionicons name="shield-checkmark-outline" size={40} color={COLORS.textMuted} />
-                      <Text style={s.emptyTitle}>No matching incidents</Text>
-                      <Text style={s.emptySub}>Queue is clear for this category.</Text>
+                    <TouchableOpacity
+                      style={styles.chipButton}
+                      onPress={() => navigation.navigate('AllComplaints', { category: 'garbage' })}
+                    >
+                      <Ionicons name="trash-outline" size={14} color={COLORS.primary} />
+                      <Text style={styles.chipText}>Sanitation</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.chipButton}
+                      onPress={() => navigation.navigate('AllComplaints', { status: 'in_progress' })}
+                    >
+                      <Ionicons name="construct-outline" size={14} color={COLORS.primary} />
+                      <Text style={styles.chipText}>Field Crews</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </AdaptiveGrid>
+
+            {/* Recent Live Feed */}
+            <View style={styles.panel}>
+              <View style={styles.panelHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.panelTitle}>Recent Incident Feed</Text>
+                  <Text style={styles.panelSubtitle}>Live incoming reports from citizen channels.</Text>
+                </View>
+                <Button
+                  title="See All Reports"
+                  variant="ghost"
+                  onPress={() => navigation.navigate('AllComplaints')}
+                />
+              </View>
+
+              <View style={{ gap: 8 }}>
+                {complaints.slice(0, 5).map(c => (
+                  <TouchableOpacity
+                    key={c._id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open complaint ${c.complaintId || c.title}`}
+                    onPress={() => navigation.navigate('AuthorityComplaintDetail', { complaintId: c._id })}
+                    style={styles.feedItem}
+                  >
+                    <View style={styles.feedLeft}>
+                      <View style={styles.feedIcon}>
+                        <Ionicons
+                          name={
+                            c.category === 'pothole'
+                              ? 'car-outline'
+                              : c.category.includes('garbage')
+                              ? 'trash-outline'
+                              : 'alert-circle-outline'
+                          }
+                          size={18}
+                          color={COLORS.primary}
+                        />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={styles.feedCode}>{c.complaintId || c._id.slice(-6).toUpperCase()}</Text>
+                          <Text style={styles.feedTitle} numberOfLines={1}>
+                            {c.title || c.category.replace(/_/g, ' ')}
+                          </Text>
+                        </View>
+                        <Text style={styles.feedAddress} numberOfLines={1}>
+                          {c.address || 'Location stored'}
+                        </Text>
+                      </View>
                     </View>
-                  )}
-                </ScrollView>
+                    <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                      <StatusBadge status={c.status} size="sm" />
+                      <Text style={styles.feedTime}>{formatDate(c.createdAt)}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
-          </View>
-        </View>
-      ) : null}
+          </>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
-const s = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0F172A' },
-  safeAreaMobile: { flex: 1, backgroundColor: COLORS.backgroundNeutral },
-  desktopFixedContainer: {
+const styles = StyleSheet.create({
+  root: {
     flex: 1,
-    backgroundColor: COLORS.backgroundNeutral,
-    ...(Platform.OS === 'web' ? { height: '100dvh' as any, overflow: 'hidden' as any } : {}),
+    backgroundColor: COLORS.background || '#F8FAFC',
   },
   scrollContent: {
-    maxWidth: 1920,
-    alignSelf: 'center' as any,
+    padding: 16,
+    paddingBottom: 40,
+    gap: 20,
+    maxWidth: 1600,
+    alignSelf: 'center',
     width: '100%',
   },
-
-  // ─── Header (Desktop) ─────────────────────────────────────────────────────
-  headerBar: {
+  header: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 16,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: '#DCFCE7',
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  statusIndicatorLive: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16A34A',
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#15803D',
+    letterSpacing: 0.8,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  hotspotBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  hotspotIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hotspotTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  hotspotSub: {
+    fontSize: 12,
+    color: '#B45309',
+    marginTop: 2,
+  },
+  kpiCard: {
+    padding: 16,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    borderRadius: 12,
+    minHeight: 110,
+    justifyContent: 'space-between',
+  },
+  kpiUrgent: {
+    borderColor: '#FECACA',
+    backgroundColor: '#FEF2F2',
+  },
+  kpiTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    borderRadius: BORDER_RADIUS.lg,
-    marginBottom: 24,
-    ...SHADOWS.card,
   },
-  headerTitle: { ...TYPOGRAPHY.h2, color: '#F8FAFC', marginBottom: 2, letterSpacing: -0.5 },
-  headerSubtitle: { ...TYPOGRAPHY.bodySmall, color: '#94A3B8' },
-  headerActions: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  headerSearch: {
-    flexDirection: 'row',
+  kpiIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     alignItems: 'center',
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 16,
-    height: 38,
-    borderRadius: BORDER_RADIUS.full,
-    borderWidth: 1,
-    borderColor: '#334155',
-    minWidth: 220,
+    justifyContent: 'center',
   },
-  headerSearchInput: {
-    flex: 1,
-    ...TYPOGRAPHY.bodySmall,
-    color: '#F8FAFC',
-    marginLeft: 8,
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}),
-  },
-  headerIconBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  notifDot: {
-    position: 'absolute', top: 10, right: 10,
-    width: 6, height: 6, borderRadius: 3,
-    backgroundColor: COLORS.error,
-  },
-  avatarBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: COLORS.primaryLight, borderWidth: 1, borderColor: COLORS.primarySurface,
-    alignItems: 'center', justifyContent: 'center',
-  },
-
-  // ─── Mobile Header ─────────────────────────────────────────────────────────
-  mobileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  menuBtn: {
-    width: 40, height: 40, borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
-  },
-  mobileHeaderTitle: { ...TYPOGRAPHY.h4, color: '#F8FAFC', fontSize: 17 },
-  mobileHeaderSub: { ...TYPOGRAPHY.caption, color: '#94A3B8', fontSize: 12 },
-  mobileHeaderIcon: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
-  },
-
-  // ─── Desktop Body ──────────────────────────────────────────────────────────
-  desktopBody: {
-    flexDirection: 'row',
-    gap: 24,
-    flex: 1,
-  },
-  desktopLeftCol: { flex: 0.45 },
-  desktopRightCol: {
-    flex: 0.55,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    ...SHADOWS.card,
-  },
-
-  // ─── Section Header ────────────────────────────────────────────────────────
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 },
-  sectionLabel: { ...TYPOGRAPHY.overline, letterSpacing: 0.5 },
-
-  // ─── KPI Grid (mobile-first: 2 columns) ───────────────────────────────────
-  kpiGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  kpiCard: {
-    flexGrow: 1,
-    flexShrink: 1,
-    minWidth: 0,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    ...SHADOWS.sm,
-  },
-  kpiContent: {
-    padding: 12,
-    minHeight: 90,
-  },
-  kpiIconCircle: {
-    width: 30, height: 30, borderRadius: 15,
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 10,
-  },
-  kpiCount: {
-    fontSize: 24,
+  kpiBadge: {
+    fontSize: 10,
     fontWeight: '700',
-    color: '#111827',
-    marginBottom: 2,
-    letterSpacing: -0.5,
+    color: '#DC2626',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  kpiValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.6,
+    marginVertical: 4,
   },
   kpiLabel: {
     fontSize: 12,
+    color: COLORS.textSecondary,
     fontWeight: '500',
-    color: '#6B7280',
   },
-
-  // ─── SLA Card ──────────────────────────────────────────────────────────────
-  slaCard: { backgroundColor: '#1E293B', borderColor: '#334155', borderRadius: 16, marginBottom: 16 },
-  slaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  slaTitle: { flex: 1, marginRight: 8, ...TYPOGRAPHY.h4, color: '#F8FAFC' },
-  slaBadge: { ...TYPOGRAPHY.bodySmall, fontWeight: '700', color: '#94A3B8' },
-  slaMetrics: {
-    flexDirection: 'row',
-    backgroundColor: '#0F172A',
-    borderRadius: BORDER_RADIUS.md,
-    paddingVertical: 14,
-    paddingHorizontal: 10,
-    marginBottom: 16,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  slaMetric: { flex: 1, alignItems: 'center' },
-  slaMetricVal: { ...TYPOGRAPHY.h3, color: '#F8FAFC', marginBottom: 4 },
-  slaMetricLabel: { ...TYPOGRAPHY.caption, fontWeight: '600', color: '#94A3B8' },
-  slaDivider: { width: 1, height: 30, backgroundColor: '#334155' },
-
-  // ─── Distribution ──────────────────────────────────────────────────────────
-  distTitle: { ...TYPOGRAPHY.overline, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 10 },
-  distRow: { marginBottom: 6 },
-  distLabel: { ...TYPOGRAPHY.caption, fontWeight: '600', color: '#E2E8F0', marginBottom: 4 },
-  distBarBg: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden' },
-  distBarFill: { height: '100%', borderRadius: 3 },
-
-  // ─── Banner ────────────────────────────────────────────────────────────────
-  banner: {
-    backgroundColor: '#ECFDF5',
-    borderRadius: 12,
+  panel: {
+    padding: 18,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginTop: 'auto' as any,
+    borderColor: COLORS.borderLight,
+    borderRadius: 12,
+    gap: 12,
   },
-  bannerTitle: { ...TYPOGRAPHY.bodyBold, color: '#064E3B', marginBottom: 2 },
-  bannerSub: { ...TYPOGRAPHY.caption, fontWeight: '800', color: '#047857', letterSpacing: 0.5 },
-
-  // ─── Queue ─────────────────────────────────────────────────────────────────
-  queueHeader: {
+  panelHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 10,
+    gap: 10,
   },
-  queueTitle: { ...TYPOGRAPHY.h3, color: COLORS.textPrimary, marginBottom: 2 },
-  queueSub: { ...TYPOGRAPHY.bodySmall, color: COLORS.textSecondary },
-
-  // ─── Filters ───────────────────────────────────────────────────────────────
-  filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: BORDER_RADIUS.full,
-    backgroundColor: '#F3F4F6',
+  panelTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  panelSubtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  triageItem: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    borderRadius: 10,
+    backgroundColor: COLORS.surface,
+    gap: 6,
+  },
+  triageTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  triageId: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  triageTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  triageMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderLight,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  metaText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    flexShrink: 1,
+  },
+  metaDate: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+  emptyQueue: {
+    padding: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  emptyQueueTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  emptyQueueSub: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
+  resolutionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 12,
+    backgroundColor: COLORS.background || '#F8FAFC',
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
-  filterPillActive: { backgroundColor: '#0F172A', borderColor: '#0F172A' },
-  filterPillText: { ...TYPOGRAPHY.bodySmall, fontWeight: '600', color: COLORS.textSecondary },
-  filterPillTextActive: { color: '#FFFFFF' },
-
-  // ─── Empty ─────────────────────────────────────────────────────────────────
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: COLORS.borderLight,
+  resolutionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
   },
-  emptyTitle: { ...TYPOGRAPHY.bodyBold, color: COLORS.textPrimary, marginTop: 12, marginBottom: 4 },
-  emptySub: { ...TYPOGRAPHY.bodySmall, color: COLORS.textSecondary, textAlign: 'center' },
+  resolutionSub: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    lineHeight: 16,
+  },
+  quickActions: {
+    marginTop: 4,
+    gap: 8,
+  },
+  quickActionLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    letterSpacing: 0.8,
+  },
+  shortcutRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chipButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    backgroundColor: COLORS.surface,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  feedItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+    gap: 12,
+  },
+  feedLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    minWidth: 0,
+  },
+  feedIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: COLORS.primaryLight || '#F3ECE8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feedCode: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  feedTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    flexShrink: 1,
+  },
+  feedAddress: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  feedTime: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+  },
+  errorBox: {
+    padding: 16,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    alignItems: 'center',
+    gap: 10,
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: 13,
+    textAlign: 'center',
+  },
 });

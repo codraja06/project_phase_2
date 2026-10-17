@@ -1,4 +1,4 @@
-import { DetectionResult } from './ai';
+import { DetectionResult, SeverityAssessment } from './ai';
 
 export type ComplaintCategory =
   | 'pothole'
@@ -39,11 +39,26 @@ export interface Complaint {
   address: string;
   status: ComplaintStatus;
   priority?: ComplaintPriority;
+  priorityScore?: number;
+  priorityMetadata?: { reviewRequired: boolean; ageScore: number; severityScore: number; categoryScore: number };
+  severity?: SeverityAssessment;
+  generatedDescription?: string;
   verified?: boolean;
   createdBy?: string | ComplaintUserRef;
   citizenId?: string | ComplaintUserRef;
   officerId?: string | ComplaintUserRef | null;
   resolvedAt?: string | null;
+  duplicateOf?: string | null;
+  duplicateReference?: string | null;
+  duplicateConfirmedAt?: string | null;
+  duplicateReason?: string;
+  assignedDepartment?: string;
+  assignedAt?: string | null;
+  completionImageUrl?: string;
+  completionSubmittedAt?: string | null;
+  completionReview?: 'pending' | 'accepted' | 'rejected' | null;
+  completionReviewNote?: string;
+  statusHistory?: { status: ComplaintStatus; at: string; by?: string }[];
   createdAt: string;
   updatedAt: string;
 }

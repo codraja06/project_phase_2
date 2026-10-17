@@ -26,14 +26,13 @@ export const CivicTrackLogo: React.FC<CivicTrackLogoProps> = ({
           {
             width: badgeSize,
             height: badgeSize,
-            borderRadius: badgeSize / 2,
+            borderRadius: badgeSize * .23,
           },
         ]}
       >
-        {/* Emblem Layer: Leaf & City Skyline Hybrid */}
         <View style={styles.emblemContainer}>
-          <Ionicons name="business" size={iconSize * 0.72} color={COLORS.primaryDark} style={styles.buildingsIcon} />
-          <Ionicons name="leaf" size={iconSize} color={COLORS.primary} style={styles.leafIcon} />
+          <Ionicons name="business-outline" size={iconSize} color={COLORS.gold} />
+          <View style={{ width: '48%', height: 3, marginTop: 5, backgroundColor: COLORS.primary, borderRadius: 2 }} />
         </View>
       </View>
 
@@ -42,8 +41,8 @@ export const CivicTrackLogo: React.FC<CivicTrackLogoProps> = ({
           <Text style={[styles.title, { fontSize: titleSize }]}>Civic Track</Text>
           {showTagline && (
             <View style={styles.taglineWrapper}>
-              <Text style={styles.taglineLine1}>Cleaner Cities</Text>
-              <Text style={styles.taglineLine2}>Brighter Tomorrows</Text>
+              <Text style={styles.taglineLine1}>Our streets. Our future.</Text>
+              <Text style={styles.taglineLine2}>A stronger tomorrow, together.</Text>
             </View>
           )}
         </View>
@@ -58,9 +57,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badge: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: COLORS.cinematic,
     borderWidth: 2.5,
-    borderColor: COLORS.primary,
+    borderColor: COLORS.secondarySurface,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',

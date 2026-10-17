@@ -56,6 +56,8 @@ export const createComplaintSchema = z.object({
   longitude: z.number().finite().min(-180).max(180),
   address: z.string().optional().default('Captured Coordinates'),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional().default('medium'),
+  analysisToken: z.string().max(50000).optional(),
+  uploadToken: z.string().max(5000).optional(),
 
 });
 

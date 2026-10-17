@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 class BoundingBox(BaseModel):
     x1: float = Field(..., description="Top-left X coordinate")
@@ -13,10 +13,28 @@ class DetectionItem(BaseModel):
     bbox: BoundingBox
     model: str = Field(..., description="Model that produced this detection")
 
+class SeverityEvidence(BaseModel):
+    category: str
+    detectionConfidence: float = Field(ge=0, le=1)
+    imageCoverage: float = Field(ge=0, le=1)
+    model: str
+
+class SeverityAssessment(BaseModel):
+    level: Optional[Literal['Low', 'Medium', 'High']] = None
+    state: Literal['estimated', 'uncertain', 'unavailable']
+    method: str
+    validated: Literal[False] = False
+    reason: str
+    evidence: List[SeverityEvidence] = Field(default_factory=list)
+
 class PredictResponse(BaseModel):
     detected: bool = Field(..., description="Whether any issue was detected")
     message: Optional[str] = "Object detection executed successfully"
     detections: List[DetectionItem] = []
+    severity: Optional[SeverityAssessment] = None
+    generatedDescription: Optional[str] = None
+    modelsUsed: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
 
 class ErrorResponse(BaseModel):
     success: bool = False

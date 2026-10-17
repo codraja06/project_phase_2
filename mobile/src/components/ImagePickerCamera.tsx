@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, BORDER_RADIUS, SHADOWS, TYPOGRAPHY } from '../constants/theme';
+import { CIVIC_PHOTOS } from './CivicVisuals';
 
 interface ImagePickerCameraProps {
   imageUri: string | null;
@@ -63,6 +65,10 @@ export const ImagePickerCamera: React.FC<ImagePickerCameraProps> = ({
         </View>
         <Text style={styles.captureTitle}>Upload an Issue Image</Text>
         <Text style={styles.captureSub}>Capture a photo or choose an image from your device</Text>
+        <View style={{ flexDirection: 'row', gap: 8, width: '100%', maxWidth: 350, marginVertical: 16 }}>
+          {[CIVIC_PHOTOS.pothole, CIVIC_PHOTOS.waste, CIVIC_PHOTOS.water].map((photo, index) => <Image key={index} source={photo} accessible={false} style={{ flex: 1, height: 72, borderRadius: 8 }} resizeMode="cover" />)}
+        </View>
+        <Text style={{ color: COLORS.textMuted, fontSize: 11, marginBottom: 14 }}>Reference photos · upload your own evidence below</Text>
         
         <View style={styles.buttonRow}>
           <TouchableOpacity
@@ -156,7 +162,7 @@ const styles = StyleSheet.create({
   actionBtnSecondary: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: BORDER_RADIUS.md,
@@ -177,7 +183,7 @@ const styles = StyleSheet.create({
   retakeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,

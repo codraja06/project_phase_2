@@ -1,5 +1,6 @@
 import { MapLocationPicker } from '../../components/MapLocationPicker';
 import { RequestError } from '../../components/RequestError';
+import { TriageSummary } from '../../components/TriageSummary';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -32,6 +33,7 @@ import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { ComplaintManagementPanel } from '../../components/ComplaintManagementPanel';
 
 type Props = NativeStackScreenProps<AuthorityStackParamList, 'AuthorityComplaintDetail'>;
 
@@ -46,7 +48,6 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
   const [expandedDesc, setExpandedDesc] = useState(false);
 
   // Modals
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [progressModalVisible, setProgressModalVisible] = useState(false);
   const [resolveModalVisible, setResolveModalVisible] = useState(false);
 
@@ -99,24 +100,12 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
     }
   };
 
-  const handleDeleteComplaint = async () => {
-    try {
-      setActionLoading(true);
-      await authorityApi.deleteComplaint(complaintId);
-      setDeleteModalVisible(false);
-      setToast({ visible: true, message: 'Complaint purged.', type: 'info' });
-      setTimeout(() => navigation.goBack(), 1200);
-    } catch (error: any) {
-      setToast({ visible: true, message: error.message || 'Unable to delete.', type: 'error' });
-    } finally {
-      setActionLoading(false);
-    }
-  };
+
 
   if (loadError) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+        <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
         <View style={styles.headerBar}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -132,7 +121,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
   if (loading && !refreshing) return <LoadingSpinner message="Loading municipal dossier..." />;
   if (!complaint) return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
       <View style={styles.headerBar}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -171,7 +160,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
       <Animated.View entering={FadeInDown.duration(400)} style={styles.headerBar}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -181,11 +170,11 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
       </Animated.View>
 
       <ScrollView style={styles.container} contentContainerStyle={isWide ? styles.desktopScrollContent : styles.scrollContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}>
-        <View style={{ padding: 16 }}><MapLocationPicker latitude={complaint.latitude} longitude={complaint.longitude} address={complaint.address} interactive={false} showCard={false} height={220} /></View>
         {isWide ? (
           <View style={styles.desktopContainer}>
             {/* Left Column */}
             <View style={styles.desktopLeftCol}>
+              <View style={{ marginBottom: 16 }}><MapLocationPicker latitude={complaint.latitude} longitude={complaint.longitude} address={complaint.address} interactive={false} showCard={false} height={220} /></View>
               <Animated.View entering={ZoomIn.delay(100)}>
                 <DetectionOverlay imageUri={complaint.imageUrl} detections={complaint.boundingBoxes || []} confidence={complaint.aiConfidence} height={380} />
               </Animated.View>
@@ -195,8 +184,8 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                   <CardContent>
                     <View style={styles.metaHeaderRow}><Ionicons name="person-circle" size={20} color={COLORS.secondary} /><Text style={styles.metaCardTitle}> Reporting Citizen</Text></View>
                     <Text style={styles.citizenNameText}>{citizenName}</Text>
-                    {citizenEmail && <Text style={styles.citizenEmailText}>✉ {citizenEmail}</Text>}
-                    {citizenPhone && <Text style={styles.citizenPhoneText}>📞 {citizenPhone}</Text>}
+                    {citizenEmail && <Text style={styles.citizenEmailText}>{citizenEmail}</Text>}
+                    {citizenPhone && <Text style={styles.citizenPhoneText}>{citizenPhone}</Text>}
                   </CardContent>
                 </Card>
               </Animated.View>
@@ -232,6 +221,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                 </View>
 
                 <Text style={styles.title}>{complaint.title}</Text>
+                <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} priorityMetadata={complaint.priorityMetadata} />
               </Animated.View>
 
               <Animated.View entering={FadeInUp.delay(200)}>
@@ -261,9 +251,8 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                 <Text style={styles.actionsSectionHeader}>MUNICIPAL ACTION PIPELINE</Text>
                 {!isVerified && <Button title="Verify Incident" onPress={handleVerifyComplaint} variant="secondary" size="lg" loading={actionLoading} style={styles.actionBtn} />}
                 {!isInProgress && !isResolved && <Button title="Mark In Progress" onPress={() => setProgressModalVisible(true)} variant="default" size="lg" loading={actionLoading} style={styles.actionBtn} />}
-                {isInProgress && <Button title="Mark Resolved" onPress={() => setResolveModalVisible(true)} variant="default" size="lg" loading={actionLoading} style={styles.actionBtn} />}
+                {isInProgress && <Button title="Mark Resolved" onPress={() => setResolveModalVisible(true)} variant="default" size="lg" loading={actionLoading} disabled={!!complaint.completionImageUrl && complaint.completionReview !== 'accepted'} style={styles.actionBtn} />}
                 {isResolved && <Button title="Resolved ✓" onPress={() => {}} variant="outline" size="lg" disabled style={styles.actionBtn} />}
-                <Button title="Purge Record" onPress={() => setDeleteModalVisible(true)} variant="destructive" style={{ marginTop: SPACING.md }} />
               </Animated.View>
             </View>
           </View>
@@ -281,7 +270,9 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                   <Badge label={isVerified ? 'VERIFIED' : 'UNVERIFIED'} variant={isVerified ? 'success' : 'warning'} />
                 </View>
 
+                <MapLocationPicker latitude={complaint.latitude} longitude={complaint.longitude} address={complaint.address} interactive={false} showCard={false} height={220} />
                 <Text style={styles.title}>{complaint.title}</Text>
+                <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} priorityMetadata={complaint.priorityMetadata} />
               </Animated.View>
               
               <Animated.View entering={FadeInUp.delay(300)}>
@@ -342,18 +333,19 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
               <Animated.View entering={FadeInUp.delay(600)} style={styles.actionsSection}>
                 {!isVerified && <Button title="Verify Incident" onPress={handleVerifyComplaint} variant="secondary" size="lg" loading={actionLoading} style={styles.actionBtn} />}
                 {!isInProgress && !isResolved && <Button title="Mark In Progress" onPress={() => setProgressModalVisible(true)} variant="default" size="lg" loading={actionLoading} style={styles.actionBtn} />}
-                {isInProgress && <Button title="Mark Resolved" onPress={() => setResolveModalVisible(true)} variant="default" size="lg" loading={actionLoading} style={styles.actionBtn} />}
+                {isInProgress && <Button title="Mark Resolved" onPress={() => setResolveModalVisible(true)} variant="default" size="lg" loading={actionLoading} disabled={!!complaint.completionImageUrl && complaint.completionReview !== 'accepted'} style={styles.actionBtn} />}
                 {isResolved && <Button title="Resolved ✓" onPress={() => {}} variant="outline" size="lg" disabled style={styles.actionBtn} />}
-                <Button title="Purge Record" onPress={() => setDeleteModalVisible(true)} variant="destructive" style={{ marginTop: SPACING.md }} />
               </Animated.View>
             </View>
           </View>
         )}
+        <View style={{ width: '100%', maxWidth: 1440, alignSelf: 'center', paddingHorizontal: isWide ? 0 : SPACING.lg, marginTop: SPACING.lg }}>
+          <ComplaintManagementPanel complaint={complaint} onChange={setComplaint} />
+        </View>
       </ScrollView>
 
       <ConfirmationDialog visible={progressModalVisible} title="Mark In Progress" message={`Dispatch municipal team to inspect and resolve '${complaint.title}'?`} confirmText="Confirm Dispatch" confirmVariant="info" loading={actionLoading} onConfirm={() => handleUpdateStatus('In Progress')} onCancel={() => setProgressModalVisible(false)} />
       <ConfirmationDialog visible={resolveModalVisible} title="Certify Resolution" message={`Confirm that work is completed and civic issue '${complaint.title}' is remediated?`} confirmText="Confirm Resolution" confirmVariant="primary" loading={actionLoading} onConfirm={() => handleUpdateStatus('Resolved')} onCancel={() => setResolveModalVisible(false)} />
-      <ConfirmationDialog visible={deleteModalVisible} title="Purge Complaint" message={`Permanently remove '${complaint.title}' from the civic database?`} confirmText="Purge Record" confirmVariant="danger" loading={actionLoading} onConfirm={handleDeleteComplaint} onCancel={() => setDeleteModalVisible(false)} />
 
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onDismiss={() => setToast(prev => ({ ...prev, visible: false }))} />
     </SafeAreaView>
@@ -361,13 +353,13 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0F172A' },
-  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: 10, paddingBottom: 14, backgroundColor: '#0F172A' },
+  safeArea: { flex: 1, backgroundColor: COLORS.authorityPrimary },
+  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: 10, paddingBottom: 14, backgroundColor: COLORS.cinematic, borderBottomWidth: 2, borderBottomColor: COLORS.gold },
   backBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', marginRight: SPACING.md },
-  headerTitle: { ...TYPOGRAPHY.h3, color: '#FFFFFF', flex: 1 },
+  headerTitle: { ...TYPOGRAPHY.h3, color: COLORS.surface, flex: 1 },
   container: { flex: 1, backgroundColor: COLORS.backgroundNeutral },
   scrollContent: { paddingBottom: SPACING['5xl'] },
-  desktopScrollContent: { padding: SPACING['5xl'], maxWidth: 1100, alignSelf: 'center', width: '100%' },
+  desktopScrollContent: { padding: SPACING['5xl'], maxWidth: 1440, alignSelf: 'center', width: '100%' },
   desktopContainer: { flexDirection: 'row', gap: SPACING['4xl'] },
   desktopLeftCol: { flex: 1 },
   desktopRightCol: { flex: 1.2 },
@@ -396,7 +388,7 @@ const styles = StyleSheet.create({
   infoValue: { ...TYPOGRAPHY.bodySmall, color: COLORS.textPrimary, fontWeight: '500' },
   infoSubValue: { ...TYPOGRAPHY.caption, color: COLORS.textSecondary, marginTop: 2 },
   readMoreText: { ...TYPOGRAPHY.caption, fontWeight: '700', color: COLORS.primary, marginTop: 4 },
-  actionsSection: { marginTop: SPACING['3xl'], padding: SPACING.xl, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.borderLight, ...SHADOWS.sm },
+  actionsSection: { marginTop: SPACING['3xl'], padding: SPACING.xl, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.lg, borderWidth: 1, borderColor: COLORS.borderLight, borderTopWidth: 3, borderTopColor: COLORS.gold, ...SHADOWS.sm },
   actionsSectionHeader: { ...TYPOGRAPHY.caption, fontWeight: '800', color: COLORS.textSecondary, marginBottom: SPACING.lg, textAlign: 'center' },
   actionBtn: { marginBottom: SPACING.md },
 });

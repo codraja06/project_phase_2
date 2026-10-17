@@ -35,7 +35,7 @@ function generateWebLeafletHtml({
       height: 100%;
       margin: 0;
       padding: 0;
-      background: #F1F5F9;
+      background: #F3ECE8;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     .custom-marker {
@@ -47,7 +47,7 @@ function generateWebLeafletHtml({
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: #B71C1C;
+      background: #BE2638;
       border: 3px solid #FFFFFF;
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
       display: flex;
@@ -72,7 +72,7 @@ function generateWebLeafletHtml({
     }
     .popup-title {
       font-weight: 700;
-      color: #0F172A;
+      color: #2C101B;
       margin-bottom: 2px;
     }
     .popup-address {
@@ -128,10 +128,12 @@ function generateWebLeafletHtml({
       if (pinsData && pinsData.length > 0) {
         pinsData.forEach(function(pin) {
           if (typeof pin.latitude === 'number' && typeof pin.longitude === 'number') {
-            var marker = L.marker([pin.latitude, pin.longitude], { icon: customIcon }).addTo(map);
+            var marker = L.marker([pin.latitude, pin.longitude], { icon: customIcon, title: pin.title || 'Reported civic issue', alt: pin.title || 'Reported civic issue' }).addTo(map);
+            if (marker.getElement()) marker.getElement().setAttribute('aria-label', pin.title || 'Reported civic issue');
             if (pin.title || pin.address) {
-              var content = '<div class="popup-title">' + (pin.title || 'Civic Issue') + '</div>';
-              if (pin.address) content += '<div class="popup-address">' + pin.address + '</div>';
+              var content = document.createElement('div');
+              var heading = document.createElement('div'); heading.className = 'popup-title'; heading.textContent = pin.title || 'Civic Issue'; content.appendChild(heading);
+              if (pin.address) { var address = document.createElement('div'); address.className = 'popup-address'; address.textContent = pin.address; content.appendChild(address); }
               marker.bindPopup(content);
             }
             marker.on('click', function() {
@@ -142,8 +144,10 @@ function generateWebLeafletHtml({
       } else {
         currentMarker = L.marker([initialLat, initialLng], {
           icon: customIcon,
-          draggable: isInteractive && canSelectLocation
+          draggable: isInteractive && canSelectLocation,
+          title: 'Incident location', alt: 'Incident location'
         }).addTo(map);
+        if (currentMarker.getElement()) currentMarker.getElement().setAttribute('aria-label', 'Incident location');
 
         if (isInteractive && canSelectLocation) {
           currentMarker.on('dragend', function(e) {
@@ -256,7 +260,7 @@ export function MapSurface({
           width: '100%',
           height: '100%',
           border: 0,
-          backgroundColor: '#F1F5F9',
+          backgroundColor: '#F3ECE8',
         }}
       />
     </View>
@@ -266,13 +270,13 @@ export function MapSurface({
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F3ECE8',
   },
   fallbackContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F3ECE8',
     padding: 16,
   },
   fallbackText: {

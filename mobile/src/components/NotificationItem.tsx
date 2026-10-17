@@ -124,8 +124,10 @@ const styles = StyleSheet.create({
     } : {}),
   },
   containerUnread: {
-    borderColor: COLORS.secondaryLight,
-    backgroundColor: '#FAFDFE',
+    borderColor: COLORS.primarySurface,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
+    backgroundColor: '#FFF9F5',
   },
   containerHovered: {
     borderColor: COLORS.primary,

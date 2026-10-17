@@ -17,7 +17,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
+import { CivicHero, PhotoCredits } from '../../components/CivicVisuals';
 import { authApi } from '../../api/authApi';
+import { googleAuthService } from '../../services/googleAuth';
 import { Input, PasswordInput } from '../../components/Input';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
@@ -33,7 +35,7 @@ import { TYPOGRAPHY } from '../../theme/typography';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 export const ProfileScreen = ({ navigation }: any) => {
-  const { isDesktop } = useBreakpoint();
+  const { isWide: isDesktop } = useBreakpoint();
   const { user, logout, updateUser } = useAuth();
 
   // Modals
@@ -54,6 +56,7 @@ export const ProfileScreen = ({ navigation }: any) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [linkingGoogle, setLinkingGoogle] = useState(false);
 
   // Notification Preferences State
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -113,6 +116,26 @@ export const ProfileScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleLinkGoogle = async () => {
+    if (user?.googleId) {
+      showMessage('Google Connected', 'This account is already linked to Google.');
+      return;
+    }
+    if (linkingGoogle) return;
+    try {
+      setLinkingGoogle(true);
+      const updated = await googleAuthService.linkGoogle();
+      updateUser(updated);
+      showMessage('Google Connected', 'You can now use Continue with Google to sign in.');
+    } catch (error: any) {
+      if (!error.message?.toLowerCase().includes('cancelled')) {
+        showMessage('Could Not Connect Google', error.message || 'Please try again.');
+      }
+    } finally {
+      setLinkingGoogle(false);
+    }
+  };
+
   const handleHelpSupport = () => {
     showMessage(
       'CivicTrack Support & Helpline',
@@ -154,6 +177,13 @@ export const ProfileScreen = ({ navigation }: any) => {
           sub: 'Change password and secure login',
           onPress: () => setChangePasswordVisible(true)},
         {
+          icon: 'logo-google' as const,
+          iconBg: COLORS.primaryLight,
+          iconColor: COLORS.primary,
+          label: user?.googleId ? 'Google Account Connected' : 'Connect Google Account',
+          sub: user?.googleId ? 'Use Google at your next sign-in' : 'Link your account for Google sign-in',
+          onPress: handleLinkGoogle},
+        {
           icon: 'notifications-outline' as const,
           iconBg: '#FEFCE8', // Yellow tint
           iconColor: COLORS.warning,
@@ -168,9 +198,9 @@ export const ProfileScreen = ({ navigation }: any) => {
           icon: 'call-outline' as const,
           iconBg: COLORS.borderLight,
           iconColor: COLORS.textSecondary,
-          label: 'City Hotline & Support',
-          sub: '1800-CIVIC-CARE • 8AM - 8PM',
-          onPress: handleHelpSupport},
+          label: 'Civic Assistance',
+          sub: 'Reporting guidance and support information',
+          onPress: () => navigation.navigate('CivicAssistant')},
         {
           icon: 'information-circle-outline' as const,
           iconBg: COLORS.borderLight,
@@ -191,6 +221,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         contentContainerStyle={isDesktop ? styles.desktopContent : styles.mobileContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={{ marginBottom: 20 }}><CivicHero compact photo="coast" eyebrow="CIVICTRACK / YOUR ACCOUNT" title="Your place in a better city." description="Your profile, preferences and civic activity." /></View>
         <Animated.View entering={FadeInDown.duration(400)} style={isDesktop ? styles.desktopHeader : styles.mobileHeader}>
           <TouchableOpacity
             style={styles.backBtn}
@@ -212,10 +243,10 @@ export const ProfileScreen = ({ navigation }: any) => {
                 <View style={styles.profileInfo}>
                   <Text style={styles.profileName}>{user?.name || 'CivicTrack Citizen'}</Text>
                   <View style={styles.badgeRow}>
-                    <Badge label="VERIFIED CITIZEN" variant="outline" icon={<Ionicons name="shield-checkmark" size={10} color={COLORS.primary} />} />
+                    <Badge label="CITIZEN ACCOUNT" variant="outline" icon={<Ionicons name="shield-checkmark" size={10} color={COLORS.primary} />} />
                     <Text style={styles.profileEmail}>{user?.email}</Text>
                   </View>
-                  <Text style={styles.profileLocality}>Ward 14 / Civic Zone</Text>
+                  <Text style={styles.profileLocality}>Citizen account</Text>
                 </View>
               </View>
               <Button
@@ -306,6 +337,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         </Animated.View>
 
         <Animated.Text entering={FadeIn.delay(600)} style={styles.footerVersion}>CivicTrack v1.0.0 • AI-Powered Civic Management</Animated.Text>
+        <PhotoCredits />
       </ScrollView>
       </KeyboardAvoidingView>
 
@@ -439,7 +471,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.background },
   container: { flex: 1 },
-  desktopContent: { padding: SPACING['5xl'], maxWidth: 900, alignSelf: 'center', width: '100%' },
+  desktopContent: { padding: 24, maxWidth: 1280, alignSelf: 'center', width: '100%' },
   mobileContent: { padding: SPACING.lg, paddingBottom: 100 },
   desktopHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING['4xl'] },
   mobileHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING['3xl'], marginTop: SPACING.sm },

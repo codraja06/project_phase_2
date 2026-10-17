@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -16,54 +16,17 @@ interface DescriptionEditorProps {
   onChangeDescription: (text: string) => void;
   address?: string;
   error?: string;
+  generatedDescription?: string;
 }
 
-export const getDefaultDescription = (category: string, address?: string): string => {
-  const locSuffix = address ? ` near ${address}` : ' at the selected location';
-  switch (category) {
-    case 'pothole':
-      return `A pothole has been detected on the road${locSuffix}.`;
-    case 'road_damage':
-      return `Road damage has been detected${locSuffix}.`;
-    case 'garbage':
-      return `Uncollected garbage accumulation reported${locSuffix}.`;
-    case 'garbage_overflow':
-      return `An overflowing garbage bin has been detected${locSuffix}.`;
-    case 'broken_streetlight':
-      return `A broken or non-functional streetlight has been reported${locSuffix}.`;
-    case 'drainage_problem':
-    case 'drainage':
-      return `A drainage problem causing water stagnation has been detected${locSuffix}.`;
-    case 'water_leakage':
-      return `A municipal water pipeline leakage has been observed${locSuffix}.`;
-    case 'dead_animal':
-      return `A deceased animal requiring sanitation clearance has been reported${locSuffix}.`;
-    case 'broken_tree':
-      return `A fallen or broken tree hazard obstructing public space has been reported${locSuffix}.`;
-    default:
-      return `A civic infrastructure issue has been reported${locSuffix}.`;
-  }
-};
-
 export const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
-  category,
-  customCategory,
   description,
   onChangeDescription,
-  address,
   error,
+  generatedDescription,
 }) => {
-  // When category changes, if description is empty, populate with generated template
-  useEffect(() => {
-    if (!description || description.trim() === '') {
-      const generated = getDefaultDescription(category, address);
-      onChangeDescription(generated);
-    }
-  }, [category, address]);
-
   const handleResetToTemplate = () => {
-    const generated = getDefaultDescription(category, address);
-    onChangeDescription(generated);
+    if (generatedDescription) onChangeDescription(generatedDescription);
   };
 
   return (
@@ -73,24 +36,25 @@ export const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           <Text style={styles.label}>Complaint Description</Text>
           <View style={styles.autoBadge}>
             <Ionicons name="sparkles" size={11} color={COLORS.secondaryDark} style={{ marginRight: 3 }} />
-            <Text style={styles.autoBadgeText}>Auto-Generated (Editable)</Text>
+            <Text style={styles.autoBadgeText}>{generatedDescription ? 'AI detection draft' : 'Manual entry'}</Text>
           </View>
         </View>
 
         <TouchableOpacity
           onPress={handleResetToTemplate}
+          disabled={!generatedDescription}
           accessibilityRole="button"
-          accessibilityLabel="Reset description template"
+          accessibilityLabel="Restore AI description"
           style={styles.resetBtn}
           activeOpacity={0.7}
         >
           <Ionicons name="refresh-outline" size={13} color={COLORS.primary} style={{ marginRight: 4 }} />
-          <Text style={styles.resetBtnText}>Reset Template</Text>
+          <Text style={styles.resetBtnText}>{generatedDescription ? 'Restore draft' : ''}</Text>
         </TouchableOpacity>
       </View>
 
       <Text style={styles.helperText}>
-        You can freely modify or add specific landmarks and details to this description.
+        {generatedDescription ? 'Review and edit the AI detection draft before submitting. Image coverage does not measure physical damage.' : 'AI description unavailable. Enter the condition you observed to continue.'}
       </Text>
 
       <View style={[styles.inputWrapper, !!error && styles.inputWrapperError]}>
@@ -101,7 +65,7 @@ export const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           numberOfLines={4}
           value={description}
           onChangeText={onChangeDescription}
-          placeholder="Describe defect details, landmarks, or severity..."
+          placeholder="Describe the issue, its location, and the action requested."
           placeholderTextColor={COLORS.textMuted}
           textAlignVertical="top"
         />
@@ -119,12 +83,15 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 6,
   },
   labelWrapper: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: 8,
   },
@@ -163,7 +130,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   inputWrapper: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,

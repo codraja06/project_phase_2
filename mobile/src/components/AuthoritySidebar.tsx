@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   sidebar: {
     width: 260,
     maxWidth: '100%',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.background,
     borderRightWidth: 1,
     borderRightColor: COLORS.borderLight,
     flexDirection: 'column',
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
   },
   logoRow: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   portalTagText: {
     ...TYPOGRAPHY.overline,
-    color: '#FFFFFF',
+    color: COLORS.surface,
     letterSpacing: 0.5,
   },
   navScroll: {
@@ -202,13 +202,13 @@ const styles = StyleSheet.create({
     } : {}),
   },
   navItemActive: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     ...SHADOWS.sm,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
   navItemHovered: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F3ECE8',
   },
   activeIndicator: {
     position: 'absolute',
@@ -237,14 +237,14 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderTopWidth: 1,
     borderTopColor: COLORS.borderLight,
   },
   footerOfficerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.background,
     padding: 12,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
