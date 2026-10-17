@@ -18,7 +18,7 @@ async function login(page, user) {
   await page.getByLabel(citizen ? 'Email Address' : 'Department Official Email', { exact: true }).fill(user.email);
   await page.getByLabel(citizen ? 'Password' : 'Officer Security Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: citizen ? 'Sign In' : 'Authenticate as Officer', exact: true }).click();
-  await page.getByText(citizen ? 'Quick Issue Categories' : 'Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
+  await page.getByText(citizen ? 'Quick Issue Categories' : 'Operational Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
 }
 async function widths(page, screen) {
   for (const width of [320,375,430,768,1024,1280,1440,1920]) {
@@ -63,6 +63,8 @@ async function widths(page, screen) {
     const chooser = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: 'Upload Image', exact: true }).click();
     await (await chooser).setFiles(path.join(__dirname, '../../assets/icon.png'));
+    const manual = page.getByRole('button', { name: 'Continue without AI assessment', exact: true });
+    await manual.waitFor({ timeout: 60000 }); await manual.click();
     await page.getByRole('button', { name: 'Pothole', exact: true }).click();
     await page.getByLabel('Complaint description', { exact: true }).fill('A pothole was observed at the selected GPS location.');
     await page.getByRole('button', { name: 'Continue to Location', exact: true }).click();
@@ -80,11 +82,11 @@ async function widths(page, screen) {
     checks.push('Citizen saw privacy-safe nearby warning, continued, and stored a real assigned complaint');
 
     await admin.getByTestId('workspace-sidebar').getByRole('button', { name: 'Incident Map', exact: true }).click();
-    await admin.getByLabel('Hotspot category filter').fill('pothole');
-    await admin.getByRole('button', { name: 'Apply map filters', exact: true }).click();
-    await expect(admin.getByRole('button', { name: `Open ${submitted.complaintId}` })).toBeVisible();
+    await admin.getByRole('button', { name: 'Potholes', exact: true }).click();
+    await admin.getByRole('button', { name: 'Apply Filters', exact: true }).click();
+    await expect(admin.getByRole('button', { name: `Open complaint ${submitted.complaintId}` })).toBeVisible();
     await widths(admin, 'Filtered hotspot map');
-    await admin.getByRole('button', { name: `Open ${submitted.complaintId}` }).click();
+    await admin.getByRole('button', { name: `Open complaint ${submitted.complaintId}` }).click();
     await expect(admin.getByText('Local Road Team', { exact: false }).filter({ visible: true }).last()).toBeVisible();
     await admin.getByRole('button', { name: 'Check nearby reports', exact: true }).click();
     await expect(admin.getByText(new RegExp(existing.complaintId)).filter({ visible: true }).first()).toBeVisible();
@@ -94,6 +96,18 @@ async function widths(page, screen) {
     await widths(admin, 'Authority complaint management');
     checks.push('Authority inspected hotspot record and confirmed a duplicate without deleting or resolving it');
 
+    await admin.getByLabel('Triage review reason').fill('Officer inspected the submitted report evidence.');
+    await admin.getByRole('button', { name: 'Severity: High', exact: true }).click();
+    await expect.poll(async () => (await Complaint.findById(submitted._id)).severityReview?.level).toBe('High');
+    await admin.getByRole('button', { name: 'Priority: low', exact: true }).click();
+    await expect.poll(async () => (await Complaint.findById(submitted._id)).priorityOverride?.level).toBe('low');
+    await admin.getByRole('button', { name: 'Restore calculated priority', exact: true }).click();
+    await expect.poll(async () => (await Complaint.findById(submitted._id)).priorityOverride).toBeNull();
+    checks.push('Officer severity correction, priority override and reset persisted with audit history');
+
+    await page.getByRole('button', { name: 'VIEW COMPLAINT DETAILS', exact: true }).click();
+    await page.getByTestId('workspace-sidebar').getByRole('button', { name: 'Notifications', exact: true }).click();
+    await expect(page.getByText('Complaint received', { exact: true })).toBeVisible();
     await admin.getByRole('button', { name: 'Mark In Progress', exact: true }).click();
     await admin.getByRole('button', { name: 'Confirm Dispatch', exact: true }).click();
     const repairChooser = admin.waitForEvent('filechooser');
@@ -105,10 +119,10 @@ async function widths(page, screen) {
     await admin.getByRole('button', { name: 'Mark Resolved', exact: true }).click();
     await admin.getByRole('button', { name: 'Confirm Resolution', exact: true }).click();
     await expect.poll(async () => (await Complaint.findById(submitted._id)).status).toBe('Resolved');
+    await expect(page.getByText('Complaint Resolved', { exact: true })).toBeVisible();
+    checks.push('Citizen notification list received authority resolution live without reload or manual refresh');
     checks.push('Repair photo required review and an explicit authority resolution confirmation');
 
-    await page.getByRole('button', { name: 'VIEW COMPLAINT DETAILS', exact: true }).click();
-    await page.getByTestId('workspace-sidebar').getByRole('button', { name: 'Notifications', exact: true }).click();
     await expect(page.getByText('Complaint Resolved', { exact: true })).toBeVisible();
     await widths(page, 'Stored citizen notifications');
     const before = await Notification.countDocuments({ recipient: citizen._id, readAt: null });

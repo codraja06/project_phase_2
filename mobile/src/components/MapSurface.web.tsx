@@ -12,12 +12,14 @@ function generateWebLeafletHtml({
   interactive,
   pins,
   hasLocationSelector,
+  zoom = 16,
 }: {
   latitude: number;
   longitude: number;
   interactive: boolean;
   pins?: MapPin[];
   hasLocationSelector: boolean;
+  zoom?: number;
 }): string {
   const safePins = pins && pins.length > 0 ? pins : null;
 
@@ -35,7 +37,7 @@ function generateWebLeafletHtml({
       height: 100%;
       margin: 0;
       padding: 0;
-      background: #F3ECE8;
+      background: #EDF2EF;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     .custom-marker {
@@ -47,7 +49,7 @@ function generateWebLeafletHtml({
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: #BE2638;
+      background: #16634B;
       border: 3px solid #FFFFFF;
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
       display: flex;
@@ -72,7 +74,7 @@ function generateWebLeafletHtml({
     }
     .popup-title {
       font-weight: 700;
-      color: #2C101B;
+      color: #102F27;
       margin-bottom: 2px;
     }
     .popup-address {
@@ -94,7 +96,7 @@ function generateWebLeafletHtml({
 
       var map = L.map('map', {
         center: [initialLat, initialLng],
-        zoom: 16,
+        zoom: ${zoom},
         zoomControl: isInteractive,
         dragging: isInteractive,
         touchZoom: isInteractive,
@@ -123,6 +125,7 @@ function generateWebLeafletHtml({
         }
       }
 
+      map.on('zoomend', function() { postMsg({ type: 'zoom_changed', zoom: map.getZoom() }); });
       var currentMarker = null;
 
       if (pinsData && pinsData.length > 0) {
@@ -188,6 +191,7 @@ export function MapSurface({
   pins,
   onSelectPin,
   onSelectLocation,
+  zoom = 16, onZoomChange,
 }: MapSurfaceProps) {
   const [iframeRef, setIframeRef] = useState<HTMLIFrameElement | null>(null);
 
@@ -204,7 +208,9 @@ export function MapSurface({
   useEffect(() => {
     const handleWindowMessage = (event: MessageEvent) => {
       try {
+        if (event.source !== iframeRef?.contentWindow) return;
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data?.type === 'zoom_changed' && onZoomChange) onZoomChange(data.zoom);
         if (data?.type === 'location_selected' && onSelectLocation) {
           onSelectLocation(data.latitude, data.longitude);
         } else if (data?.type === 'pin_selected' && onSelectPin) {
@@ -217,7 +223,7 @@ export function MapSurface({
 
     window.addEventListener('message', handleWindowMessage);
     return () => window.removeEventListener('message', handleWindowMessage);
-  }, [onSelectLocation, onSelectPin]);
+  }, [onSelectLocation, onSelectPin, onZoomChange, iframeRef]);
 
   // Center update message to iframe
   useEffect(() => {
@@ -237,8 +243,9 @@ export function MapSurface({
         interactive,
         pins,
         hasLocationSelector: !!onSelectLocation,
+        zoom,
       }),
-    [lat, lng, interactive, pins, !!onSelectLocation]
+    [lat, lng, interactive, pins, !!onSelectLocation, zoom]
   );
 
   if (!validCoords) {
@@ -260,7 +267,7 @@ export function MapSurface({
           width: '100%',
           height: '100%',
           border: 0,
-          backgroundColor: '#F3ECE8',
+          backgroundColor: '#EDF2EF',
         }}
       />
     </View>
@@ -270,13 +277,13 @@ export function MapSurface({
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
   },
   fallbackContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
     padding: 16,
   },
   fallbackText: {

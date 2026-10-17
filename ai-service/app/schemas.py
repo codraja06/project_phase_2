@@ -12,6 +12,7 @@ class DetectionItem(BaseModel):
     confidence: float = Field(..., description="Detection confidence score between 0 and 1")
     bbox: BoundingBox
     model: str = Field(..., description="Model that produced this detection")
+    modelVersion: Optional[str] = None
 
 class SeverityEvidence(BaseModel):
     category: str

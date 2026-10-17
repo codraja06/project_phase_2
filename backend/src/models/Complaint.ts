@@ -33,6 +33,7 @@ export interface IBoundingBox {
     y2: number;
   };
   model?: string;
+  modelVersion?: string;
 }
 
 export interface IComplaint extends Document {
@@ -53,6 +54,10 @@ export interface IComplaint extends Document {
   status: ComplaintStatus;
   priority: ComplaintPriority;
   severity?: SeverityAssessment;
+  imageFingerprint?: Record<string, any>;
+  severityReview?: { level: 'Low' | 'Medium' | 'High'; reason: string; at: Date; by: mongoose.Types.ObjectId } | null;
+  priorityOverride?: { level: 'low' | 'medium' | 'high'; reason: string; at: Date; by: mongoose.Types.ObjectId } | null;
+  auditHistory?: { action: string; at: Date; by?: mongoose.Types.ObjectId; before?: string; after?: string; reason: string }[];
   priorityScore?: number;
   priorityMetadata?: Record<string, any>;
   generatedDescription?: string;
@@ -96,6 +101,7 @@ const BoundingBoxSchema = new Schema<IBoundingBox>(
       y2: { type: Number, default: 0 },
     },
     model: { type: String },
+    modelVersion: { type: String },
   },
   { _id: false }
 );
@@ -157,8 +163,15 @@ const ComplaintSchema = new Schema<IComplaint>(
       categoryScore: { type: Number, min: 0, max: 100 },
       reviewRequired: { type: Boolean },
       resolved: { type: Boolean },
+      recommendationScore: { type: Number },
+      authorityOverride: { type: Boolean },
+      severitySource: { type: String },
     }, { _id: false }) },
     generatedDescription: { type: String, default: '' },
+    imageFingerprint: { type: new Schema({ method: String, hash: String, histogram: [Number] }, { _id: false }) },
+    severityReview: { type: new Schema({ level: { type: String, enum: ['Low', 'Medium', 'High'], required: true }, reason: { type: String, required: true }, at: { type: Date, required: true }, by: { type: Schema.Types.ObjectId, ref: 'User', required: true } }, { _id: false }), default: null },
+    priorityOverride: { type: new Schema({ level: { type: String, enum: ['low', 'medium', 'high'], required: true }, reason: { type: String, required: true }, at: { type: Date, required: true }, by: { type: Schema.Types.ObjectId, ref: 'User', required: true } }, { _id: false }), default: null },
+    auditHistory: [{ _id: false, action: { type: String, required: true }, at: { type: Date, required: true }, by: { type: Schema.Types.ObjectId, ref: 'User' }, before: String, after: String, reason: { type: String, required: true } }],
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     officerId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     verified: { type: Boolean, default: false },

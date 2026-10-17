@@ -4,12 +4,14 @@ import { SeverityAssessment } from '../types/ai';
 import { Badge } from './ui/Badge';
 import { COLORS } from '../theme/colors';
 
-export const TriageSummary = ({ severity, priority, score, priorityMetadata, compact = false }: {
+export const TriageSummary = ({ severity, severityReview, priority, score, priorityMetadata, compact = false }: {
+  severityReview?: { level: 'Low' | 'Medium' | 'High'; reason: string };
   severity?: SeverityAssessment; priority?: string; score?: number;
-  priorityMetadata?: { severityScore: number; categoryScore: number; ageScore: number; reviewRequired?: boolean; resolved?: boolean };
+  priorityMetadata?: { severityScore: number; categoryScore: number; ageScore: number; reviewRequired?: boolean; resolved?: boolean; authorityOverride?: boolean; recommendationScore?: number; severitySource?: string };
   compact?: boolean;
 }) => (
   <View style={styles.container}>
+    {!!severityReview && <Text style={styles.note}>Authority-reviewed severity: {severityReview.level} / {severityReview.reason}</Text>}
     <View style={styles.badges}>
       <Badge label={severity?.level ? `${severity.level} severity · experimental` : 'Severity unavailable · review needed'}
         variant={severity?.level === 'High' ? 'destructive' : severity?.level === 'Medium' ? 'warning' : 'secondary'}
@@ -18,6 +20,7 @@ export const TriageSummary = ({ severity, priority, score, priorityMetadata, com
         variant={priority === 'high' || priority === 'urgent' ? 'destructive' : 'secondary'} />}
     </View>
     {!compact && <Text style={styles.note}>{severity?.reason || 'No severity prediction is available for this report. Authority review required.'}</Text>}
+    {!compact && priorityMetadata?.authorityOverride && <Text style={styles.note}>Authority priority override applied. Calculated recommendation: {priorityMetadata.recommendationScore}/100.</Text>}
     {!compact && priorityMetadata && <Text style={styles.note}>{priorityMetadata.resolved ? 'Resolved reports leave the attention queue.' :
       `Priority factors: severity ${priorityMetadata.severityScore}, category ${priorityMetadata.categoryScore}, unresolved age ${priorityMetadata.ageScore}${priorityMetadata.reviewRequired ? '. Severity needs human review.' : '.'}`}</Text>}
   </View>

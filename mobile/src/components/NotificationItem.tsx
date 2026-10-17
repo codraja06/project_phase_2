@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primarySurface,
     borderLeftWidth: 4,
     borderLeftColor: COLORS.primary,
-    backgroundColor: '#FFF9F5',
+    backgroundColor: '#F5FAF7',
   },
   containerHovered: {
     borderColor: COLORS.primary,

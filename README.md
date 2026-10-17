@@ -466,6 +466,17 @@ severity/priority/descriptions and authorized status updates remain available.
 [FEATURES456_VERIFICATION.md](FEATURES456_VERIFICATION.md) lists files changed, actual test
 results, configuration limits and commands to run the existing project.
 
+## Current visual identity
+
+The full Expo application uses an original green and professional blue identity:
+photographic authentication pages, citizen reporting hero, category photo tiles,
+authority banners, consistent lists/details/forms/maps, notification views and profiles.
+Seven licensed reference photos are bundled in `mobile/assets/civic`; source and license
+credits are available in the app's profiles and the asset directory. Actual complaint images, detection coordinates,
+backend data, permissions and navigation remain connected to their existing services.
+See [DESIGN.md](DESIGN.md) for the current design system and
+[MASTER_IMPLEMENTATION_VERIFICATION.md](MASTER_IMPLEMENTATION_VERIFICATION.md) for current tests, feature status and remaining external dependencies.
+
 ## Features 7–12: complaint operations
 
 - Citizen review checks nearby same-category unresolved reports and warns before submission.
@@ -488,3 +499,25 @@ needs different warning thresholds. Set `RESOLUTION_TARGET_HOURS` only after the
 municipality establishes a service target. Existing backend, AI and Expo startup
 commands above are unchanged. The real provider and trained-model limitations noted
 above still apply.
+
+## Latest master implementation
+
+All thirteen requested areas and their practical limits are listed in
+[the implementation report](MASTER_IMPLEMENTATION_VERIFICATION.md). New additions include
+signed visual fingerprints for duplicate review, authenticated live in-app notification
+signals, configurable map grouping/window, exact median and unresolved-age analytics,
+category/department drill-downs, and officer severity/priority correction history.
+Original predictions, photos, final citizen-approved descriptions and status remain
+separate. Existing records need no destructive migration.
+
+`backend/.env.example` documents `DUPLICATE_MAX_HASH_DISTANCE`,
+`DUPLICATE_MIN_COLOR_SIMILARITY`, `HOTSPOT_CELL_DEGREES`, `HOTSPOT_WINDOW_DAYS` and
+optional `RESOLUTION_TARGET_HOURS`. Existing install/start commands above still apply;
+run `npm install` in backend after pulling to install WebSocket support. Deployments
+must forward `/api/notifications/live` WebSocket upgrades. Push delivery while the app
+is closed and cross-instance socket broadcasting are not configured.
+
+Use [the model configuration](ai-service/models/MODEL_CONFIGURATION.md) and
+[training/evaluation guide](ai-service/training/README.md) before adding new weights.
+Current severity and duplicate thresholds are unvalidated baselines. Missing trained
+models and external chat credentials produce explicit fallback states.

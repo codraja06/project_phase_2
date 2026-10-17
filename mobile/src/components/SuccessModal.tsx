@@ -85,7 +85,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
             },
           ]}
         >
-          {/* Animated TVK Theme Success Icon: Yellow Ring with Red Checkmark */}
+          {/* Animated confirmation icon using semantic theme colors */}
           <View style={styles.iconRingOuter}>
             <Animated.View
               style={[

@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   searchWrapperMobile: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
     paddingHorizontal: 12,
     height: 40,
     borderRadius: BORDER_RADIUS.md,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
     paddingHorizontal: 12,
     height: 40,
     borderRadius: BORDER_RADIUS.md,
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderLight,
   },
   iconBtnActive: {
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
   },
   notificationBadge: {
     position: 'absolute',

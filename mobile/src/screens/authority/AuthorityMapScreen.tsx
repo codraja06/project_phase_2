@@ -22,12 +22,19 @@ const CATEGORY_CHIPS = [
   { label: 'Road Damage', value: 'road_damage' },
   { label: 'Garbage', value: 'garbage' },
   { label: 'Animals', value: 'dead_animal' },
+  { label: 'Trees', value: 'broken_tree' },
+  { label: 'Streetlights', value: 'broken_streetlight' },
+  { label: 'Water leakage', value: 'water_leakage' },
+  { label: 'Drainage', value: 'drainage' },
+  { label: 'Other', value: 'other' },
 ];
 
 export const AuthorityMapScreen = ({ navigation }: any) => {
   const { isWide } = useBreakpoint();
   const [draft, setDraft] = useState<Filters>({ status: 'all', priority: 'all', category: 'all' });
   const [query, setQuery] = useState<Filters>(draft);
+  const [cellDegrees, setCellDegrees] = useState(.01);
+  const [windowDays, setWindowDays] = useState(30);
   const [clusters, setClusters] = useState<HotspotCluster[]>([]);
   const [selected, setSelected] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -43,15 +50,15 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
         status: query.status === 'all' ? undefined : query.status,
         priority: query.priority === 'all' ? undefined : query.priority,
       };
-      const data = await managementApi.getHotspots(params);
-      setClusters(data.clusters);
+      const data = await managementApi.getHotspots({ ...params, cellDegrees });
+      setClusters(data.clusters); setWindowDays(data.windowDays);
       setSelected(0);
     } catch (e: any) {
       setError(e.message || 'Could not load complaint hotspots.');
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [query, cellDegrees]);
 
   useFocusEffect(
     useCallback(() => {
@@ -71,7 +78,7 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>Incident Hotspots & Geographic Density</Text>
             <Text style={styles.subtitle}>
-              GPS-reported complaints aggregated into ~0.01° grid cells. Click any cluster pin or cell to inspect underlying reports.
+              GPS-reported complaints grouped into adjustable geographic grid cells. Click any cluster pin or cell to inspect underlying reports.
             </Text>
           </View>
           <View style={styles.statBadge}>
@@ -82,6 +89,8 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
           </View>
         </View>
 
+        <FilterChipGroup options={[{ label: 'Block / 0.001 degrees', value: '.001' }, { label: 'Neighbourhood / 0.01 degrees', value: '.01' }, { label: 'Area / 0.05 degrees', value: '.05' }]} selectedValue={String(cellDegrees).replace(/^0/, '')} onSelect={value => setCellDegrees(Number(value))} />
+        <Text style={{ color: COLORS.textSecondary }}>Geographic grid counts. Default window: last {windowDays} days unless dates are selected. These are observed report concentrations.</Text>
         {/* Filter Bar */}
         <View style={styles.filterCard}>
           <View style={{ gap: 8 }}>
@@ -154,6 +163,8 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
                   latitude={current.latitude}
                   longitude={current.longitude}
                   interactive
+                  zoom={cellDegrees <= .001 ? 17 : cellDegrees <= .01 ? 14 : 11}
+                  onZoomChange={zoom => setCellDegrees(zoom >= 16 ? .001 : zoom >= 13 ? .01 : .05)}
                   pins={clusters.map((cluster, index) => ({
                     id: String(index),
                     latitude: cluster.latitude,
@@ -175,10 +186,10 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
 
             {/* Clusters Sidebar / Details */}
             <View style={styles.sidebar}>
-              <Text style={styles.sectionHeading}>Cluster Density Index ({clusters.length})</Text>
+              <Text style={styles.sectionHeading}>Geographic report counts ({clusters.length})</Text>
               <ScrollView style={{ maxHeight: isWide ? 220 : 140 }} contentContainerStyle={{ gap: 6 }}>
                 {clusters.map((cluster, index) => {
-                  const isHighDensity = cluster.count >= 3;
+                  const isHighDensity = false;
                   const isCurrent = selected === index;
                   return (
                     <TouchableOpacity
@@ -294,7 +305,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: COLORS.primaryLight || '#F3ECE8',
+    backgroundColor: COLORS.primaryLight || '#EDF2EF',
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
@@ -396,7 +407,7 @@ const styles = StyleSheet.create({
   },
   clusterChipActive: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryLight || '#F3ECE8',
+    backgroundColor: COLORS.primaryLight || '#EDF2EF',
   },
   clusterText: {
     fontSize: 13,

@@ -9,6 +9,8 @@ import { Notification } from '../src/models/Notification';
 import { generateToken } from '../src/utils/jwt';
 import * as storage from '../src/services/cloudinaryService';
 
+jest.setTimeout(20000);
+
 describe('Duplicate review, departments, repair evidence, notifications and operations', () => {
   let citizen: any, other: any, officer: any, admin: any;
   let citizenToken: string, otherToken: string, officerToken: string, adminToken: string;

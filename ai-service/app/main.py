@@ -6,6 +6,7 @@ from app.config import settings
 from app.schemas import PredictResponse, ErrorResponse
 from app.detector import detector_instance
 from app.assessment import assess
+from app.image_signature import image_signature, MAX_BYTES
 
 app = FastAPI(
     title="AI Civic Issue Detection Service",
@@ -23,6 +24,14 @@ app.add_middleware(
 
 import io
 from PIL import Image, ImageOps
+
+@app.post('/image-signature')
+async def fingerprint_image(image: UploadFile = File(...)):
+    contents = await image.read(MAX_BYTES + 1)
+    try:
+        return await run_in_threadpool(image_signature, contents)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
 
 @app.get("/health", status_code=status.HTTP_200_OK)
 def health_check():
@@ -54,7 +63,9 @@ async def predict_issue(image: UploadFile = File(...), category: str = Form('aut
         )
 
     try:
-        contents = await image.read()
+        contents = await image.read(MAX_BYTES + 1)
+        if len(contents) > MAX_BYTES:
+            raise HTTPException(status_code=413, detail='Choose an image up to 10 MB.')
         if not contents or len(contents) == 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -64,6 +75,8 @@ async def predict_issue(image: UploadFile = File(...), category: str = Form('aut
         # Validate image content using PIL
         try:
             test_img = Image.open(io.BytesIO(contents))
+            if test_img.format not in ('JPEG', 'PNG', 'WEBP') or test_img.width * test_img.height > 24_000_000:
+                raise ValueError('Unsupported image type or dimensions')
             test_img.verify()
         except Exception:
             raise HTTPException(
@@ -97,7 +110,7 @@ async def predict_issue(image: UploadFile = File(...), category: str = Form('aut
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error executing computer vision detection: {str(e)}"
+            detail="Computer vision could not process this image. Please retry or report manually."
         )
 
 if __name__ == "__main__":

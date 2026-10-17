@@ -19,7 +19,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 }) => {
   const normStatus = (status || '').toString().toLowerCase().trim();
 
-  let bg = '#F3ECE8';
+  let bg = '#EDF2EF';
   let text = COLORS.textSecondary;
   let borderColor = COLORS.border;
   let iconName: keyof typeof Ionicons.glyphMap = 'ellipse';

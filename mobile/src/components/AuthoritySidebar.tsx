@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderLight,
   },
   navItemHovered: {
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
   },
   activeIndicator: {
     position: 'absolute',

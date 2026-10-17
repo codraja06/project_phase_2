@@ -19,7 +19,7 @@ async function auth(page, user) {
   await page.getByLabel(user.role === 'citizen' ? 'Email Address' : 'Department Official Email', { exact: true }).fill(user.email);
   await page.getByLabel(user.role === 'citizen' ? 'Password' : 'Officer Security Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: user.role === 'citizen' ? 'Sign In' : 'Authenticate as Officer', exact: true }).click();
-  await page.getByText(user.role === 'citizen' ? 'Quick Issue Categories' : 'Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
+  await page.getByText(user.role === 'citizen' ? 'Quick Issue Categories' : 'Operational Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
 }
 async function layout(page, role, route, detail = false) {
   for (const width of widths) {
@@ -77,7 +77,7 @@ async function axe(page, route) {
         ['citizen/dashboard','Quick Issue Categories'],['citizen/report','Report Civic Hazard'],['citizen/history','My Complaints'],
         ['citizen/map','Your report map'],['citizen/alerts','Notifications'],['citizen/assistance','Civic Assistance'],['citizen/profile','Account Settings'],[`citizen/complaint/${reports[0]._id}`,'Incident Dossier'],
       ] : [
-        ['authority/dashboard','Command Center'],['authority/complaints','Incident Registry'],['authority/map','Incident Map'],
+        ['authority/dashboard','Operational Command Center'],['authority/complaints','Incident Registry'],['authority/map','Incident Map'],
         ['authority/analytics','Municipal Analytics'],['authority/alerts','Notifications'],['authority/profile','Officer Dossier'],[`authority/complaint/${reports[0]._id}`,'Incident Dossier'],
       ];
       for (const [route, heading] of routes) {

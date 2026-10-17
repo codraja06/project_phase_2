@@ -38,7 +38,7 @@ export const AuthorityInsights = ({ navigation, detailed = false }: { navigation
     finally { if (id === request.current) setLoading(false); }
   };
   useFocusEffect(useCallback(() => { void load(); return () => { request.current++; }; }, [query]));
-  const openList = (extra = {}) => navigation.navigate('AllComplaints', { filter: query.status === 'Pending' ? 'pending' : query.status === 'In Progress' ? 'in_progress' : query.status === 'Resolved' ? 'resolved' : 'all', from: query.from, to: query.to, category: query.category, search: query.search, ...extra });
+  const openList = (extra = {}) => navigation.navigate('AllComplaints', { filter: query.status === 'Pending' ? 'pending' : query.status === 'In Progress' ? 'in_progress' : query.status === 'Resolved' ? 'resolved' : 'all', from: query.from, to: query.to, category: query.category, search: query.search, department: query.department, ...extra });
   const setRange = (range: string) => {
     setPreset(range); const next = { ...draft, from: range === 'all' ? undefined : daysAgo(Number(range) - 1), to: range === 'all' ? undefined : today() }; setDraft(next); setQuery(next);
   };
@@ -66,6 +66,7 @@ export const AuthorityInsights = ({ navigation, detailed = false }: { navigation
           <View><Text style={styles.fieldLabel}>From (UTC, YYYY-MM-DD)</Text><TextInput accessibilityLabel="Analytics start date" style={styles.input} value={draft.from || ''} placeholder="YYYY-MM-DD" onChangeText={from => { setPreset('custom'); setDraft({ ...draft, from: from || undefined }); }} /></View>
           <View><Text style={styles.fieldLabel}>To (UTC, YYYY-MM-DD)</Text><TextInput accessibilityLabel="Analytics end date" style={styles.input} value={draft.to || ''} placeholder="YYYY-MM-DD" onChangeText={to => { setPreset('custom'); setDraft({ ...draft, to: to || undefined }); }} /></View>
           <View><Text style={styles.fieldLabel}>Search reports</Text><TextInput accessibilityLabel="Search analytics" style={styles.input} value={draft.search || ''} placeholder="Issue, ID or location" onChangeText={search => setDraft({ ...draft, search })} /></View>
+          <View><Text style={styles.fieldLabel}>Department</Text><TextInput accessibilityLabel="Analytics department" style={styles.input} value={draft.department || ''} placeholder="All departments" onChangeText={department => setDraft({ ...draft, department: department.trim() || undefined })} /></View>
           <View><Text style={styles.fieldLabel}>Category</Text><TextInput accessibilityLabel="Analytics category" style={styles.input} value={draft.category === 'all' ? '' : draft.category} placeholder="All or e.g. pothole" autoCapitalize="none" onChangeText={category => setDraft({ ...draft, category: category.trim() || 'all' })} /></View>
           <View style={{ justifyContent: 'flex-end' }}><Button title="Apply filters" onPress={() => setQuery({ ...draft })} disabled={loading} /></View>
         </AdaptiveGrid>
@@ -104,14 +105,16 @@ export const AuthorityInsights = ({ navigation, detailed = false }: { navigation
             </View>
             <MiniDonut resolved={data.summary.resolved} total={data.summary.total} size={64} />
           </View>
+          <Text style={styles.subtitle}>Median completed hours: {data.medianResolutionHours?.toFixed(1) ?? 'Unavailable'} / Average unresolved age: {data.unresolvedAge?.averageHours?.toFixed(1) ?? 'Unavailable'} h / Oldest unresolved: {data.unresolvedAge?.oldestHours?.toFixed(1) ?? 'Unavailable'} h. Targets use elapsed hours.</Text>
+          {(data.resolutionByCategory || []).map(row => <TouchableOpacity key={row.category} accessibilityRole="button" onPress={() => openList({ category: row.category, filter: 'resolved' })} style={styles.dataRow}><Text style={styles.dataLabel}>{label(row.category)}</Text><Text style={styles.dataNumber}>{row.resolved} resolved / {row.averageHours.toFixed(1)} h avg</Text></TouchableOpacity>)}
           <AdaptiveGrid minWidth={155} maxColumns={3} gap={10}>
             <View style={styles.metric}><Text style={styles.metricValue}>{data.summary.unresolved ?? data.summary.pending + data.summary.inProgress}</Text><Text style={styles.metricLabel}>Unresolved reports</Text></View>
             <View style={styles.metric}><Text style={styles.metricValue}>{data.summary.averageResolutionHours == null ? '—' : data.summary.averageResolutionHours.toFixed(1)}</Text><Text style={styles.metricLabel}>Average completed hours</Text></View>
-            <View style={styles.metric}><Text style={styles.metricValue}>{data.resolutionTargetHours == null ? '—' : data.summary.overdue}</Text><Text style={styles.metricLabel}>{data.resolutionTargetHours == null ? 'No service target configured' : `Open beyond ${data.resolutionTargetHours} h target`}</Text></View>
+            <TouchableOpacity accessibilityRole="button" disabled={data.resolutionTargetHours == null} onPress={() => openList({ overdue: true })} style={styles.metric}><Text style={styles.metricValue}>{data.resolutionTargetHours == null ? '—' : data.summary.overdue}</Text><Text style={styles.metricLabel}>{data.resolutionTargetHours == null ? 'No service target configured' : `Open beyond ${data.resolutionTargetHours} h target`}</Text></TouchableOpacity>
           </AdaptiveGrid>
           {(data.resolutionByDepartment || []).length ? <View><Text style={[styles.panelTitle, { marginTop: 16 }]}>Completed work by department</Text>
             <Text style={styles.subtitle}>Counts and average hours are shown together; workloads differ.</Text>
-            {data.resolutionByDepartment.map(row => <View key={row.department} style={styles.dataRow}><Text style={styles.dataLabel}>{row.department}</Text><Text style={styles.dataNumber}>{row.resolved} resolved · {row.averageHours.toFixed(1)} h avg</Text></View>)}
+            {data.resolutionByDepartment.map(row => <TouchableOpacity key={row.department} accessibilityRole="button" onPress={() => openList({ department: row.department, filter: 'resolved' })} style={styles.dataRow}><Text style={styles.dataLabel}>{row.department}</Text><Text style={styles.dataNumber}>{row.resolved} resolved · {row.averageHours.toFixed(1)} h avg</Text></TouchableOpacity>)}
           </View> : <Text style={styles.subtitle}>No resolved reports with recorded department and valid timestamps in this view.</Text>}
           {(data.resolutionTrends || []).length > 0 && <View><Text style={[styles.panelTitle, { marginTop: 16 }]}>Resolution dates</Text>
             {data.resolutionTrends.map(row => <View key={row.date} style={styles.dataRow}><Text style={styles.dataLabel}>{row.date}</Text><Text style={styles.dataNumber}>{row.resolved} resolved · {row.averageHours.toFixed(1)} h avg</Text></View>)}
@@ -147,7 +150,7 @@ export const AuthorityInsights = ({ navigation, detailed = false }: { navigation
         <View style={styles.panel}><View style={styles.heading}><View><Text style={styles.panelTitle}>Recent complaints</Text><Text style={styles.subtitle}>Latest reports matching the current filters.</Text></View><Button title="See all" variant="ghost" onPress={() => openList()} /></View>
           {data.recent.map(complaint => <TouchableOpacity key={complaint._id} accessibilityRole="button" accessibilityLabel={`Open complaint ${complaint.complaintId}`} onPress={() => navigation.navigate('AuthorityComplaintDetail', { complaintId: complaint._id })} style={styles.recent}>
             <View style={styles.recentHeader}><View style={{ flex: 1, minWidth: 0 }}><Text style={styles.reference}>{complaint.complaintId}</Text><Text style={styles.recentTitle}>{complaint.title}</Text></View><StatusBadge status={complaint.status} size="sm" /></View>
-            <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} compact /><Text style={styles.subtitle} numberOfLines={2}>{complaint.description}</Text>
+            <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} compact /><Text style={styles.subtitle} numberOfLines={2}>{complaint.description}</Text>
           </TouchableOpacity>)}
         </View>
         <Text style={styles.footnote}>{data.summary.averageResolutionHours === null ? 'Resolution duration unavailable for this view.' : `Average recorded resolution time: ${data.summary.averageResolutionHours.toFixed(1)} hours.`} Priority is calculated from severity, category and age; authorities control status.</Text>

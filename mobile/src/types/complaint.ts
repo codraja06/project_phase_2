@@ -42,6 +42,9 @@ export interface Complaint {
   priorityScore?: number;
   priorityMetadata?: { reviewRequired: boolean; ageScore: number; severityScore: number; categoryScore: number };
   severity?: SeverityAssessment;
+  severityReview?: { level: 'Low' | 'Medium' | 'High'; reason: string; at: string; by: string };
+  priorityOverride?: { level: 'low' | 'medium' | 'high'; reason: string; at: string; by: string } | null;
+  auditHistory?: { action: string; at: string; by?: string; before?: string; after?: string; reason: string }[];
   generatedDescription?: string;
   verified?: boolean;
   createdBy?: string | ComplaintUserRef;

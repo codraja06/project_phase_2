@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   brandingContent: { justifyContent: 'center', alignItems: 'flex-start', maxWidth: 520 },
   logoWrapper: { marginBottom: SPACING['3xl'], alignItems: 'center' },
   brandingTitle: { ...TYPOGRAPHY.display, color: COLORS.onCinematic, fontSize: 42, lineHeight: 49, marginBottom: SPACING.lg, textAlign: 'left', letterSpacing: -1.2 },
-  brandingSubtitle: { ...TYPOGRAPHY.body, color: '#F0DFDC', lineHeight: 25, maxWidth: 420, textAlign: 'left' },
+  brandingSubtitle: { ...TYPOGRAPHY.body, color: '#DDE9E4', lineHeight: 25, maxWidth: 420, textAlign: 'left' },
   brandingFooter: { position: 'absolute', bottom: SPACING['4xl'] },
   brandingFooterText: { ...TYPOGRAPHY.caption, color: COLORS.gold },
   authSide: { flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center' },

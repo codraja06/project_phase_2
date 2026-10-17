@@ -9,6 +9,7 @@ export const authorityApi = {
     const response: any = await axiosClient.get('/authority/analytics', { params }); return response.data;
   },
   async getAllComplaints(params?: {
+    department?: string; overdue?: boolean;
     status?: string;
     category?: string;
     search?: string;

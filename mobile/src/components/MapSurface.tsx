@@ -21,12 +21,14 @@ function generateLeafletHtml({
   interactive,
   pins,
   hasLocationSelector,
+  zoom = 16,
 }: {
   latitude: number;
   longitude: number;
   interactive: boolean;
   pins?: MapPin[];
   hasLocationSelector: boolean;
+  zoom?: number;
 }): string {
   const safePins = pins && pins.length > 0 ? pins : null;
 
@@ -44,7 +46,7 @@ function generateLeafletHtml({
       height: 100%;
       margin: 0;
       padding: 0;
-      background: #F3ECE8;
+      background: #EDF2EF;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     .custom-marker {
@@ -56,7 +58,7 @@ function generateLeafletHtml({
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: #BE2638;
+      background: #16634B;
       border: 3px solid #FFFFFF;
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
       display: flex;
@@ -85,7 +87,7 @@ function generateLeafletHtml({
     }
     .popup-title {
       font-weight: 700;
-      color: #2C101B;
+      color: #102F27;
       margin-bottom: 2px;
     }
     .popup-address {
@@ -112,7 +114,7 @@ function generateLeafletHtml({
 
       var map = L.map('map', {
         center: [initialLat, initialLng],
-        zoom: 16,
+        zoom: ${zoom},
         zoomControl: isInteractive,
         dragging: isInteractive,
         touchZoom: isInteractive,
@@ -137,6 +139,7 @@ function generateLeafletHtml({
         popupAnchor: [0, -16]
       });
 
+      map.on('zoomend', function() { postMsg({ type: 'zoom_changed', zoom: map.getZoom() }); });
       var currentMarker = null;
 
       function postMsg(data) {
@@ -207,6 +210,7 @@ export function MapSurface({
   pins,
   onSelectPin,
   onSelectLocation,
+  zoom = 16, onZoomChange,
 }: MapSurfaceProps) {
   const webViewRef = useRef<WebView>(null);
   const [loadError, setLoadError] = useState(false);
@@ -237,13 +241,15 @@ export function MapSurface({
         interactive,
         pins,
         hasLocationSelector: !!onSelectLocation,
+        zoom,
       }),
-    [lat, lng, interactive, pins, !!onSelectLocation]
+    [lat, lng, interactive, pins, !!onSelectLocation, zoom]
   );
 
   const handleMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'zoom_changed' && onZoomChange) onZoomChange(data.zoom);
       if (data.type === 'location_selected' && onSelectLocation) {
         onSelectLocation(data.latitude, data.longitude);
       } else if (data.type === 'pin_selected' && onSelectPin) {
@@ -320,7 +326,7 @@ export function MapSurface({
         startInLoadingState={true}
         renderLoading={() => (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#BE2638" />
+            <ActivityIndicator size="small" color="#16634B" />
             <Text style={styles.loadingText}>Loading OpenStreetMap...</Text>
           </View>
         )}
@@ -338,7 +344,7 @@ export function MapSurface({
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
   },
   webView: {
     flex: 1,
@@ -348,7 +354,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
     gap: 8,
   },
   loadingText: {
@@ -361,13 +367,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
     gap: 8,
   },
   fallbackTitle: {
     fontWeight: '700',
     fontSize: 14,
-    color: '#2C101B',
+    color: '#102F27',
     textAlign: 'center',
   },
   coordsText: {
@@ -378,7 +384,7 @@ const styles = StyleSheet.create({
   externalButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#BE2638',
+    backgroundColor: '#16634B',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,

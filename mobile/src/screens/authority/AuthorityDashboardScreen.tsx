@@ -154,10 +154,10 @@ export const AuthorityDashboardScreen = ({ navigation }: any) => {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.hotspotTitle}>
-                {hotspots.length} Geographic Hotspot Cluster{hotspots.length === 1 ? '' : 's'} Detected
+                {hotspots.length} Geographic Report Group{hotspots.length === 1 ? '' : 's'}
               </Text>
               <Text style={styles.hotspotSub}>
-                Multiple incidents clustered in close proximity. Tap to inspect coordinate density on Incident Map.
+                Observed reports grouped by location. Inspect counts and records on Incident Map.
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#B45309" />
@@ -265,7 +265,7 @@ export const AuthorityDashboardScreen = ({ navigation }: any) => {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.panelTitle}>Priority Triage Queue</Text>
                     <Text style={styles.panelSubtitle}>
-                      High-severity complaints awaiting assignment or action.
+                      Unresolved reports ordered by recommended priority.
                     </Text>
                   </View>
                   <Button
@@ -302,7 +302,7 @@ export const AuthorityDashboardScreen = ({ navigation }: any) => {
                           {c.title || c.category.replace(/_/g, ' ')}
                         </Text>
                         <TriageSummary
-                          severity={c.severity}
+                          severity={c.severity} severityReview={c.severityReview}
                           priority={c.priority}
                           score={c.priorityScore}
                           compact
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: COLORS.primaryLight || '#F3ECE8',
+    backgroundColor: COLORS.primaryLight || '#EDF2EF',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -83,7 +83,7 @@ export const ComplaintCard: React.FC<ComplaintCardProps> = ({
           <StatusBadge status={complaint.status} size="sm" />
         </View>
 
-        <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} compact />
+        <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} compact />
         {/* ─── Main Content: Thumbnail + Info ─── */}
         <View style={styles.contentRow}>
           {/* Thumbnail with error fallback */}

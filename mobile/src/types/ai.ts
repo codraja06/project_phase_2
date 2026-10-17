@@ -10,6 +10,7 @@ export interface DetectionResult {
   confidence: number;
   bbox: BoundingBox;
   model: string;
+  modelVersion?: string;
 }
 
 export interface AIDetectResponse {

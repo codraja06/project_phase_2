@@ -46,7 +46,7 @@ export const WorkspaceShell = ({ role, activeRoute, onNavigate, children }: {
               accessibilityState={{ selected: route === activeRoute }} onPress={() => onNavigate(route)}
               style={[styles.nav, !expanded && styles.railNav, route === activeRoute && styles.selected]}>
               <View style={{ position: 'relative' }}>
-                <Ionicons name={icon as any} size={21} color={route === activeRoute ? COLORS.gold : '#DDC8CF'} />
+                <Ionicons name={icon as any} size={21} color={route === activeRoute ? COLORS.gold : '#D4E4DD'} />
                 {!expanded && isNotif && unreadCount > 0 && (
                   <View style={{ position: 'absolute', top: -4, right: -6 }}>
                     <NotificationBadge count={unreadCount} dot />
@@ -92,15 +92,15 @@ const styles = StyleSheet.create({
   root: { flex: 1, flexDirection: 'row', backgroundColor: COLORS.background, minWidth: 0 },
   sidebar: { backgroundColor: COLORS.cinematic, borderRightWidth: 1, borderRightColor: COLORS.authorityPrimary, borderTopWidth: 4, borderTopColor: COLORS.primary },
   brand: { minHeight: 92, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  mark: { height: 40, width: 40, borderRadius: 10, backgroundColor: COLORS.authorityPrimary, borderWidth: 1, borderColor: '#713648', justifyContent: 'center', alignItems: 'center' },
+  mark: { height: 40, width: 40, borderRadius: 10, backgroundColor: COLORS.authorityPrimary, borderWidth: 1, borderColor: '#44695A', justifyContent: 'center', alignItems: 'center' },
   brandName: { color: COLORS.onCinematic, fontSize: 20, letterSpacing: -.6, fontWeight: '800' },
-  brandSub: { fontSize: 10, color: '#D3B8C2', marginTop: 3 },
+  brandSub: { fontSize: 10, color: '#CADCD3', marginTop: 3 },
   workspaceLabel: { fontSize: 9, color: COLORS.gold, letterSpacing: 1.5, paddingHorizontal: 24, marginBottom: 12 },
   nav: { flexDirection: 'row', gap: 11, alignItems: 'center', minHeight: 46, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8 },
-  navText: { flexShrink: 1, color: '#DDC8CF', fontSize: 13, fontWeight: '500' },
-  selected: { backgroundColor: '#651C32', borderLeftWidth: 3, borderLeftColor: COLORS.gold }, railNav: { flexDirection: 'column', paddingHorizontal: 3, gap: 5 },
+  navText: { flexShrink: 1, color: '#D4E4DD', fontSize: 13, fontWeight: '500' },
+  selected: { backgroundColor: '#245C49', borderLeftWidth: 3, borderLeftColor: COLORS.gold }, railNav: { flexDirection: 'column', paddingHorizontal: 3, gap: 5 },
   railText: { fontSize: 10, lineHeight: 14, textAlign: 'center' },
-  account: { margin: 12, paddingTop: 16, paddingBottom: 8, borderTopWidth: 1, borderTopColor: '#5C2A3C', flexDirection: 'row', gap: 10, alignItems: 'center', minHeight: 60 },
+  account: { margin: 12, paddingTop: 16, paddingBottom: 8, borderTopWidth: 1, borderTopColor: '#375649', flexDirection: 'row', gap: 10, alignItems: 'center', minHeight: 60 },
   avatar: { height: 34, width: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primaryLight },
   accountName: { color: COLORS.onCinematic, fontSize: 13, fontWeight: '600' }, main: { flex: 1, minWidth: 0 },
   header: { minHeight: 76, paddingHorizontal: 24, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight, borderTopWidth: 4, borderTopColor: COLORS.primary },

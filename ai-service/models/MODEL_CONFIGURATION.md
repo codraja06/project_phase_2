@@ -64,3 +64,13 @@ Use the existing procedures and scripts in `../training/README.md` from this fol
 Streetlight and water-leakage training was not performed in this change: compatible datasets
 and trained weights were not available. The existing YOLO models were exercised locally;
 these smoke checks establish integration, not detection or severity accuracy.
+
+## Version and image safety metadata
+
+Every loaded weight file receives a SHA-256 content-version identifier once at startup
+(or an explicit configured registry version). Health metadata and actual detections carry
+that version; complaint bounding boxes preserve it. Uploads accept JPEG/PNG/WebP, at most
+10 MB and 24 megapixels. `/image-signature` runs independently of detector readiness and
+returns a conservative dHash64/RGB48 visual comparison signal. It does not classify an
+issue, infer severity, or confirm the same physical incident. No accuracy claim follows
+from model loading or smoke tests. Held-out local evaluation is still required.

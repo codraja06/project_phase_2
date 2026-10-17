@@ -1,3 +1,4 @@
+import { subscribeNotificationChanges, notifyUnreadCountChanged } from '../hooks/useUnreadCount';
 import React, { useCallback, useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,11 +25,11 @@ export const NotificationCenter = ({ navigation, role }: { navigation: any; role
       setError('');
       const data = await managementApi.getNotifications(target);
       setItems(previous => target === 1 ? data.notifications : [...previous, ...data.notifications]);
-      setPage(target); setPages(data.pages); setUnread(data.unread);
+      setPage(target); setPages(data.pages); setUnread(data.unread); notifyUnreadCountChanged(data.unread);
     } catch (e: any) { setError(e.message || 'Could not load notifications.'); }
     finally { setLoading(false); setRefreshing(false); setMoreLoading(false); }
   }, []);
-  useFocusEffect(useCallback(() => { void load(); }, [load]));
+  useFocusEffect(useCallback(() => { void load(); return subscribeNotificationChanges(() => { void load(); }); }, [load]));
 
   const open = async (item: CivicNotification) => {
     try {

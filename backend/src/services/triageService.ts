@@ -43,31 +43,41 @@ export const priorityScoreExpression = (now = new Date()): any => {
   ] } }] };
   const age = { $min: [60, { $multiply: [3, ageDays] }] };
   const severity = { $switch: { branches: [
-    { case: { $eq: ['$severity.level', 'High'] }, then: 65 },
-    { case: { $eq: ['$severity.level', 'Medium'] }, then: 35 },
-    { case: { $eq: ['$severity.level', 'Low'] }, then: 10 },
+    { case: { $eq: [{ $ifNull: ['$severityReview.level', '$severity.level'] }, 'High'] }, then: 65 },
+    { case: { $eq: [{ $ifNull: ['$severityReview.level', '$severity.level'] }, 'Medium'] }, then: 35 },
+    { case: { $eq: [{ $ifNull: ['$severityReview.level', '$severity.level'] }, 'Low'] }, then: 10 },
   ], default: 25 } };
   const category = { $switch: { branches: Object.entries(categoryWeight).map(([key, score]) => ({ case: { $eq: ['$category', key] }, then: score })), default: 5 } };
-  return { $cond: [{ $eq: ['$status', 'Resolved'] }, 0, { $min: [100, { $add: [severity, category, age] }] }] };
+  const recommended = { $min: [100, { $add: [severity, category, age] }] };
+  return { $cond: [{ $eq: ['$status', 'Resolved'] }, 0, { $switch: { branches: [
+    { case: { $eq: ['$priorityOverride.level', 'high'] }, then: 80 },
+    { case: { $eq: ['$priorityOverride.level', 'medium'] }, then: 45 },
+    { case: { $eq: ['$priorityOverride.level', 'low'] }, then: 10 },
+  ], default: recommended } }] };
 };
 
 export const calculatePriority = (complaint: {
   severity?: SeverityAssessment; category: string; createdAt?: Date | string;
   status: string; resolvedAt?: Date | string | null;
+  severityReview?: { level: 'Low' | 'Medium' | 'High' } | null;
+  priorityOverride?: { level: 'low' | 'medium' | 'high' } | null;
 }, now = new Date()) => {
   const severityPoints = { Low: 10, Medium: 35, High: 65 };
-  const level = complaint.severity?.level;
+  const level = complaint.severityReview?.level || complaint.severity?.level;
   const severityScore = level ? severityPoints[level] : 25;
   // Resolved complaints leave the attention queue and stop accruing age points.
   const end = complaint.status === 'Resolved' ? new Date(complaint.resolvedAt || complaint.createdAt || now) : now;
   const ageDays = Math.max(0, (end.getTime() - new Date(complaint.createdAt || now).getTime()) / 86400000);
   const ageScore = Math.min(60, Math.floor(Number.isFinite(ageDays) ? ageDays : 0) * 3);
   const categoryScore = categoryWeight[complaint.category] ?? 5;
-  const priorityScore = complaint.status === 'Resolved' ? 0 : Math.min(100, severityScore + ageScore + categoryScore);
+  const recommendationScore = Math.min(100, severityScore + ageScore + categoryScore);
+  const priorityScore = complaint.status === 'Resolved' ? 0 : complaint.priorityOverride ? { low: 10, medium: 45, high: 80 }[complaint.priorityOverride.level] : recommendationScore;
   const priority = priorityScore >= 65 ? 'high' : priorityScore >= 30 ? 'medium' : 'low';
   return { priority, priorityScore, priorityMetadata: {
     method: 'triage-priority-v1', calculatedAt: now, severityScore, ageScore, categoryScore,
     reviewRequired: !level, resolved: complaint.status === 'Resolved',
+    recommendationScore, authorityOverride: !!complaint.priorityOverride,
+    severitySource: complaint.severityReview ? 'authority' : 'estimate',
   } };
 };
 

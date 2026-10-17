@@ -1,3 +1,4 @@
+import { env } from '../config/env';
 import { analyticsQuery, analyticsFilter } from '../services/analyticsService';
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
@@ -45,6 +46,12 @@ export const getAllComplaints = async (req: AuthRequest, res: Response, next: Ne
     if (req.query.from || req.query.to) {
       const dates = analyticsQuery.parse({ from: req.query.from, to: req.query.to });
       Object.assign(conditions, analyticsFilter(dates));
+    }
+    if (req.query.department) conditions.assignedDepartment = z.string().trim().min(1).max(100).parse(req.query.department);
+    if (req.query.overdue === 'true') {
+      if (!env.RESOLUTION_TARGET_HOURS || env.RESOLUTION_TARGET_HOURS <= 0) throw new ApiError(400, 'No resolution target configured.');
+      conditions.status = { $ne: 'Resolved' };
+      conditions.createdAt = { ...(conditions.createdAt || {}), $lt: new Date(Math.min(conditions.createdAt?.$lt?.getTime() || Infinity, now.getTime() - env.RESOLUTION_TARGET_HOURS * 3600000)) };
     }
     const ordering: any = sortBy === 'priority' ? { priorityScore: -1, createdAt: 1, _id: 1 } : { createdAt: sortBy === 'oldest' ? 1 : -1, _id: 1 };
     const [aggregate] = await Complaint.aggregate([

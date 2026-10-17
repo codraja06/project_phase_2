@@ -222,7 +222,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
     setDuplicateMatches([]);
     setDuplicateCheckMessage('');
     try {
-      const result = await managementApi.checkDuplicates({ category: selectedCategory, latitude, longitude });
+      const result = await managementApi.checkDuplicates({ category: selectedCategory, latitude, longitude, uploadToken: uploadToken || undefined });
       setDuplicateMatches(result.matches);
       if (result.matches.length) setDuplicateCheckMessage(result.reason);
     } catch {

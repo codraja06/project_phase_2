@@ -17,6 +17,7 @@ export const boundingBoxSchema = z.object({
     })
     .optional(),
   model: z.string().optional(),
+  modelVersion: z.string().max(100).optional(),
 }).transform((box) => {
   const cat = box.category || box.className || 'issue';
   const x1 = Number(box.bbox?.x1 ?? box.x1 ?? 0);
@@ -35,6 +36,7 @@ export const boundingBoxSchema = z.object({
     y2,
     bbox: { x1, y1, x2, y2 },
     model: box.model || 'yolo',
+    modelVersion: box.modelVersion,
   };
 });
 

@@ -3,13 +3,16 @@ import { axiosClient } from './axiosClient';
 import { Complaint } from '../types/complaint';
 
 export interface CivicNotification { _id: string; title: string; message: string; complaintId: string; readAt?: string | null; createdAt: string }
-export interface DuplicateMatch { id: string | null; complaintId: string | null; distanceMeters: number; status: string; disclosure: 'own' | 'nearby' }
+export interface DuplicateMatch { id: string | null; complaintId: string | null; distanceMeters: number; status: string; disclosure: 'own' | 'nearby'; imageComparison?: 'similar' | 'unavailable'; similarity?: { hashDistance: number; colorSimilarity: number } | null }
 export interface DepartmentRule { category: string; department: string; enabled: boolean }
 export interface HotspotCluster { latitude: number; longitude: number; count: number; records: { _id: string; complaintId: string; title: string; status: string; category: string }[] }
 
 export const managementApi = {
-  async checkDuplicates(input: { category: string; latitude: number; longitude: number }): Promise<{ matches: DuplicateMatch[]; reason: string }> {
+  async checkDuplicates(input: { category: string; latitude: number; longitude: number; uploadToken?: string }): Promise<{ matches: DuplicateMatch[]; reason: string }> {
     const envelope: any = await axiosClient.post('/management/duplicates/check', input); return envelope.data;
+  },
+  async reviewTriage(id: string, kind: 'severity' | 'priority', level: string | null, reason: string): Promise<Complaint> {
+    const envelope: any = await axiosClient.patch(`/management/complaints/${id}/triage`, { kind, level, reason }); return envelope.data;
   },
   async confirmDuplicate(id: string, originalId: string, reason: string): Promise<Complaint> {
     const envelope: any = await axiosClient.patch(`/management/complaints/${id}/duplicate`, { originalId, reason }); return envelope.data;
@@ -41,7 +44,7 @@ export const managementApi = {
   async reviewCompletion(id: string, decision: 'accepted' | 'rejected', note: string): Promise<Complaint> {
     const envelope: any = await axiosClient.patch(`/management/complaints/${id}/completion/review`, { decision, note }); return envelope.data;
   },
-  async getHotspots(params: { category?: string; status?: string; priority?: string; from?: string; to?: string }): Promise<{ clusters: HotspotCluster[] }> {
+  async getHotspots(params: { cellDegrees?: number; windowDays?: number; category?: string; status?: string; priority?: string; from?: string; to?: string }): Promise<{ clusters: HotspotCluster[]; cellDegrees: number; windowDays: number }> {
     const envelope: any = await axiosClient.get('/management/hotspots', { params }); return envelope.data;
   },
   async getNotifications(page = 1): Promise<{ notifications: CivicNotification[]; total: number; unread: number; pages: number }> {

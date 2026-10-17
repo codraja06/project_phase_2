@@ -1,0 +1,113 @@
+import request from 'supertest';
+import mongoose from 'mongoose';
+import { createServer, Server } from 'http';
+import { WebSocket, WebSocketServer } from 'ws';
+import app from '../src/app';
+import { env } from '../src/config/env';
+import { User } from '../src/models/User';
+import { Complaint } from '../src/models/Complaint';
+import { Notification } from '../src/models/Notification';
+import { generateToken } from '../src/utils/jwt';
+import { attachLiveNotifications } from '../src/services/liveNotifications';
+import { notifyUser } from '../src/services/notificationService';
+import { compareFingerprints } from '../src/services/imageSimilarityService';
+import { signEvidence, unavailableSeverity } from '../src/services/triageService';
+
+describe('Master upgrade: actual delivery, human decisions and visual evidence', () => {
+  let citizen: any, officer: any, complaint: any, server: Server, wss: WebSocketServer;
+  let citizenToken: string, officerToken: string, url: string;
+  const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+  beforeAll(async () => {
+    await mongoose.connect(env.MONGODB_URI);
+    citizen = await User.create({ name: 'Master citizen', email: 'master-citizen@example.test', phone: '9876543210', password: 'MasterTest123!', role: 'citizen' });
+    officer = await User.create({ name: 'Master officer', email: 'master-officer@example.test', phone: '9876543210', password: 'MasterTest123!', role: 'authority' });
+    citizenToken = generateToken({ userId: String(citizen._id), role: 'citizen' });
+    officerToken = generateToken({ userId: String(officer._id), role: 'authority' });
+    complaint = await Complaint.create({ title: 'Master report', description: 'Observed pothole for review.', category: 'pothole', imageUrl: 'https://example.test/original.jpg', latitude: 12.9, longitude: 80.2, address: 'Recorded GPS', createdBy: citizen._id, severity: unavailableSeverity() });
+    server = createServer(app); wss = attachLiveNotifications(server);
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    url = `ws://127.0.0.1:${(server.address() as any).port}/api/notifications/live`;
+  });
+  afterAll(async () => {
+    wss.clients.forEach(socket => socket.terminate());
+    await new Promise<void>(resolve => wss.close(() => resolve()));
+    await new Promise<void>(resolve => server.close(() => resolve()));
+    await Notification.deleteMany({ recipient: { $in: [citizen._id, officer._id] } });
+    await Complaint.deleteMany({ createdBy: citizen._id });
+    await User.deleteMany({ _id: { $in: [citizen._id, officer._id] } });
+    await mongoose.disconnect();
+  });
+  it('delivers persisted events over authenticated sockets, without broadcasting to another recipient', async () => {
+    const socket = new WebSocket(url);
+    const messages: string[] = [];
+    socket.on('message', data => messages.push(JSON.parse(data.toString()).type));
+    await new Promise<void>((resolve, reject) => { socket.once('open', () => { socket.send(JSON.stringify({ type: 'authenticate', token: citizenToken })); }); socket.once('message', () => resolve()); socket.once('error', reject); });
+    expect(messages).toEqual(['ready']);
+    await notifyUser(officer._id, { title: 'Private officer event', message: 'Only for officer', complaintId: complaint._id, eventKey: 'master-officer-event' });
+    const changed = new Promise<void>(resolve => socket.once('message', () => resolve()));
+    await notifyUser(citizen._id, { title: 'Own event', message: 'Stored update', complaintId: complaint._id, eventKey: 'master-citizen-event' });
+    await changed;
+    expect(messages).toEqual(['ready', 'notifications-changed']);
+    expect(await Notification.countDocuments({ recipient: citizen._id, eventKey: 'master-citizen-event' })).toBe(1);
+    await notifyUser(citizen._id, { title: 'Own event', message: 'Stored update', complaintId: complaint._id, eventKey: 'master-citizen-event' });
+    expect(messages).toHaveLength(2);
+    socket.close();
+  });
+  it('rejects an invalid socket credential', async () => {
+    const socket = new WebSocket(url);
+    socket.on('open', () => socket.send(JSON.stringify({ type: 'authenticate', token: 'invalid' })));
+    const code = await new Promise<number>(resolve => socket.on('close', resolve));
+    expect(code).toBe(1008);
+  });
+  it('preserves the original estimate and status while recording authority reviews and override resets', async () => {
+    const endpoint = `/api/management/complaints/${complaint._id}/triage`;
+    const review = { kind: 'severity', level: 'High', reason: 'Officer inspected the submitted evidence.' };
+    expect((await request(app).patch(endpoint).set(auth(citizenToken)).send(review)).status).toBe(403);
+    const corrected = await request(app).patch(endpoint).set(auth(officerToken)).send(review);
+    expect(corrected.status).toBe(200);
+    expect(corrected.body.data.severity.level).toBeNull();
+    expect(corrected.body.data.severityReview.level).toBe('High');
+    expect(corrected.body.data.priority).toBe('high');
+    const overridden = await request(app).patch(endpoint).set(auth(officerToken)).send({ kind: 'priority', level: 'low', reason: 'Temporary operational decision by officer.' });
+    expect(overridden.body.data.priority).toBe('low');
+    expect(overridden.body.data.status).toBe('Pending');
+    const reset = await request(app).patch(endpoint).set(auth(officerToken)).send({ kind: 'priority', level: null, reason: 'Restore the calculated operational queue.' });
+    expect(reset.body.data.priority).toBe('high');
+    expect(reset.body.data.auditHistory).toHaveLength(3);
+    expect((await request(app).patch(endpoint).set(auth(officerToken)).send({ ...review, reason: '' })).status).toBe(400);
+  });
+  it('requires compatible visual signals and abstains when fingerprints are missing', () => {
+    const fingerprint = { method: 'dhash64-rgb48-v1', hash: '0000000000000000', histogram: Array(48).fill(1 / 16) };
+    expect(compareFingerprints(fingerprint, fingerprint)?.similar).toBe(true);
+    expect(compareFingerprints(fingerprint, { ...fingerprint, hash: 'ffffffffffffffff' })?.similar).toBe(false);
+    expect(compareFingerprints(undefined, fingerprint)).toBeNull();
+  });
+  it('combines signed image similarity with nearby category/status/time candidates', async () => {
+    const fingerprint = { method: 'dhash64-rgb48-v1', hash: '0000000000000000', histogram: Array(48).fill(1 / 16) };
+    const fields = { title: 'Master visual candidate', description: 'A candidate for human review.', category: 'master_visual', imageUrl: 'https://example.test/photo.jpg', latitude: 12.91, longitude: 80.21, address: 'Recorded GPS', createdBy: citizen._id };
+    const similar = await Complaint.create({ ...fields, imageFingerprint: fingerprint });
+    const different = await Complaint.create({ ...fields, imageFingerprint: { ...fingerprint, hash: 'ffffffffffffffff' } });
+    const legacy = await Complaint.create(fields);
+    const uploadToken = signEvidence({ imageHash: 'test-image-digest', imageUrl: fields.imageUrl, imageFingerprint: fingerprint }, 'upload', String(citizen._id));
+    const result = await request(app).post('/api/management/duplicates/check').set(auth(citizenToken)).send({ category: fields.category, latitude: fields.latitude, longitude: fields.longitude, uploadToken });
+    expect(result.status).toBe(200);
+    expect(result.body.data.matches.map((match: any) => match.id)).not.toContain(String(different._id));
+    expect(result.body.data.matches.find((match: any) => match.id === String(similar._id)).imageComparison).toBe('similar');
+    expect(result.body.data.matches.find((match: any) => match.id === String(legacy._id)).imageComparison).toBe('unavailable');
+    expect((await request(app).post('/api/management/duplicates/check').set(auth(officerToken)).send({ category: fields.category, latitude: fields.latitude, longitude: fields.longitude, uploadToken })).status).toBe(403);
+  });
+  it('validates geographic grouping and exposes actual unresolved age and category durations', async () => {
+    const invalid = await request(app).get('/api/management/hotspots?cellDegrees=0').set(auth(officerToken));
+    expect(invalid.status).toBe(400);
+    const map = await request(app).get('/api/management/hotspots?cellDegrees=0.001&windowDays=7').set(auth(officerToken));
+    expect(map.body.data.cellDegrees).toBe(.001); expect(map.body.data.windowDays).toBe(7);
+    const stats = await request(app).get('/api/authority/analytics?search=Master').set(auth(officerToken));
+    expect(stats.status).toBe(200); expect(stats.body.data.unresolvedAge.averageHours).toBeGreaterThanOrEqual(0);
+    expect(stats.body.data.medianResolutionHours).toBeNull();
+    expect(stats.body.data.resolutionByCategory).toEqual([]);
+    for (const hours of [24, 48]) await Complaint.create({ title: 'Master resolved report', description: 'Completed work for measured duration.', category: 'pothole', imageUrl: 'https://example.test/original.jpg', latitude: 12.9, longitude: 80.2, address: 'Recorded GPS', createdBy: citizen._id, status: 'Resolved', createdAt: new Date('2026-01-01'), resolvedAt: new Date(new Date('2026-01-01').getTime() + hours * 3600000) });
+    const measured = await request(app).get('/api/authority/analytics?search=Master').set(auth(officerToken));
+    expect(measured.body.data.medianResolutionHours).toBe(36);
+    expect(measured.body.data.resolutionByCategory[0].averageHours).toBe(36);
+  });
+});

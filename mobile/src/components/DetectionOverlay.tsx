@@ -206,9 +206,9 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
-    backgroundColor: '#0A0F1D',
+    backgroundColor: COLORS.cinematic,
     borderWidth: 1.5,
-    borderColor: '#1E293B',
+    borderColor: COLORS.authorityPrimary,
     ...SHADOWS.card,
   },
   container: {

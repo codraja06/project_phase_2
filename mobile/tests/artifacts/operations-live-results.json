@@ -3,6 +3,8 @@
     "Administrator saved an internal category-to-department rule in the real application",
     "Citizen saw privacy-safe nearby warning, continued, and stored a real assigned complaint",
     "Authority inspected hotspot record and confirmed a duplicate without deleting or resolving it",
+    "Officer severity correction, priority override and reset persisted with audit history",
+    "Citizen notification list received authority resolution live without reload or manual refresh",
     "Repair photo required review and an explicit authority resolution confirmation",
     "Stored citizen notification marked read and opened its own complaint",
     "Real resolution analytics include the assigned department and completed report"

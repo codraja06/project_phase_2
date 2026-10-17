@@ -47,6 +47,6 @@ async function login(page,role='citizen') {
  await page.getByLabel(role==='citizen'?'Password':'Officer Security Password',{exact:true}).fill('FixturePassword123!');
  const button=page.getByRole('button',{name:role==='citizen'?'Sign In':'Authenticate as Officer',exact:true});
  if(await button.count()) await button.click(); else await page.getByRole('button').filter({hasText:/sign in|authenticate/i}).click();
- await page.getByText(role==='citizen'?'Quick Issue Categories':'Command Center',{exact:true}).last().waitFor();
+ await page.getByText(role==='citizen'?'Quick Issue Categories':'Operational Command Center',{exact:true}).last().waitFor();
 }
 module.exports={chromium,mockApi,login,complaints,user};

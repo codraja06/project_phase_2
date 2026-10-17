@@ -18,10 +18,11 @@ export const createComplaint = async (req: AuthRequest, res: Response, next: Nex
     const { analysisToken, uploadToken, priority: _clientPriority, ...input } = validated;
     let severity = unavailableSeverity();
     let generatedDescription = '';
+    const upload = uploadToken ? readEvidence(uploadToken, 'upload', req.user._id.toString()) : null;
+    if (upload && upload.imageUrl !== input.imageUrl) throw new ApiError(400, 'Uploaded image receipt does not match the report.');
     if (analysisToken) {
       if (!uploadToken) throw new ApiError(400, 'Upload the analyzed image before submitting.');
       const analysis = readEvidence(analysisToken, 'analysis', req.user._id.toString());
-      const upload = readEvidence(uploadToken, 'upload', req.user._id.toString());
       if (analysis.imageHash !== upload.imageHash || upload.imageUrl !== input.imageUrl) {
         throw new ApiError(400, 'The uploaded image does not match the analyzed photo.');
       }
@@ -34,16 +35,20 @@ export const createComplaint = async (req: AuthRequest, res: Response, next: Nex
       input.aiConfidence = input.boundingBoxes[0]?.confidence || 0;
     }
 
-    const rule = await DepartmentRule.findOne({ category: input.category.toLowerCase(), enabled: true }).lean();
+    // Manual category selection is explicit citizen input; uncertain or mismatched AI labels need human routing.
+    const routingEligible = input.category !== 'other' && (!analysisToken || input.boundingBoxes.some(box => box.category === input.category && box.confidence >= .6));
+    const rule = routingEligible ? await DepartmentRule.findOne({ category: input.category.toLowerCase(), enabled: true }).lean() : null;
     const complaint = await Complaint.create({
       ...input,
       severity,
       generatedDescription,
+      imageFingerprint: upload?.imageFingerprint,
       ...calculatePriority({ severity, category: input.category, status: 'Pending' }),
       createdBy: req.user._id,
       status: 'Pending',
       assignedDepartment: rule?.department || '',
       assignedAt: rule ? new Date() : null,
+      auditHistory: rule ? [{ action: 'department-assigned', at: new Date(), after: rule.department, reason: 'Configured category routing rule.' }] : [],
       statusHistory: [{ status: 'Pending', at: new Date(), by: req.user._id }],
     });
 

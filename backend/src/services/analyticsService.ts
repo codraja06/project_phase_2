@@ -9,7 +9,7 @@ const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => {
 }, 'Enter a valid date as YYYY-MM-DD');
 export const analyticsQuery = z.object({
   from: day.optional(), to: day.optional(), search: z.string().max(200).optional(),
-  category: z.string().max(80).optional(), status: z.enum(['all', 'Pending', 'In Progress', 'Resolved']).optional(),
+  department: z.string().trim().max(100).optional(), category: z.string().max(80).optional(), status: z.enum(['all', 'Pending', 'In Progress', 'Resolved']).optional(),
 }).refine(q => !q.from || !q.to || q.from <= q.to, { message: 'Start date must be before end date' });
 
 export function analyticsFilter(query: z.infer<typeof analyticsQuery>) {
@@ -20,6 +20,7 @@ export function analyticsFilter(query: z.infer<typeof analyticsQuery>) {
   };
   if (query.status && query.status !== 'all') filter.status = query.status;
   if (query.category && query.category !== 'all') filter.category = query.category;
+  if (query.department) filter.assignedDepartment = query.department;
   if (query.search) {
     const literal = query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     filter.$or = ['title', 'description', 'complaintId', 'address'].map(field => ({ [field]: { $regex: literal, $options: 'i' } }));
@@ -45,6 +46,16 @@ export async function complaintAnalytics(query: z.infer<typeof analyticsQuery>) 
           { $eq: ['$status', 'Resolved'] }, { $ne: ['$resolvedAt', null] }, { $gte: ['$resolvedAt', '$createdAt'] },
         ] }, { $divide: [{ $subtract: ['$resolvedAt', '$createdAt'] }, 3600000] }, null] } },
       } }],
+      unresolvedAge: [
+        { $match: { status: { $ne: 'Resolved' } } },
+        { $group: { _id: null, averageHours: { $avg: { $max: [0, { $divide: [{ $subtract: [now, '$createdAt'] }, 3600000] }] } }, oldestHours: { $max: { $max: [0, { $divide: [{ $subtract: [now, '$createdAt'] }, 3600000] }] } } } },
+      ],
+      resolutionByCategory: [
+        { $match: { status: 'Resolved', resolvedAt: { $type: 'date' }, $expr: { $gte: ['$resolvedAt', '$createdAt'] } } },
+        { $group: { _id: '$category', resolved: { $sum: 1 }, averageHours: { $avg: { $divide: [{ $subtract: ['$resolvedAt', '$createdAt'] }, 3600000] } } } },
+        { $sort: { resolved: -1 } },
+      ],
+      durationCount: [{ $match: { status: 'Resolved', resolvedAt: { $type: 'date' }, $expr: { $gte: ['$resolvedAt', '$createdAt'] } } }, { $count: 'count' }],
       categories: [{ $group: { _id: '$category', count: { $sum: 1 } } }, { $sort: { count: -1, _id: 1 } }],
       trends: [{ $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'UTC' } }, count: { $sum: 1 } } }, { $sort: { _id: -1 } }, { $limit: 90 }, { $sort: { _id: 1 } }],
       geography: [
@@ -70,7 +81,18 @@ export async function complaintAnalytics(query: z.infer<typeof analyticsQuery>) 
   ]);
   const summary = result.summary[0] || { total: 0, pending: 0, inProgress: 0, resolved: 0, unresolved: 0, overdue: 0, highPriority: 0, averageResolutionHours: null };
   delete summary._id;
-  return { summary, categories: result.categories.map((c: any) => ({ category: c._id || 'other', count: c.count })),
+  const count = result.durationCount[0]?.count || 0;
+  let medianResolutionHours: number | null = null;
+  if (count) {
+    const middle = await Complaint.aggregate([
+      { $match: { ...analyticsFilter(query), status: 'Resolved', resolvedAt: { $type: 'date' }, $expr: { $gte: ['$resolvedAt', '$createdAt'] } } },
+      { $project: { hours: { $divide: [{ $subtract: ['$resolvedAt', '$createdAt'] }, 3600000] } } },
+      { $sort: { hours: 1, _id: 1 } }, { $skip: Math.floor((count - 1) / 2) }, { $limit: count % 2 ? 1 : 2 },
+    ]);
+    medianResolutionHours = middle.length ? middle.reduce((sum, row) => sum + row.hours, 0) / middle.length : null;
+  }
+  return { summary, medianResolutionHours, unresolvedAge: result.unresolvedAge[0] || { averageHours: null, oldestHours: null },
+    resolutionByCategory: result.resolutionByCategory.map((row: any) => ({ category: row._id, resolved: row.resolved, averageHours: row.averageHours })), categories: result.categories.map((c: any) => ({ category: c._id || 'other', count: c.count })),
     trends: result.trends.map((t: any) => ({ date: t._id, count: t.count })),
     geography: result.geography.map((g: any) => ({ latitude: g.latitude, longitude: g.longitude, count: g.count,
       label: `${g._id.lat.toFixed(1)}, ${g._id.lng.toFixed(1)}` })),

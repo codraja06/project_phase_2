@@ -192,7 +192,7 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
 
   return (
     <View style={isDesktop ? styles.safeArea : styles.safeAreaMobile}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
+      <StatusBar barStyle="light-content" backgroundColor="#102F27" />
 
       {!isDesktop && (
         <AuthorityMobileHeader title="Officer Dossier" />

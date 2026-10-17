@@ -57,7 +57,7 @@ export const PhotoCredits = () => {
       <Text style={{ color: COLORS.textSecondary, fontSize: 12, fontWeight: '600' }}>Photography & visual identity {expanded ? '−' : '+'}</Text>
     </TouchableOpacity>
     {expanded && <View style={{ gap: 12 }}>
-      <Text style={{ color: COLORS.textSecondary, fontSize: 12, lineHeight: 19 }}>An independent civic application with an original TVK-inspired color theme. No official party emblem, endorsement or celebrity image is used. Reference photos illustrate civic contexts and are separate from submitted complaint evidence.</Text>
+      <Text style={{ color: COLORS.textSecondary, fontSize: 12, lineHeight: 19 }}>An independent civic application with an original community-focused color theme. Reference photos illustrate civic contexts and are separate from submitted complaint evidence.</Text>
       {credits.map(credit => <View key={credit.file} style={{ gap: 4 }}>
         <TouchableOpacity accessibilityRole="link" onPress={() => Linking.openURL(credit.source)}><Text style={{ color: COLORS.primary, fontSize: 12, lineHeight: 18 }}>{credit.title} · {credit.author}</Text></TouchableOpacity>
         <TouchableOpacity accessibilityRole="link" onPress={() => Linking.openURL(credit.licenseUrl || 'https://creativecommons.org/publicdomain/zero/1.0/')}><Text style={{ color: COLORS.textSecondary, fontSize: 11 }}>{credit.license} · resized, cropped and tinted for display</Text></TouchableOpacity>
@@ -72,7 +72,7 @@ const s = StyleSheet.create({
   goldEdge: { position: 'absolute', left: 6, top: 0, bottom: 0, width: 2, backgroundColor: COLORS.gold },
   eyebrow: { color: COLORS.gold, fontSize: 10, lineHeight: 16, letterSpacing: 1.7, fontWeight: '800' },
   heroTitle: { color: COLORS.onCinematic, fontFamily: FONT_FAMILY.bold, fontWeight: '800', letterSpacing: -1.1 },
-  heroDescription: { color: '#F0DFDC', fontSize: 14, lineHeight: 22, maxWidth: 530 },
+  heroDescription: { color: '#DDE9E4', fontSize: 14, lineHeight: 22, maxWidth: 530 },
   cityStamp: { position: 'absolute', right: 20, bottom: 16, flexDirection: 'row', gap: 5, alignItems: 'center' },
   stampText: { color: COLORS.onCinematic, fontSize: 9, fontWeight: '600', letterSpacing: 1.4 },
 });

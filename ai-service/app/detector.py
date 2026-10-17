@@ -1,4 +1,5 @@
 import os
+import hashlib
 import io
 import json
 import math
@@ -80,6 +81,14 @@ def apply_nms(detections: List[Dict[str, Any]], iou_threshold: float = 0.45) -> 
     return kept_detections
 
 
+def _weights_version(path):
+    digest = hashlib.sha256()
+    with open(path, 'rb') as weights:
+        for chunk in iter(lambda: weights.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return 'sha256:' + digest.hexdigest()[:16]
+
+
 class CivicIssueDetector:
     def __init__(self, registry_path=None, model_factory=None):
         self.models, self.registry, self.model_status = {}, {}, {}
@@ -118,7 +127,7 @@ class CivicIssueDetector:
             env_name = entry.get("pathEnv", "")
             configured_path = os.getenv(env_name, entry.get("path", ""))
             enabled = entry.get("enabled", True) and os.getenv(env_name.replace("_PATH", "_ENABLED"), "true").lower() not in ("false", "0", "no")
-            state = {"state": "unavailable", "reason": "Trained weights are not configured.", "categories": entry["categories"]}
+            state = {"state": "unavailable", "reason": "Trained weights are not configured.", "categories": entry["categories"], "version": entry.get('version')}
             self.model_status[name] = state
             if not enabled or not configured_path:
                 state.update(state="disabled", reason="Model is disabled.")
@@ -132,6 +141,7 @@ class CivicIssueDetector:
                     raise ValueError("Confidence must be between zero and one")
                 entry["threshold"] = threshold
                 model = model_factory(path)
+                state['version'] = entry.get('version') or _weights_version(path)
                 labels = model.names.values() if isinstance(model.names, dict) else model.names
                 categories = sorted({self._category(str(label), entry) for label in labels} - {None})
                 self.models[name] = model
@@ -142,8 +152,9 @@ class CivicIssueDetector:
             try:
                 self.models["default"] = model_factory(self._resolve_path(settings.MODEL_PATH))
                 self.registry["default"] = {"threshold": settings.CONF_THRESHOLD, "categories": list(set(CLASS_MAPPING.values()))}
+                legacy_version = _weights_version(self._resolve_path(settings.MODEL_PATH))
                 labels = self.models["default"].names.values()
-                self.model_status["default"] = {"state": "ready", "categories": sorted({self._category(str(label), {}) for label in labels} - {None}), "reason": "Legacy MODEL_PATH loaded."}
+                self.model_status["default"] = {"state": "ready", "categories": sorted({self._category(str(label), {}) for label in labels} - {None}), "reason": "Legacy MODEL_PATH loaded.", "version": legacy_version}
             except Exception:
                 self.model_status["default"] = {"state": "error", "reason": "Legacy model could not be loaded."}
 
@@ -202,7 +213,7 @@ class CivicIssueDetector:
                             if not 0 <= confidence <= 1 or x2 <= x1 or y2 <= y1 or confidence < entry.get("threshold", settings.CONF_THRESHOLD):
                                 continue
                             raw_detections.append({"category": normalized, "confidence": round(confidence, 4),
-                                "bbox": dict(zip(("x1","y1","x2","y2"), (round(x1,2),round(y1,2),round(x2,2),round(y2,2)))), "model": name})
+                                "bbox": dict(zip(("x1","y1","x2","y2"), (round(x1,2),round(y1,2),round(x2,2),round(y2,2)))), "model": name, "modelVersion": self.model_status.get(name, {}).get('version')})
                     successful.append(name)
                 except Exception:
                     warnings.append(f"Inference failed for model {name}; results may be incomplete.")

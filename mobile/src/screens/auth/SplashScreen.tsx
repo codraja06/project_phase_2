@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     ...TYPOGRAPHY.body,
-    color: '#F0DFDC',
+    color: '#DDE9E4',
     textAlign: 'center',
     marginBottom: SPACING.lg,
   },

@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.border,
-    backgroundColor: '#F3ECE8',
+    backgroundColor: '#EDF2EF',
     position: 'relative',
     ...SHADOWS.card,
   },

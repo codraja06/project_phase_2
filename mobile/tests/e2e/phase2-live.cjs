@@ -1,5 +1,5 @@
 // Opt-in verification against real local services and a dedicated test database.
-// Run with AI on 8052, backend on 5052, Expo web on 8081 (API URL pointing to 5052).
+// Run with AI on 8052, backend on 5052, Expo web on 8083 (API URL pointing to 5052).
 const { chromium, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
@@ -7,7 +7,7 @@ const mongoose = require('../../../backend/node_modules/mongoose');
 const { User } = require('../../../backend/dist/models/User');
 const { Complaint } = require('../../../backend/dist/models/Complaint');
 const API = 'http://127.0.0.1:5052/api';
-const WEB = process.env.PHASE2_WEB_URL || 'http://localhost:8081';
+const WEB = process.env.PHASE2_WEB_URL || 'http://localhost:8083';
 const DB = 'mongodb://127.0.0.1:27017/civictrack_phase2_e2e';
 const photo = process.env.PHASE2_TEST_IMAGE;
 if (!photo || !fs.existsSync(photo)) throw new Error('Set PHASE2_TEST_IMAGE to a real civic issue image.');
@@ -32,7 +32,7 @@ async function login(page, email, role) {
   await page.getByLabel(role === 'citizen' ? 'Email Address' : 'Department Official Email', { exact: true }).fill(email);
   await page.getByLabel(role === 'citizen' ? 'Password' : 'Officer Security Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: role === 'citizen' ? 'Sign In' : 'Authenticate as Officer', exact: true }).click();
-  await page.getByText(role === 'citizen' ? 'Quick Issue Categories' : 'Command Center', { exact: true }).last().waitFor();
+  await page.getByText(role === 'citizen' ? 'Quick Issue Categories' : 'Operational Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
 }
 
 (async () => {
@@ -51,7 +51,7 @@ async function login(page, email, role) {
     expect(registry.models.filter(model => model.state === 'ready').length).toBe(4);
     const routedForm = category => {
       const body = new FormData(); body.append('category', category);
-      body.append('image', new Blob([fs.readFileSync(photo)], { type: 'image/webp' }), path.basename(photo));
+      body.append('image', new Blob([fs.readFileSync(photo)], { type: path.extname(photo).toLowerCase() === '.png' ? 'image/png' : path.extname(photo).toLowerCase() === '.webp' ? 'image/webp' : 'image/jpeg' }), path.basename(photo));
       return body;
     };
     const potholeOnly = await api('/ai/detect', citizen.token, 'POST', routedForm('pothole'));
@@ -171,7 +171,7 @@ async function login(page, email, role) {
     authorityPage.on('pageerror', e => errors.push(e.message));
     await login(authorityPage, users[1].email, 'authority');
     await expect(authorityPage.getByText(`${analysis.severity.level} severity · experimental`, { exact: true }).first()).toBeVisible();
-    await authorityPage.getByRole('button', { name: 'All Complaints', exact: true }).click();
+    await authorityPage.getByTestId('workspace-sidebar').getByRole('button', { name: 'All Complaints', exact: true }).click();
     await expect(authorityPage.getByText(complaint.complaintId, { exact: true }).filter({ visible: true })).toBeVisible();
     for (const viewport of [{ width: 1440, height: 900 }, { width: 768, height: 1024 }, { width: 320, height: 568 }]) {
       await authorityPage.setViewportSize(viewport);
@@ -186,7 +186,7 @@ async function login(page, email, role) {
     const filteredResponse = authorityPage.waitForResponse(r => r.url().includes('/api/authority/complaints?') && r.url().includes('priority=high'));
     await authorityPage.getByRole('button', { name: 'High Priority', exact: true }).click();
     expect((await filteredResponse).status()).toBe(200);
-    await expect(authorityPage.getByText(`Aged low-severity test ${suffix}`, { exact: true })).toBeVisible();
+    await expect(authorityPage.getByText(`Aged low-severity test ${suffix}`, { exact: true }).filter({ visible: true }).first()).toBeVisible();
     const sortedResponse = authorityPage.waitForResponse(r => r.url().includes('sortBy=oldest'));
     await authorityPage.getByRole('button', { name: 'Oldest first', exact: true }).click();
     expect((await sortedResponse).status()).toBe(200);

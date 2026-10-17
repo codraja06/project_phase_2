@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     color: COLORS.onCinematic},
   desktopSubtitle: {
     ...TYPOGRAPHY.bodySmall,
-    color: '#F0DFDC',
+    color: '#DDE9E4',
     fontWeight: '500',
     marginTop: SPACING.xs},
   desktopControls: {

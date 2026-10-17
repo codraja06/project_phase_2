@@ -1,8 +1,8 @@
 /**
  * CivicTrack Design System — Color Palette
  * 
- * CivicTrack original TVK-inspired identity: vermilion, maroon and warm gold.
- * Enhanced with proper WCAG AA contrast ratios and dark mode support.
+ * CivicTrack original identity: deep green, professional blue and neutral surfaces.
+ * Semantic tokens keep text, status and decorative accents distinct.
  *
  * Contrast requirements (WCAG 2.1 AA):
  *   - Body text: ≥ 4.5:1
@@ -14,66 +14,66 @@
 
 export const LIGHT_COLORS = {
   // Primary actions and selected navigation
-  primary: '#BE2638',
-  primaryDark: '#901B30',
-  primaryDeep: '#5B1226',
-  primaryLight: '#FCECEF',
-  primarySurface: '#F5D4DA',
-  primaryHover: '#A41F32',
-  primaryGlow: 'rgba(190, 38, 56, 0.14)',
+  primary: '#16634B',
+  primaryDark: '#104936',
+  primaryDeep: '#0C372A',
+  primaryLight: '#EAF5EF',
+  primarySurface: '#D5EBDF',
+  primaryHover: '#12543F',
+  primaryGlow: 'rgba(22, 99, 75, 0.14)',
 
-  // Gold on light surfaces uses a dark ochre for readable text
-  secondary: '#98610B',
-  secondaryDark: '#744807',
-  secondaryDeep: '#593606',
-  secondaryLight: '#FFF4D7',
-  secondarySurface: '#F8E4AA',
-  secondaryHover: '#744807',
-  secondaryGlow: 'rgba(242, 193, 78, 0.18)',
-  gold: '#F2C14E',
-  goldLight: '#FFF4D7',
-  cinematic: '#2C101B',
-  onCinematic: '#FFF9F1',
+  // Professional blue secondary actions
+  secondary: '#245CB3',
+  secondaryDark: '#1B478D',
+  secondaryDeep: '#153C79',
+  secondaryLight: '#EDF3FC',
+  secondarySurface: '#DDE8FA',
+  secondaryHover: '#1B478D',
+  secondaryGlow: 'rgba(36, 92, 179, 0.14)',
+  gold: '#93C5FD',
+  goldLight: '#EDF3FC',
+  cinematic: '#102F27',
+  onCinematic: '#FFFFFF',
 
   // Authority Command Accents
-  authorityPrimary: '#411426',
-  authorityDark: '#2C101B',
-  authorityLight: '#F8ECF0',
-  authoritySurface: '#ECD5DE',
+  authorityPrimary: '#183E34',
+  authorityDark: '#102F27',
+  authorityLight: '#EAF5EF',
+  authoritySurface: '#D5EBDF',
   authorityGlow: 'rgba(15, 23, 42, 0.12)',
 
   // Neutrals (Zinc scale — warmer than pure gray)
-  darkCharcoal: '#281E23',
+  darkCharcoal: '#182D28',
   slateDark: '#27272A',
-  slateMedium: '#65565C',
-  slateMuted: '#74636B',
-  slateLight: '#F3ECE8',
+  slateMedium: '#52635E',
+  slateMuted: '#596B65',
+  slateLight: '#EDF2EF',
 
   // Backgrounds & Surfaces
-  background: '#FAF6F2',
-  backgroundNeutral: '#F3ECE8',
+  background: '#F4F7F6',
+  backgroundNeutral: '#EDF2EF',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
-  cardHover: '#FFF9F5',
-  cardBorder: '#E9DED8',
+  cardHover: '#F5FAF7',
+  cardBorder: '#DFE7E2',
 
   // Warm ink and readable secondary text on light surfaces
-  textPrimary: '#281E23',
-  textSecondary: '#65565C',
-  textMuted: '#74636B',
-  textInverse: '#FFF9F1',
-  textLink: '#BE2638',
+  textPrimary: '#182D28',
+  textSecondary: '#52635E',
+  textMuted: '#596B65',
+  textInverse: '#FFFFFF',
+  textLink: '#16634B',
 
   // Borders
-  border: '#DACBC5',
-  borderLight: '#E9DED8',
-  borderStrong: '#BEAAA4',
+  border: '#CAD6CF',
+  borderLight: '#DFE7E2',
+  borderStrong: '#B1BFB7',
   borderMaroon: '#FECACA',
   borderYellow: '#FDE68A',
-  divider: '#E9DED8',
+  divider: '#DFE7E2',
 
-  // Status: Semantic colors — each pair tested for contrast
+  // Status colors retain independent text labels alongside color
   pending: '#D97706',           // Amber
   pendingLight: '#FFFBEB',
   pendingDark: '#92400E',
@@ -126,7 +126,7 @@ export const LIGHT_COLORS = {
 // ─── Dark Mode Palette ─────────────────────────────────────────────────────────
 
 export const DARK_COLORS: typeof LIGHT_COLORS = {
-  primary: '#EF4444',
+  primary: '#6EE7B7',
   primaryDark: '#FCA5A5',
   primaryDeep: '#B91C1C',
   primaryLight: '#1C1012',
@@ -134,17 +134,17 @@ export const DARK_COLORS: typeof LIGHT_COLORS = {
   primaryHover: '#F87171',
   primaryGlow: 'rgba(239, 68, 68, 0.20)',
 
-  secondary: '#F59E0B',
+  secondary: '#93C5FD',
   secondaryDark: '#FCD34D',
   secondaryDeep: '#D97706',
   secondaryLight: '#1A1708',
   secondarySurface: '#2A2210',
   secondaryHover: '#FBBF24',
   secondaryGlow: 'rgba(245, 158, 11, 0.20)',
-  gold: '#F2C14E',
+  gold: '#93C5FD',
   goldLight: '#30250F',
-  cinematic: '#2C101B',
-  onCinematic: '#FFF9F1',
+  cinematic: '#102F27',
+  onCinematic: '#FFFFFF',
 
   authorityPrimary: '#E2E8F0',
   authorityDark: '#F8FAFC',

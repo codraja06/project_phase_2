@@ -1,6 +1,9 @@
 import { Complaint } from './complaint';
-export interface AnalyticsQuery { from?: string; to?: string; search?: string; status?: string; category?: string }
+export interface AnalyticsQuery { department?: string; from?: string; to?: string; search?: string; status?: string; category?: string }
 export interface AnalyticsData {
+  medianResolutionHours?: number | null;
+  unresolvedAge?: { averageHours: number | null; oldestHours: number | null };
+  resolutionByCategory?: { category: string; resolved: number; averageHours: number }[];
   summary: { total: number; pending: number; inProgress: number; resolved: number; unresolved: number; overdue: number; highPriority: number; averageResolutionHours: number | null };
   categories: { category: string; count: number }[];
   trends: { date: string; count: number }[];

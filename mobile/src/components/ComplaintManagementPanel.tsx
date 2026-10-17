@@ -14,6 +14,7 @@ const body = { color: COLORS.textSecondary, lineHeight: 20 };
 
 export const ComplaintManagementPanel = ({ complaint, onChange }: { complaint: Complaint; onChange: (next: Complaint) => void }) => {
   const { isWide } = useBreakpoint();
+  const [triageReason, setTriageReason] = useState('');
   const [department, setDepartment] = useState(complaint.assignedDepartment || '');
   const [reason, setReason] = useState('');
   const [duplicateReason, setDuplicateReason] = useState('');
@@ -44,6 +45,17 @@ export const ComplaintManagementPanel = ({ complaint, onChange }: { complaint: C
   return <View style={{ gap: 16 }}>
     {!!message && <Text accessibilityRole="alert" style={{ color: message.includes('failed') || message.includes('Unable') ? COLORS.error : COLORS.primary }}>{message}</Text>}
     <View style={section}>
+      <Text style={heading}>Authority triage review</Text>
+      <Text style={body}>Original AI estimate: {complaint.severity?.level || 'Unavailable'}. Experimental; requires human review.</Text>
+      <Text style={body}>Reviewed severity: {complaint.severityReview?.level || 'Not reviewed'} / Priority override: {complaint.priorityOverride?.level || 'Calculated'}</Text>
+      <TextInput accessibilityLabel="Triage review reason" style={field} value={triageReason} onChangeText={setTriageReason} placeholder="Explain your decision (at least 10 characters)" multiline />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {(['Low', 'Medium', 'High'] as const).map(level => <Button key={level} title={`Severity: ${level}`} variant="outline" disabled={working || triageReason.trim().length < 10} onPress={() => run(() => managementApi.reviewTriage(complaint._id, 'severity', level, triageReason.trim()), 'Severity review recorded.')} />)}
+        {(['low', 'medium', 'high'] as const).map(level => <Button key={level} title={`Priority: ${level}`} variant="outline" disabled={working || triageReason.trim().length < 10} onPress={() => run(() => managementApi.reviewTriage(complaint._id, 'priority', level, triageReason.trim()), 'Priority override recorded.')} />)}
+        <Button title="Restore calculated priority" variant="outline" disabled={working || triageReason.trim().length < 10} onPress={() => run(() => managementApi.reviewTriage(complaint._id, 'priority', null, triageReason.trim()), 'Calculated priority restored.')} />
+      </View>
+    </View>
+    <View style={section}>
       <Text style={heading}>Department assignment</Text>
       <Text style={body}>Current: {complaint.assignedDepartment || 'Unassigned. An administrator can configure category mappings.'}</Text>
       <Text style={body}>Assign or reassign internally. This does not change complaint status.</Text>
@@ -61,7 +73,7 @@ export const ComplaintManagementPanel = ({ complaint, onChange }: { complaint: C
       {candidates.length > 0 && !complaint.duplicateOf && <>
         <TextInput accessibilityLabel="Reason for duplicate confirmation" style={field} value={duplicateReason} onChangeText={setDuplicateReason} placeholder="Explain why these refer to the same issue" multiline />
         {candidates.map(match => <View key={String(match.id)} style={{ borderTopWidth: 1, borderColor: COLORS.borderLight, paddingTop: 8, gap: 6 }}>
-          <Text style={body}>{match.complaintId} · about {match.distanceMeters} m · {match.status}</Text>
+          <Text style={body}>{match.complaintId} · about {match.distanceMeters} m · {match.status} / {match.imageComparison === 'similar' ? 'Visual similarity supported' : 'Image comparison unavailable; manual review required'}</Text>
           <Button title={`Confirm duplicate of ${match.complaintId}`} variant="outline" disabled={working || duplicateReason.trim().length < 10} onPress={() => run(() => managementApi.confirmDuplicate(complaint._id, String(match.id), duplicateReason.trim()), 'Duplicate link confirmed.')} />
         </View>)}
       </>}
@@ -84,5 +96,6 @@ export const ComplaintManagementPanel = ({ complaint, onChange }: { complaint: C
       {!!complaint.completionReviewNote && <Text style={body}>Review note: {complaint.completionReviewNote}</Text>}
       {complaint.statusHistory?.length ? <View style={{ gap: 3 }}><Text style={body}>Recorded status history</Text>{complaint.statusHistory.map((event, index) => <Text key={`${index}-${event.at}`} style={body}>{event.status} · {new Date(event.at).toLocaleString()}</Text>)}</View> : null}
     </View>
+    {!!complaint.auditHistory?.length && <View style={section}><Text style={heading}>Decision history</Text>{complaint.auditHistory.slice().reverse().map((event, index) => <Text key={`${index}-${event.at}`} style={body}>{event.action}: {event.before || '-'} to {event.after || '-'} / {new Date(event.at).toLocaleString()} / {event.by || 'Configured routing rule'} / {event.reason}</Text>)}</View>}
   </View>;
 };

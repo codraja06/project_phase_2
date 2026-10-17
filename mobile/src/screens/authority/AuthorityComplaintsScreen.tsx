@@ -142,7 +142,7 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
         <Text style={styles.tableTitle} numberOfLines={1}>
           {complaint.title}
         </Text>
-        <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} compact />
+        <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} compact />
         <Text style={styles.tableDate} numberOfLines={2}>{complaint.description}</Text>
       </TouchableOpacity>
 
@@ -265,7 +265,7 @@ const MobileAuthorityCard: React.FC<MobileCardProps> = ({
           </View>
         </TouchableOpacity>
 
-        <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} compact />
+        <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} compact />
         <Text style={styles.mobileCardLocation} numberOfLines={3}>{complaint.description}</Text>
         <View style={styles.mobileCompareBanner}>
           <View style={styles.mobileCompareCol}>
@@ -313,7 +313,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
 
 
   useEffect(() => { const timer = setTimeout(() => setAppliedSearch(searchQuery), 300); return () => clearTimeout(timer); }, [searchQuery]);
-  useEffect(() => { setPage(1); }, [priorityFilter, sortBy, statusFilter, appliedSearch, route?.params?.from, route?.params?.to, route?.params?.category]);
+  useEffect(() => { setPage(1); }, [priorityFilter, sortBy, statusFilter, appliedSearch, route?.params?.from, route?.params?.to, route?.params?.category, route?.params?.department, route?.params?.overdue]);
   useEffect(() => { setSearchQuery(route?.params?.search || ''); }, [route?.params?.search]);
 
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({ visible: false, message: '', type: 'success' });
@@ -328,7 +328,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
   useFocusEffect(
     React.useCallback(() => {
       fetchComplaints();
-    }, [route?.params?.filter, priorityFilter, sortBy, page, statusFilter, appliedSearch, route?.params?.from, route?.params?.to, route?.params?.category])
+    }, [route?.params?.filter, priorityFilter, sortBy, page, statusFilter, appliedSearch, route?.params?.from, route?.params?.to, route?.params?.category, route?.params?.department, route?.params?.overdue])
   );
 
   const fetchComplaints = async () => {
@@ -337,7 +337,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
       setLoading(true); setLoadError('');
       const date = new Date().toISOString().slice(0, 10);
       const res = await authorityApi.getAllComplaints({ priority: priorityFilter, sortBy, page, limit: 25,
-        status: ['all','today'].includes(statusFilter) ? undefined : statusFilter, search: appliedSearch, category: route?.params?.category,
+        status: ['all','today'].includes(statusFilter) ? undefined : statusFilter, search: appliedSearch, category: route?.params?.category, department: route?.params?.department, overdue: route?.params?.overdue,
         from: statusFilter === 'today' ? date : route?.params?.from, to: statusFilter === 'today' ? date : route?.params?.to });
       if (request !== fetchRequest.current) return;
       setComplaints(res.complaints || []);
@@ -403,9 +403,9 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
     <Button title="Next page" variant="outline" size="sm" disabled={loading || page >= pagination.pages} onPress={() => { setSelectedIds([]); setPage(page + 1); }} />
   </View>;
   const priorityControls = <View>
-    {(route?.params?.from || route?.params?.to || (route?.params?.category && route.params.category !== 'all')) && <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+    {(route?.params?.department || route?.params?.overdue || route?.params?.from || route?.params?.to || (route?.params?.category && route.params.category !== 'all')) && <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
       <Text style={styles.tableDate}>Date range: {route?.params?.from || 'Any'} to {route?.params?.to || 'Any'} · Category: {route?.params?.category || 'All'}</Text>
-      <Button title="Clear date/category filters" variant="ghost" size="sm" onPress={() => navigation.setParams({ from: undefined, to: undefined, category: undefined })} />
+      <Button title="Clear date/category filters" variant="ghost" size="sm" onPress={() => navigation.setParams({ from: undefined, to: undefined, category: undefined, department: undefined, overdue: undefined })} />
     </View>}
     <Text style={styles.tableDate}>Priority</Text>
     <FilterChipGroup options={[
@@ -580,7 +580,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
 
   return (
     <View style={styles.safeAreaMobile}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
+      <StatusBar barStyle="light-content" backgroundColor="#102F27" />
 
       <AuthorityMobileHeader 
         title="Incident Registry" 
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
   // ── Desktop Table ──────────────────────────────────────────────────────────
   desktopHeader: { position: 'relative', overflow: 'hidden', minHeight: 140, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING['4xl'], paddingTop: SPACING['3xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.cinematic },
   desktopTitle: { ...TYPOGRAPHY.h1, color: COLORS.onCinematic },
-  desktopSubtitle: { ...TYPOGRAPHY.bodySmall, color: '#F0DFDC', fontWeight: '500', marginTop: SPACING.xs },
+  desktopSubtitle: { ...TYPOGRAPHY.bodySmall, color: '#DDE9E4', fontWeight: '500', marginTop: SPACING.xs },
   desktopControls: { width: 380 },
   desktopSearch: { marginBottom: 0 },
   desktopFilterBar: { paddingHorizontal: SPACING['4xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },

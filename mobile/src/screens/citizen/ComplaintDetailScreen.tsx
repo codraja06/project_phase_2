@@ -207,7 +207,7 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                 </Animated.View>
 
                 <Animated.Text entering={FadeInUp.delay(200)} style={styles.title}>{complaint.title}</Animated.Text>
-                <TriageSummary severity={complaint.severity} />
+                <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} />
 
                 {/* Tags Row */}
                 <Animated.View entering={FadeInUp.delay(300)} style={styles.tagRow}>
@@ -291,7 +291,7 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 
               <MapLocationPicker latitude={complaint.latitude} longitude={complaint.longitude} address={complaint.address} interactive={false} showCard={false} height={220} />
               <Animated.Text entering={FadeInUp.delay(300)} style={styles.title}>{complaint.title}</Animated.Text>
-              <TriageSummary severity={complaint.severity} />
+              <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} />
 
               {/* Tags */}
               <Animated.View entering={FadeInUp.delay(400)} style={styles.tagRow}>
@@ -377,8 +377,8 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.sm,
     paddingBottom: SPACING.md,
     borderBottomWidth: 1.5,
-    borderBottomColor: COLORS.borderLight,
-    backgroundColor: COLORS.background},
+    borderBottomColor: COLORS.gold,
+    backgroundColor: COLORS.cinematic},
   headerRightBadges: {
     marginLeft: 'auto',
     flexDirection: 'row',
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     marginRight: SPACING.md},
   headerTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.textPrimary},
+    color: COLORS.onCinematic},
   container: {
     flex: 1,
     backgroundColor: COLORS.background},

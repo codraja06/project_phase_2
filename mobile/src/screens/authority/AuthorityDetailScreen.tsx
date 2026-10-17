@@ -105,7 +105,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
   if (loadError) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
+        <StatusBar barStyle="light-content" backgroundColor="#102F27" />
         <View style={styles.headerBar}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -121,7 +121,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
   if (loading && !refreshing) return <LoadingSpinner message="Loading municipal dossier..." />;
   if (!complaint) return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
+      <StatusBar barStyle="light-content" backgroundColor="#102F27" />
       <View style={styles.headerBar}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -160,7 +160,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#2C101B" />
+      <StatusBar barStyle="light-content" backgroundColor="#102F27" />
       <Animated.View entering={FadeInDown.duration(400)} style={styles.headerBar}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -221,7 +221,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                 </View>
 
                 <Text style={styles.title}>{complaint.title}</Text>
-                <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} priorityMetadata={complaint.priorityMetadata} />
+                <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} priorityMetadata={complaint.priorityMetadata} />
               </Animated.View>
 
               <Animated.View entering={FadeInUp.delay(200)}>
@@ -272,7 +272,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 
                 <MapLocationPicker latitude={complaint.latitude} longitude={complaint.longitude} address={complaint.address} interactive={false} showCard={false} height={220} />
                 <Text style={styles.title}>{complaint.title}</Text>
-                <TriageSummary severity={complaint.severity} priority={complaint.priority} score={complaint.priorityScore} priorityMetadata={complaint.priorityMetadata} />
+                <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} priorityMetadata={complaint.priorityMetadata} />
               </Animated.View>
               
               <Animated.View entering={FadeInUp.delay(300)}>
