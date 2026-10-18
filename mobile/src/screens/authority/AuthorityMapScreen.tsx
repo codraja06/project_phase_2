@@ -12,7 +12,6 @@ import { StatusBadge } from '../../components/StatusBadge';
 import { managementApi, HotspotCluster } from '../../api/managementApi';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { COLORS } from '../../theme/colors';
-import { CivicHero } from '../../components/CivicVisuals';
 
 type Filters = { category?: string; status?: string; priority?: string; from?: string; to?: string };
 
@@ -73,7 +72,7 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.root}>
       {!isWide && <AuthorityMobileHeader title="Incident Map" />}
       <ScrollView contentContainerStyle={styles.scroll}>
-        <CivicHero compact photo="city" eyebrow="MAPPING CIVIC ATTENTION" title="See the city. Focus the response." description="Explore real report locations and the areas receiving repeated complaints." />
+
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>Incident Hotspots & Geographic Density</Text>
@@ -305,7 +304,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: COLORS.primaryLight || '#EDF2EF',
+    backgroundColor: COLORS.primaryLight || '#F1F5F9',
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
@@ -407,7 +406,7 @@ const styles = StyleSheet.create({
   },
   clusterChipActive: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryLight || '#EDF2EF',
+    backgroundColor: COLORS.primaryLight || '#F1F5F9',
   },
   clusterText: {
     fontSize: 13,

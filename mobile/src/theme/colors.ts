@@ -1,8 +1,8 @@
 /**
  * CivicTrack Design System — Color Palette
  * 
- * CivicTrack original identity: deep green, professional blue and neutral surfaces.
- * Semantic tokens keep text, status and decorative accents distinct.
+ * Restored CivicTrack identity: crimson red, soft pink, white and dark navy
+ * Enhanced with proper WCAG AA contrast ratios and dark mode support.
  *
  * Contrast requirements (WCAG 2.1 AA):
  *   - Body text: ≥ 4.5:1
@@ -13,67 +13,64 @@
 // ─── Light Mode Palette ────────────────────────────────────────────────────────
 
 export const LIGHT_COLORS = {
-  // Primary actions and selected navigation
-  primary: '#16634B',
-  primaryDark: '#104936',
-  primaryDeep: '#0C372A',
-  primaryLight: '#EAF5EF',
-  primarySurface: '#D5EBDF',
-  primaryHover: '#12543F',
-  primaryGlow: 'rgba(22, 99, 75, 0.14)',
+  // Primary: Deep Crimson Red (Flag inspired)
+  primary: '#B71C1C',
+  primaryDark: '#7F1416',
+  primaryDeep: '#5C0E0E',
+  primaryLight: '#FEF2F2',
+  primarySurface: '#FEE2E2',
+  primaryHover: '#991B1B',
+  primaryGlow: 'rgba(183, 28, 28, 0.16)',
 
-  // Professional blue secondary actions
-  secondary: '#245CB3',
-  secondaryDark: '#1B478D',
-  secondaryDeep: '#153C79',
-  secondaryLight: '#EDF3FC',
-  secondarySurface: '#DDE8FA',
-  secondaryHover: '#1B478D',
-  secondaryGlow: 'rgba(36, 92, 179, 0.14)',
-  gold: '#93C5FD',
-  goldLight: '#EDF3FC',
-  cinematic: '#102F27',
-  onCinematic: '#FFFFFF',
+  // Secondary / Accent: Golden Amber (Flag inspired — tuned for readability)
+  secondary: '#D97706',
+  secondaryDark: '#B45309',
+  secondaryDeep: '#92400E',
+  secondaryLight: '#FFFBEB',
+  secondarySurface: '#FEF3C7',
+  secondaryHover: '#B45309',
+  secondaryGlow: 'rgba(217, 119, 6, 0.18)',
 
   // Authority Command Accents
-  authorityPrimary: '#183E34',
-  authorityDark: '#102F27',
-  authorityLight: '#EAF5EF',
-  authoritySurface: '#D5EBDF',
+  authorityPrimary: '#0F172A',
+  authorityDark: '#020617',
+  authorityLight: '#F1F5F9',
+  authoritySurface: '#E2E8F0',
   authorityGlow: 'rgba(15, 23, 42, 0.12)',
+  gold: '#B71C1C', goldLight: '#FEF2F2', cinematic: '#0F172A', onCinematic: '#FFFFFF',
 
   // Neutrals (Zinc scale — warmer than pure gray)
-  darkCharcoal: '#182D28',
+  darkCharcoal: '#18181B',
   slateDark: '#27272A',
-  slateMedium: '#52635E',
-  slateMuted: '#596B65',
-  slateLight: '#EDF2EF',
+  slateMedium: '#3F3F46',
+  slateMuted: '#52525B',
+  slateLight: '#A1A1AA',
 
   // Backgrounds & Surfaces
-  background: '#F4F7F6',
-  backgroundNeutral: '#EDF2EF',
+  background: '#FAFAF9',
+  backgroundNeutral: '#F5F5F4',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
-  cardHover: '#F5FAF7',
-  cardBorder: '#DFE7E2',
+  cardHover: '#FAFAF9',
+  cardBorder: '#E4E4E7',
 
-  // Warm ink and readable secondary text on light surfaces
-  textPrimary: '#182D28',
-  textSecondary: '#52635E',
-  textMuted: '#596B65',
-  textInverse: '#FFFFFF',
-  textLink: '#16634B',
+  // Typography — all meet WCAG AA on #FAFAF9 background
+  textPrimary: '#18181B',    // 15.4:1 contrast on #FAFAF9
+  textSecondary: '#3F3F46',  // 9.6:1
+  textMuted: '#52525B',      // 6.7:1
+  textInverse: '#FAFAF9',
+  textLink: '#B71C1C',       // 5.9:1
 
   // Borders
-  border: '#CAD6CF',
-  borderLight: '#DFE7E2',
-  borderStrong: '#B1BFB7',
+  border: '#D4D4D8',
+  borderLight: '#E4E4E7',
+  borderStrong: '#A1A1AA',
   borderMaroon: '#FECACA',
   borderYellow: '#FDE68A',
-  divider: '#DFE7E2',
+  divider: '#E4E4E7',
 
-  // Status colors retain independent text labels alongside color
+  // Status: Semantic colors — each pair tested for contrast
   pending: '#D97706',           // Amber
   pendingLight: '#FFFBEB',
   pendingDark: '#92400E',
@@ -126,7 +123,7 @@ export const LIGHT_COLORS = {
 // ─── Dark Mode Palette ─────────────────────────────────────────────────────────
 
 export const DARK_COLORS: typeof LIGHT_COLORS = {
-  primary: '#6EE7B7',
+  primary: '#EF4444',
   primaryDark: '#FCA5A5',
   primaryDeep: '#B91C1C',
   primaryLight: '#1C1012',
@@ -134,23 +131,20 @@ export const DARK_COLORS: typeof LIGHT_COLORS = {
   primaryHover: '#F87171',
   primaryGlow: 'rgba(239, 68, 68, 0.20)',
 
-  secondary: '#93C5FD',
+  secondary: '#F59E0B',
   secondaryDark: '#FCD34D',
   secondaryDeep: '#D97706',
   secondaryLight: '#1A1708',
   secondarySurface: '#2A2210',
   secondaryHover: '#FBBF24',
   secondaryGlow: 'rgba(245, 158, 11, 0.20)',
-  gold: '#93C5FD',
-  goldLight: '#30250F',
-  cinematic: '#102F27',
-  onCinematic: '#FFFFFF',
 
   authorityPrimary: '#E2E8F0',
   authorityDark: '#F8FAFC',
   authorityLight: '#1E293B',
   authoritySurface: '#334155',
   authorityGlow: 'rgba(226, 232, 240, 0.12)',
+  gold: '#FCA5A5', goldLight: '#2A1215', cinematic: '#0F172A', onCinematic: '#FFFFFF',
 
   darkCharcoal: '#FAFAF9',
   slateDark: '#E4E4E7',

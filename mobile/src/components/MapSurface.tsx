@@ -46,7 +46,7 @@ function generateLeafletHtml({
       height: 100%;
       margin: 0;
       padding: 0;
-      background: #EDF2EF;
+      background: #F1F5F9;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     .custom-marker {
@@ -58,7 +58,7 @@ function generateLeafletHtml({
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: #16634B;
+      background: #B71C1C;
       border: 3px solid #FFFFFF;
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
       display: flex;
@@ -87,7 +87,7 @@ function generateLeafletHtml({
     }
     .popup-title {
       font-weight: 700;
-      color: #102F27;
+      color: #0F172A;
       margin-bottom: 2px;
     }
     .popup-address {
@@ -326,7 +326,7 @@ export function MapSurface({
         startInLoadingState={true}
         renderLoading={() => (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#16634B" />
+            <ActivityIndicator size="small" color="#B71C1C" />
             <Text style={styles.loadingText}>Loading OpenStreetMap...</Text>
           </View>
         )}
@@ -344,7 +344,7 @@ export function MapSurface({
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#EDF2EF',
+    backgroundColor: '#F1F5F9',
   },
   webView: {
     flex: 1,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EDF2EF',
+    backgroundColor: '#F1F5F9',
     gap: 8,
   },
   loadingText: {
@@ -367,13 +367,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#EDF2EF',
+    backgroundColor: '#F1F5F9',
     gap: 8,
   },
   fallbackTitle: {
     fontWeight: '700',
     fontSize: 14,
-    color: '#102F27',
+    color: '#0F172A',
     textAlign: 'center',
   },
   coordsText: {
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   externalButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#16634B',
+    backgroundColor: '#B71C1C',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,

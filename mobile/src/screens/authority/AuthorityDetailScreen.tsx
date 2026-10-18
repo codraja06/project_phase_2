@@ -105,7 +105,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
   if (loadError) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" backgroundColor="#102F27" />
+        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
         <View style={styles.headerBar}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -121,7 +121,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
   if (loading && !refreshing) return <LoadingSpinner message="Loading municipal dossier..." />;
   if (!complaint) return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#102F27" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <View style={styles.headerBar}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -160,7 +160,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#102F27" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <Animated.View entering={FadeInDown.duration(400)} style={styles.headerBar}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
@@ -178,7 +178,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
               <Animated.View entering={ZoomIn.delay(100)}>
                 <DetectionOverlay imageUri={complaint.imageUrl} detections={complaint.boundingBoxes || []} confidence={complaint.aiConfidence} height={380} />
               </Animated.View>
-              
+
               <Animated.View entering={FadeInUp.delay(200)}>
                 <Card style={{ marginTop: SPACING.lg }}>
                   <CardContent>
@@ -261,7 +261,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
             <Animated.View entering={ZoomIn.delay(100)}>
               <DetectionOverlay imageUri={complaint.imageUrl} detections={complaint.boundingBoxes || []} confidence={complaint.aiConfidence} height={270} />
             </Animated.View>
-            
+
             <View style={styles.mobileContentPadding}>
               <Animated.View entering={FadeInUp.delay(200)}>
                 <View style={styles.topBadgeRowMobile}>
@@ -274,7 +274,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                 <Text style={styles.title}>{complaint.title}</Text>
                 <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} priorityMetadata={complaint.priorityMetadata} />
               </Animated.View>
-              
+
               <Animated.View entering={FadeInUp.delay(300)}>
                 <Card style={{ marginBottom: SPACING.lg, backgroundColor: COLORS.surface }}>
                   <CardContent style={{ flexDirection: 'row', justifyContent: 'space-between', padding: SPACING.md }}>
@@ -353,10 +353,10 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.authorityPrimary },
-  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: 10, paddingBottom: 14, backgroundColor: COLORS.cinematic, borderBottomWidth: 2, borderBottomColor: COLORS.gold },
+  safeArea: { flex: 1, backgroundColor: '#0F172A' },
+  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: 10, paddingBottom: 14, backgroundColor: '#0F172A', borderBottomWidth: 2, borderBottomColor: COLORS.gold },
   backBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', marginRight: SPACING.md },
-  headerTitle: { ...TYPOGRAPHY.h3, color: COLORS.surface, flex: 1 },
+  headerTitle: { ...TYPOGRAPHY.h3, color: '#FFFFFF', flex: 1 },
   container: { flex: 1, backgroundColor: COLORS.backgroundNeutral },
   scrollContent: { paddingBottom: SPACING['5xl'] },
   desktopScrollContent: { padding: SPACING['5xl'], maxWidth: 1440, alignSelf: 'center', width: '100%' },
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   infoValue: { ...TYPOGRAPHY.bodySmall, color: COLORS.textPrimary, fontWeight: '500' },
   infoSubValue: { ...TYPOGRAPHY.caption, color: COLORS.textSecondary, marginTop: 2 },
   readMoreText: { ...TYPOGRAPHY.caption, fontWeight: '700', color: COLORS.primary, marginTop: 4 },
-  actionsSection: { marginTop: SPACING['3xl'], padding: SPACING.xl, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.lg, borderWidth: 1, borderColor: COLORS.borderLight, borderTopWidth: 3, borderTopColor: COLORS.gold, ...SHADOWS.sm },
+  actionsSection: { marginTop: SPACING['3xl'], padding: SPACING.xl, backgroundColor: COLORS.surface, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.borderLight, borderTopWidth: 3, borderTopColor: COLORS.gold, ...SHADOWS.sm },
   actionsSectionHeader: { ...TYPOGRAPHY.caption, fontWeight: '800', color: COLORS.textSecondary, marginBottom: SPACING.lg, textAlign: 'center' },
   actionBtn: { marginBottom: SPACING.md },
 });

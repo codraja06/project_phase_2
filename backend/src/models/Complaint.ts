@@ -66,6 +66,8 @@ export interface IComplaint extends Document {
   officerId?: mongoose.Types.ObjectId | null;
   verified: boolean;
   resolvedAt?: Date | null;
+  resolutionNoticePending?: boolean;
+  resolutionNoticeAt?: Date | null;
   duplicateOf?: mongoose.Types.ObjectId | null;
   duplicateConfirmedAt?: Date | null;
   duplicateConfirmedBy?: mongoose.Types.ObjectId | null;
@@ -176,6 +178,8 @@ const ComplaintSchema = new Schema<IComplaint>(
     officerId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     verified: { type: Boolean, default: false },
     resolvedAt: { type: Date, default: null },
+      resolutionNoticePending: { type: Boolean, default: false },
+      resolutionNoticeAt: { type: Date, default: null },
     duplicateOf: { type: Schema.Types.ObjectId, ref: 'Complaint', default: null },
     duplicateConfirmedAt: { type: Date, default: null },
     duplicateConfirmedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
@@ -229,5 +233,7 @@ ComplaintSchema.set('toJSON', {
     return ret;
   },
 });
+
+ComplaintSchema.index({ status: 1, resolutionNoticePending: 1 });
 
 export const Complaint = mongoose.model<IComplaint>('Complaint', ComplaintSchema);

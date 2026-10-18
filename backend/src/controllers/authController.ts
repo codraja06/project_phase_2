@@ -7,34 +7,12 @@ import { generateToken } from '../utils/jwt';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
 import {
-  registerSchema,
   loginSchema,
   updateProfileSchema,
   changePasswordSchema,
 } from '../validators/authValidator';
 
-export const register = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const validated = registerSchema.parse(req.body);
-
-    const existingUser = await User.findOne({ email: validated.email });
-    if (existingUser) {
-      throw new ApiError(400, 'User with this email already exists.');
-    }
-
-    const user = await User.create(validated);
-    const token = generateToken({ userId: user._id.toString(), role: user.role });
-
-    res.status(201).json(
-      new ApiResponse('User registered successfully', {
-        user,
-        token,
-      })
-    );
-  } catch (error) {
-    next(error);
-  }
-};
+export { completeSignup as register } from './signupController';
 
 export const login = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -68,7 +46,7 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
     const { token, nonce, role = 'citizen' } = req.body;
     if (!token || typeof token !== 'string') throw new ApiError(401, 'A verified Google ID token is required.');
     if (role !== 'citizen' && role !== 'authority') throw new ApiError(400, 'Invalid account role.');
-    if (!env.GOOGLE_CLIENT_ID) throw new ApiError(503, 'Google sign-in is not configured. Please use email and password.');
+    if (!env.GOOGLE_CLIENT_ID) throw new ApiError(503, 'Google sign-in is not configured. Please use email and password.', [], true);
     let identity;
     try {
       const ticket = await new OAuth2Client(env.GOOGLE_CLIENT_ID).verifyIdToken({ idToken: token, audience: env.GOOGLE_CLIENT_ID });
@@ -87,9 +65,10 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
     // Link existing accounts only after their password has established ownership.
     if (user && user.googleId !== identity.sub) throw new ApiError(401, 'Use email and password to sign in to this existing account.');
     if (!user) {
-      user = await User.create({ name: identity.name || email.split('@')[0], email, role: 'citizen', googleId: identity.sub, avatar: identity.picture || '' });
+      user = await User.create({ name: identity.name || email.split('@')[0], email, role: 'citizen', googleId: identity.sub, avatar: identity.picture || '', emailVerifiedAt: new Date() });
     }
 
+    if (!user.emailVerifiedAt) { user.emailVerifiedAt = new Date(); await user.save(); }
     const appToken = generateToken({ userId: user._id.toString(), role: user.role });
 
     res.status(200).json(
@@ -108,7 +87,7 @@ export const linkGoogle = async (req: AuthRequest, res: Response, next: NextFunc
     if (!req.user) throw new ApiError(401, 'Unauthorized');
     const { token, nonce } = req.body;
     if (!token || typeof token !== 'string') throw new ApiError(401, 'A verified Google ID token is required.');
-    if (!env.GOOGLE_CLIENT_ID) throw new ApiError(503, 'Google sign-in is not configured.');
+    if (!env.GOOGLE_CLIENT_ID) throw new ApiError(503, 'Google sign-in is not configured.', [], true);
 
     let identity;
     try {
@@ -131,6 +110,7 @@ export const linkGoogle = async (req: AuthRequest, res: Response, next: NextFunc
     if (linkedElsewhere) throw new ApiError(409, 'This Google account is already linked to another user.');
 
     req.user.googleId = identity.sub;
+    req.user.emailVerifiedAt = new Date();
     await req.user.save();
     res.status(200).json(new ApiResponse('Google account linked successfully', req.user));
   } catch (error) {
@@ -166,7 +146,13 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
     }
 
     if (validated.name) user.name = validated.name;
-    if (validated.phone !== undefined) user.phone = validated.phone;
+    if (validated.phone !== undefined && validated.phone !== user.phone) {
+      const normalized = validated.phone.replace(/\D/g, '');
+      if (!/^\d{8,15}$/.test(normalized)) throw new ApiError(400, 'Enter a valid phone number.');
+      if (await User.exists({ _id: { $ne: user._id }, phoneNormalized: normalized })) throw new ApiError(400, 'These profile details cannot be saved.');
+      user.phone = validated.phone; user.phoneNormalized = normalized; user.phoneVerifiedAt = null;
+      user.notificationPreferences = { email: user.notificationPreferences?.email ?? true, sms: false, smsConsentedAt: null };
+    }
 
     await user.save();
 

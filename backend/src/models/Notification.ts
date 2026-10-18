@@ -8,6 +8,7 @@ export interface INotification extends Document {
   complaintId: mongoose.Types.ObjectId;
   readAt?: Date | null;
   createdAt: Date;
+  resolution?: { category: string; resolvedAt: Date };
 }
 
 const schema = new Schema<INotification>({
@@ -17,6 +18,7 @@ const schema = new Schema<INotification>({
   message: { type: String, required: true },
   complaintId: { type: Schema.Types.ObjectId, ref: 'Complaint', required: true },
   readAt: { type: Date, default: null },
+  resolution: { type: new Schema({ category: String, resolvedAt: Date }, { _id: false }) },
 }, { timestamps: true });
 schema.index({ recipient: 1, eventKey: 1 }, { unique: true });
 schema.index({ recipient: 1, createdAt: -1 });

@@ -54,7 +54,7 @@ const CitizenTabs = (_props: any) => {
       }
 
       if (isWide) return null;
-      return <PrimaryTabBar {...props} routes={['CitizenDashboard', 'ReportIssue', 'ComplaintHistory', 'CivicAssistant', 'CitizenProfile']} />;
+      return <PrimaryTabBar {...props} routes={['CitizenDashboard', 'ReportIssue', 'ComplaintHistory', 'Notifications', 'CitizenProfile']} />;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isWide, activeRoute, insets.bottom]

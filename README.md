@@ -4,7 +4,7 @@
 > Detects supported civic issues from photos using configured YOLO models, pins reports on a GPS map, submits them to a city authority, and enables the authority to track and resolve complaints through a status pipeline.
 
 The current upgrade adds independently configured detection models, citizen civic assistance,
-MongoDB-backed authority analytics, and an adaptive green/blue UI. Model availability depends
+MongoDB-backed authority analytics, and the restored original red/white/navy UI. Model availability depends
 on compatible trained weights; AI assistance depends on provider configuration. See
 [the design system](DESIGN.md), [model configuration](ai-service/models/MODEL_CONFIGURATION.md),
 and [Features 4–6 verification](FEATURES456_VERIFICATION.md).
@@ -60,8 +60,7 @@ project1/
 │   │   ├── services/ (cloudinaryService, aiService)
 │   │   ├── utils/    (jwt, apiError, apiResponse)
 │   │   └── validators/
-│   ├── .env          ← create from .env.example
-│   └── .env.example
+│   └── .env          ← single backend configuration (Git-ignored)
 │
 ├── ai-service/        Python FastAPI (port 8000)
 │   ├── app/          (main.py, detector.py, schemas.py, config.py)
@@ -87,25 +86,91 @@ project1/
 
 ## Environment Variables Setup
 
-### 1. Backend — `backend/.env` (copy from `.env.example`)
+### 1. Backend — single configuration file: `backend/.env`
+
+Keep all backend settings in this one Git-ignored file. For a fresh checkout, create
+`backend/.env` from the safe example below and fill credentials privately.
 
 ```env
 PORT=5000
 NODE_ENV=development
 MONGODB_URI=mongodb://127.0.0.1:27017/civic_issue_db
-JWT_SECRET=change_this_to_a_long_random_secret_string
+JWT_SECRET=
 JWT_EXPIRES_IN=7d
 
-# Cloudinary (optional — app uses local file fallback if left empty)
+# Same Google OAuth Web client ID used by the mobile app. Never put a client
+# secret in the mobile app; the backend verifies Google's signed ID tokens.
+GOOGLE_CLIENT_ID=
+
+# ── Cloudinary Setup (Optional) ───────────────────────────────────────────────
+# If left empty, images are stored locally in the backend/uploads/ folder.
+# Sign up free at https://cloudinary.com
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
-# URL of the Python AI microservice
+# ── Python AI Microservice URL ────────────────────────────────────────────────
+# Default is localhost. Change this if AI service runs on a different machine.
 AI_SERVICE_URL=http://127.0.0.1:8000
 
-# Google Maps API Key (optional — used only by backend for reference)
+# ── Backend Public URL (IMPORTANT for physical device testing) ────────────────
+# When Cloudinary is NOT configured, uploaded images are served from this URL.
+# Set to your machine's LAN IP so mobile devices can display uploaded images.
+# Find your LAN IP:  Windows: ipconfig → IPv4 Address
+#                    Mac/Linux: ifconfig → inet
+# Example: http://192.168.1.105:5000
+BACKEND_PUBLIC_URL=http://127.0.0.1:5000
+
+# ── Google Maps API Key ───────────────────────────────────────────────────────
+# Optional. Get one from https://console.cloud.google.com/
 GOOGLE_MAPS_API_KEY=
+# Civic assistance: server-side chat-completions-compatible endpoint.
+# Example endpoint shape: https://your-provider.example/v1/chat/completions
+# Leave unset to use the clearly labeled built-in civic guide.
+CHAT_PROVIDER_URL=
+CHAT_PROVIDER_MODEL=
+CHAT_PROVIDER_API_KEY=
+
+# Duplicate-warning policy. Same-category, unresolved reports within this radius
+# and lookback period are only suggestions; officers confirm links manually.
+DUPLICATE_RADIUS_METERS=120
+DUPLICATE_LOOKBACK_DAYS=30
+
+# Optional municipal service target. Leave empty until the municipality sets one.
+# When configured, unresolved complaints older than this many hours count as overdue.
+RESOLUTION_TARGET_HOURS=
+
+# Conservative visual similarity support; requires the local AI image-signature endpoint.
+DUPLICATE_MAX_HASH_DISTANCE=10
+DUPLICATE_MIN_COLOR_SIMILARITY=0.85
+# Geographic grid size and default lookback (days); API filters may override these.
+HOTSPOT_CELL_DEGREES=0.01
+HOTSPOT_WINDOW_DAYS=30
+
+# Email OTP + resolution email. Empty placeholders; defaults are in the comments.
+# OTP: 5 minutes, 60-second cooldown, 5 attempts, 5 requests/contact/hour.
+OTP_EXPIRY_MINUTES=
+OTP_RESEND_COOLDOWN_SECONDS=
+OTP_MAX_ATTEMPTS=
+OTP_HOURLY_LIMIT=
+# Optional dedicated random HMAC key; falls back to JWT_SECRET. Keep stable across replicas.
+OTP_HASH_SECRET=
+# Optional: true requires a separate phone OTP before account creation (default false).
+OTP_REQUIRE_PHONE=
+SMTP_HOST=
+# Default 587 with required STARTTLS; 465 uses implicit TLS.
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASS=
+EMAIL_FROM=
+
+# Optional SMS: set SMS_PROVIDER to twilio; sender must be the Twilio E.164 number.
+SMS_PROVIDER=
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM=
+# Default true. Run at least one persistent Node process for background delivery.
+DELIVERY_WORKER_ENABLED=
 ```
 
 ### 2. AI Service — `ai-service/.env` (create if not present)
@@ -159,7 +224,7 @@ Or use [MongoDB Community Server](https://www.mongodb.com/try/download/community
 ```bash
 cd backend
 npm install
-cp .env.example .env        # then edit .env with your values
+# Create/edit backend/.env using the backend configuration example above
 npm run dev                 # starts on http://localhost:5000
 ```
 
@@ -222,12 +287,17 @@ See [`ai-service/training/README.md`](ai-service/training/README.md) for full tr
 
 ### Auth Endpoints
 ```
-POST   /api/auth/register          Register citizen
+POST   /api/auth/signup/request-otp  Request email OTP; optional configured SMS
+POST   /api/auth/signup/verify-otp   Verify email or phone independently
+POST   /api/auth/signup/resend-otp   Replace challenge subject to limits
+POST   /api/auth/signup/complete     Create citizen after required verification
+POST   /api/auth/register            Compatibility alias for verified completion
 POST   /api/auth/login             Login (citizen or authority)
 POST   /api/auth/logout            Logout (authenticated)
 GET    /api/auth/me                Get current user
 PUT    /api/auth/profile           Update name/phone
 PUT    /api/auth/change-password   Change password
+PUT    /api/auth/notification-preferences  Save email alerts and explicit SMS consent
 ```
 
 ### Citizen Endpoints (requires citizen JWT)
@@ -454,7 +524,7 @@ uncertainty/abstention rates, and high-severity misses. Authorities retain final
   counts, live priority, category frequency, submission-day trends, geographic distribution
   and recent complaints. Apply date/category/status/search filters or open complaint lists
   from metrics. Lists support priority sorting/filtering and 25-record pagination.
-- **Adaptive UI:** shared green/blue tokens, phone navigation, tablet rails, desktop
+- **Adaptive UI:** restored red/navy tokens, phone navigation, tablet rails, desktop
   sidebars/headers, wide report panes and responsive charts/lists. See [DESIGN.md](DESIGN.md).
 
 The current streetlight/water-leakage models are unconfigured, and the supplied
@@ -468,14 +538,16 @@ results, configuration limits and commands to run the existing project.
 
 ## Current visual identity
 
-The full Expo application uses an original green and professional blue identity:
-photographic authentication pages, citizen reporting hero, category photo tiles,
-authority banners, consistent lists/details/forms/maps, notification views and profiles.
-Seven licensed reference photos are bundled in `mobile/assets/civic`; source and license
-credits are available in the app's profiles and the asset directory. Actual complaint images, detection coordinates,
-backend data, permissions and navigation remain connected to their existing services.
-See [DESIGN.md](DESIGN.md) for the current design system and
-[MASTER_IMPLEMENTATION_VERIFICATION.md](MASTER_IMPLEMENTATION_VERIFICATION.md) for current tests, feature status and remaining external dependencies.
+The original CivicTrack interface has been restored using the existing Phase 1 source:
+white cards and sidebar, soft red/pink accents, original logo/system typography and
+red/navy authority styling. The citizen dashboard reuses its original reporting hero,
+icon categories, search, activity cards and recent incidents. Current Phase 2 features,
+responsive navigation and real API integrations remain available.
+
+See [DESIGN.md](DESIGN.md) and [UI_RESTORATION_VERIFICATION.md](UI_RESTORATION_VERIFICATION.md)
+for source provenance, changed files, verification and reference-image limitations.
+The earlier master implementation report remains the record of backend feature work;
+its green/blue visual direction is superseded by this restoration.
 
 ## Features 7–12: complaint operations
 
@@ -510,7 +582,7 @@ category/department drill-downs, and officer severity/priority correction histor
 Original predictions, photos, final citizen-approved descriptions and status remain
 separate. Existing records need no destructive migration.
 
-`backend/.env.example` documents `DUPLICATE_MAX_HASH_DISTANCE`,
+The backend configuration example above documents `DUPLICATE_MAX_HASH_DISTANCE`,
 `DUPLICATE_MIN_COLOR_SIMILARITY`, `HOTSPOT_CELL_DEGREES`, `HOTSPOT_WINDOW_DAYS` and
 optional `RESOLUTION_TARGET_HOURS`. Existing install/start commands above still apply;
 run `npm install` in backend after pulling to install WebSocket support. Deployments
@@ -521,3 +593,56 @@ Use [the model configuration](ai-service/models/MODEL_CONFIGURATION.md) and
 [training/evaluation guide](ai-service/training/README.md) before adding new weights.
 Current severity and duplicate thresholds are unvalidated baselines. Missing trained
 models and external chat credentials produce explicit fallback states.
+
+## OTP registration and resolution notifications
+
+Citizen sign-up now requires email verification before account creation. Codes last
+five minutes, allow at most five guesses, have a 60-second resend cooldown and a
+five-request contact limit per hour. The original sign-up page leads to a matching
+verification step, then the existing authenticated dashboard. Existing accounts
+continue to sign in as before; a password login alone does not verify their contacts.
+
+Install the updated backend dependencies with `npm install` in `backend`, then set
+the SMTP variables in `backend/.env` and restart the API. New variables in
+the backend configuration example above are empty placeholders. Set a stable random `JWT_SECRET`
+(at least 32 characters in production); optionally set a separate `OTP_HASH_SECRET`.
+Configure `SMTP_HOST`, `SMTP_PORT` (default 587), `SMTP_USER`, `SMTP_PASS`, and
+`EMAIL_FROM`. For Gmail, the host is `smtp.gmail.com`; use the real sender account
+and a new app password, never the example strings or an exposed password.
+Missing SMTP configuration produces a setup error and creates no account.
+
+Optional SMS uses `SMS_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`
+and `TWILIO_FROM`. The last value must be the actual Twilio sender in international
+`+countrycode` format. `TWILIO_PHONE_NUMBER`, `SMS_API_KEY` and `SMS_API_SECRET`
+are not variables consumed by this integration. SMS and email use separate OTPs.
+Set `OTP_REQUIRE_PHONE=true` only when the SMS provider is ready; otherwise email
+verification is required and phone verification is optional.
+
+A real authority transition to Resolved now records one citizen notification,
+category and resolution time, plus durable email/SMS jobs. The existing live
+notification badge/list is reused. Email goes only to verified, opted-in email
+addresses; SMS also requires a verified phone and explicit saved consent in
+Profile → Notification Preferences. Delivery states appear on the notification.
+The final complaint status remains saved if sending fails.
+
+The worker starts with the existing backend and checks durable jobs every five
+seconds. Keep at least one API process running (`DELIVERY_WORKER_ENABLED` defaults
+to true). A request-only server that stops between requests will not run this
+worker reliably. Retries cover definite temporary rejection; unknown provider
+acceptance needs manual reconciliation to avoid blind duplicate sends. “Sent” in
+MongoDB means provider acceptance, not confirmed inbox/handset delivery.
+
+No existing records are deleted or automatically marked verified. New MongoDB
+collections and additive indexes are described in the
+[setup and migration guide](docs/OTP_NOTIFICATIONS.md), together with endpoint
+payloads, safe delivery troubleshooting and the list of changed files.
+See the [verification report](docs/OTP_NOTIFICATIONS_VERIFICATION.md) for actual
+results and the remaining external-delivery requirements. No real email or SMS
+delivery is claimed from mocked-provider tests.
+
+If a development OTP was previously visible on the verification screen, reload the
+app and start a new registration after configuring real sender credentials. The
+code-display/logging fallback has been removed. Example strings such as `your_gmail`
+or `your_twilio_account_sid` cannot send messages and are rejected as configuration.
+`TWILIO_FROM` is the authorized sending number, while your receiving phone number
+belongs in the sign-up form. See the setup guide's troubleshooting section above.

@@ -37,7 +37,7 @@ function generateWebLeafletHtml({
       height: 100%;
       margin: 0;
       padding: 0;
-      background: #EDF2EF;
+      background: #F1F5F9;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     .custom-marker {
@@ -49,7 +49,7 @@ function generateWebLeafletHtml({
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: #16634B;
+      background: #B71C1C;
       border: 3px solid #FFFFFF;
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
       display: flex;
@@ -74,7 +74,7 @@ function generateWebLeafletHtml({
     }
     .popup-title {
       font-weight: 700;
-      color: #102F27;
+      color: #0F172A;
       margin-bottom: 2px;
     }
     .popup-address {
@@ -267,7 +267,7 @@ export function MapSurface({
           width: '100%',
           height: '100%',
           border: 0,
-          backgroundColor: '#EDF2EF',
+          backgroundColor: '#F1F5F9',
         }}
       />
     </View>
@@ -277,13 +277,13 @@ export function MapSurface({
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#EDF2EF',
+    backgroundColor: '#F1F5F9',
   },
   fallbackContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#EDF2EF',
+    backgroundColor: '#F1F5F9',
     padding: 16,
   },
   fallbackText: {

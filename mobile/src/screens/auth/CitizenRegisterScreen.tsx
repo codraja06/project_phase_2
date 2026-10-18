@@ -1,3 +1,5 @@
+import { authApi, SignupSession } from '../../api/authApi';
+import { SignupVerificationScreen } from './SignupVerificationScreen';
 import React, { useState } from 'react';
 import {
   View,
@@ -16,12 +18,10 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthStackParamList } from '../../types/navigation';
 import { citizenRegisterSchema, CitizenRegisterForm } from '../../validation/schemas';
-import { useAuth } from '../../hooks/useAuth';
 import { Input, PasswordInput } from '../../components/Input';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
 import { CivicTrackLogo } from '../../components/CivicTrackLogo';
-import { BrandBackdrop } from '../../components/CivicVisuals';
 import { COLORS } from '../../theme/colors';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SHADOWS } from '../../theme/index';
@@ -32,7 +32,7 @@ import { useBreakpoint } from '../../hooks/useBreakpoint';
 type Props = NativeStackScreenProps<AuthStackParamList, 'CitizenRegister'>;
 
 export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
-  const { register } = useAuth();
+  const [signupSession, setSignupSession] = useState<SignupSession | null>(null);
   const { isDesktop, isWide } = useBreakpoint();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -40,6 +40,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors }} = useForm<CitizenRegisterForm>({
     resolver: zodResolver(citizenRegisterSchema),
     defaultValues: {
@@ -53,12 +54,13 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setErrorMessage(null);
       setLoading(true);
-      await register({
+      const session = await authApi.requestSignupOtp({
         name: data.name,
         email: data.email,
         phone: data.phone,
         password: data.password,
-        role: 'citizen'});
+        });
+      reset(); setSignupSession(session);
     } catch (error: any) {
       setErrorMessage(
         error.message || 'Registration failed. Please verify your details and try again.'
@@ -67,6 +69,8 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+  if (signupSession) return <SignupVerificationScreen session={signupSession} onSessionChange={setSignupSession} onBack={() => setSignupSession(null)} onSignIn={() => { setSignupSession(null); navigation.navigate('CitizenLogin'); }} />;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -80,7 +84,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.desktopContainer}>
             {/* Left Branding Side */}
             <View style={styles.brandingSide}>
-              <BrandBackdrop photo="coast" opacity={.67} />
+
               <Animated.View entering={FadeIn.duration(1000)} style={styles.brandingContent}>
                 <View style={styles.logoWrapper}>
                   <CivicTrackLogo size="lg" showText={false} />
@@ -198,7 +202,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
                         )}
                       />
 
-                      <Button title="Complete Registration" onPress={handleSubmit(onSubmit)} loading={loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
+                      <Button title="Send verification code" onPress={handleSubmit(onSubmit)} loading={loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
                     </CardContent>
                   </Card>
                 </Animated.View>
@@ -219,7 +223,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.mobileHeader}>
-              <BrandBackdrop photo="city" opacity={.72} />
+
               <Animated.View entering={FadeInDown.delay(100)}>
                 <TouchableOpacity hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityRole="button" accessibilityLabel="Back"
                   style={styles.backBtnMobile}
@@ -324,7 +328,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
                       )}
                     />
 
-                    <Button title="Complete Registration" onPress={handleSubmit(onSubmit)} loading={loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
+                    <Button title="Send verification code" onPress={handleSubmit(onSubmit)} loading={loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
                   </CardContent>
                 </Card>
               </Animated.View>
@@ -347,28 +351,28 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.background },
   // Desktop
   desktopContainer: { flex: 1, flexDirection: 'row' },
-  brandingSide: { flex: 1.2, backgroundColor: COLORS.backgroundNeutral, padding: 36, justifyContent: 'center', alignItems: 'flex-start', position: 'relative', overflow: 'hidden' },
-  brandingContent: { justifyContent: 'center', alignItems: 'flex-start', maxWidth: 520 },
+  brandingSide: { flex: 1.2, backgroundColor: COLORS.backgroundNeutral, padding: SPACING['7xl'], justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  brandingContent: { justifyContent: 'center', alignItems: 'center' },
   logoWrapper: { marginBottom: SPACING['3xl'], alignItems: 'center' },
-  brandingTitle: { ...TYPOGRAPHY.display, color: COLORS.onCinematic, fontSize: 42, lineHeight: 49, marginBottom: SPACING.lg, textAlign: 'left', letterSpacing: -1.2 },
-  brandingSubtitle: { ...TYPOGRAPHY.body, color: '#DDE9E4', lineHeight: 25, maxWidth: 420, textAlign: 'left' },
+  brandingTitle: { ...TYPOGRAPHY.display, color: COLORS.textPrimary, marginBottom: SPACING.lg, textAlign: 'center' },
+  brandingSubtitle: { ...TYPOGRAPHY.h3, color: COLORS.textSecondary, lineHeight: 28, maxWidth: 420, textAlign: 'center' },
   brandingFooter: { position: 'absolute', bottom: SPACING['4xl'] },
-  brandingFooterText: { ...TYPOGRAPHY.caption, color: COLORS.gold },
+  brandingFooterText: { ...TYPOGRAPHY.caption, color: COLORS.textMuted },
   authSide: { flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center' },
   authWrapper: { width: '100%', maxWidth: 460, paddingHorizontal: SPACING['3xl'], paddingVertical: SPACING['5xl'] },
   backBtnDesktop: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING['4xl'], alignSelf: 'flex-start' },
   backBtnTextDesktop: { ...TYPOGRAPHY.bodySmall, color: COLORS.textSecondary, fontWeight: '600', marginLeft: SPACING.xs },
   authTitle: { ...TYPOGRAPHY.h1, color: COLORS.textPrimary, marginBottom: SPACING.md },
   authSubtitle: { ...TYPOGRAPHY.body, color: COLORS.textSecondary, marginBottom: SPACING['4xl'] },
-  
+
   // Mobile
   mobileContainer: { flexGrow: 1, backgroundColor: COLORS.background, paddingBottom: SPACING['4xl'] },
-  mobileHeader: { backgroundColor: COLORS.backgroundNeutral, padding: SPACING['3xl'], paddingTop: SPACING.xl, paddingBottom: SPACING['4xl'], borderBottomLeftRadius: 20, borderBottomRightRadius: 20, alignItems: 'center', overflow: 'hidden', position: 'relative' },
+  mobileHeader: { backgroundColor: COLORS.backgroundNeutral, padding: SPACING['3xl'], paddingTop: SPACING.xl, paddingBottom: SPACING['4xl'], borderBottomLeftRadius: 32, borderBottomRightRadius: 32, alignItems: 'center' },
   backBtnMobile: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING['3xl'], backgroundColor: COLORS.surface, paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm, borderRadius: BORDER_RADIUS.xl, alignSelf: 'flex-start', borderWidth: 1, borderColor: COLORS.borderLight, ...SHADOWS.sm },
   backBtnTextMobile: { ...TYPOGRAPHY.caption, color: COLORS.textPrimary, fontWeight: '700', marginLeft: SPACING.xs },
   logoWrapperMobile: { marginBottom: SPACING.xl },
-  mobileTitle: { ...TYPOGRAPHY.h1, color: COLORS.onCinematic, marginBottom: SPACING.xs },
-  mobileSubtitle: { ...TYPOGRAPHY.body, color: COLORS.gold },
+  mobileTitle: { ...TYPOGRAPHY.h1, color: COLORS.textPrimary, marginBottom: SPACING.xs },
+  mobileSubtitle: { ...TYPOGRAPHY.body, color: COLORS.textSecondary },
   mobileBody: { padding: SPACING['2xl'], marginTop: -20 },
 
   // Shared

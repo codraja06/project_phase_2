@@ -15,6 +15,8 @@ export interface NotificationData {
   type?: 'status_change' | 'assignment' | 'alert' | 'system' | 'resolved' | 'in_progress' | 'received';
   isRead?: boolean;
   complaintId?: string;
+  resolutionDetails?: string;
+  deliverySummary?: string;
 }
 
 interface NotificationItemProps {
@@ -70,10 +72,14 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ item, onPres
         </View>
 
         {item.message ? (
-          <Text style={styles.message} numberOfLines={2}>
+          <Text style={styles.message}>
             {item.message}
           </Text>
         ) : null}
+
+        {!!item.resolutionDetails && <Text style={styles.message}>{item.resolutionDetails}</Text>}
+        {!!item.deliverySummary && <Text style={styles.message}>{item.deliverySummary}</Text>}
+        {!!item.resolutionDetails && onPress && <Text style={[styles.message, { color: COLORS.primary, fontWeight: '700' }]}>View complaint details →</Text>}
 
         <Text style={styles.time}>{item.timestamp}</Text>
       </View>

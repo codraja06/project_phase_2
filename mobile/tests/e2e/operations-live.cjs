@@ -6,6 +6,7 @@ const { User } = require('../../../backend/dist/models/User');
 const { Complaint } = require('../../../backend/dist/models/Complaint');
 const { DepartmentRule } = require('../../../backend/dist/models/DepartmentRule');
 const { Notification } = require('../../../backend/dist/models/Notification');
+const { NotificationDelivery } = require('../../../backend/dist/models/NotificationDelivery');
 const fs = require('fs'), path = require('path');
 const WEB = process.env.PHASE2_WEB_URL || 'http://localhost:8083';
 const artifact = path.join(__dirname, '../artifacts/operations-live-results.json');
@@ -18,7 +19,7 @@ async function login(page, user) {
   await page.getByLabel(citizen ? 'Email Address' : 'Department Official Email', { exact: true }).fill(user.email);
   await page.getByLabel(citizen ? 'Password' : 'Officer Security Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: citizen ? 'Sign In' : 'Authenticate as Officer', exact: true }).click();
-  await page.getByText(citizen ? 'Quick Issue Categories' : 'Operational Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
+  await page.getByText(citizen ? 'Quick Issue Categories' : 'Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
 }
 async function widths(page, screen) {
   for (const width of [320,375,430,768,1024,1280,1440,1920]) {
@@ -84,7 +85,11 @@ async function widths(page, screen) {
     await admin.getByTestId('workspace-sidebar').getByRole('button', { name: 'Incident Map', exact: true }).click();
     await admin.getByRole('button', { name: 'Potholes', exact: true }).click();
     await admin.getByRole('button', { name: 'Apply Filters', exact: true }).click();
-    await expect(admin.getByRole('button', { name: `Open complaint ${submitted.complaintId}` })).toBeVisible();
+    // Nearby reports can be in adjacent grid cells; inspect the selectable cells.
+    const targetReport = admin.getByRole('button', { name: `Open complaint ${submitted.complaintId}` });
+    const cells = admin.getByRole('button', { name: /^Cluster \d+:/ });
+    for (let index = 0; index < await cells.count() && !await targetReport.isVisible(); index++) await cells.nth(index).click();
+    await expect(targetReport).toBeVisible();
     await widths(admin, 'Filtered hotspot map');
     await admin.getByRole('button', { name: `Open complaint ${submitted.complaintId}` }).click();
     await expect(admin.getByText('Local Road Team', { exact: false }).filter({ visible: true }).last()).toBeVisible();
@@ -140,6 +145,7 @@ async function widths(page, screen) {
     if (browser) await browser.close();
     if (users.length) {
       const ids = users.map(user => user._id);
+      await NotificationDelivery.deleteMany({ recipient: { $in: ids } });
       await Notification.deleteMany({ recipient: { $in: ids } });
       await Complaint.deleteMany({ createdBy: { $in: ids } });
       await DepartmentRule.deleteMany({ category: 'pothole', updatedBy: users[2]._id });

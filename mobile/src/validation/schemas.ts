@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 export const citizenLoginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid email address').max(254),
   password: z.string().min(1, 'Password is required'),
 });
 
 export const citizenRegisterSchema = z
   .object({
-    name: z.string().min(2, 'Full name must be at least 2 characters'),
-    email: z.string().email('Please enter a valid email address'),
-    phone: z.string().min(8, 'Phone number must be at least 8 digits'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    name: z.string().trim().min(2, 'Full name must be at least 2 characters').max(100),
+    email: z.string().trim().toLowerCase().email('Please enter a valid email address').max(254),
+    phone: z.string().trim().max(30).regex(/^\+?[0-9 ()-]+$/, 'Enter a valid phone number').refine(value => /^\d{8,15}$/.test(value.replace(/\D/g, '')), 'Enter 8 to 15 phone digits'),
+    password: z.string().min(6, 'Password must be at least 6 characters').max(72, 'Password is too long'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((data) => data.password === data.confirmPassword, {

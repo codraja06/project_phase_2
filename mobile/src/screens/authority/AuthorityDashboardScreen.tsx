@@ -26,7 +26,6 @@ import { BarChart, SparkLine, MiniDonut } from '../../components/BarChart';
 import { SkeletonStatCard, SkeletonList } from '../../components/SkeletonLoader';
 import { AuthorityMobileHeader } from '../../components/AuthorityMobileHeader';
 import { formatDate } from '../../utils/date';
-import { CivicHero } from '../../components/CivicVisuals';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const daysAgo = (days: number) => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
@@ -108,7 +107,7 @@ export const AuthorityDashboardScreen = ({ navigation }: any) => {
           />
         }
       >
-        <CivicHero compact photo="bridge" eyebrow="CIVICTRACK / MUNICIPAL OPERATIONS" title="Turn reports into visible progress." description="Review evidence, focus attention and keep citizens informed." />
+
         {/* Header row */}
         <View style={styles.header}>
           <View style={{ flex: 1, minWidth: 240 }}>
@@ -117,7 +116,7 @@ export const AuthorityDashboardScreen = ({ navigation }: any) => {
               <Text style={styles.statusText}>MUNICIPAL COMPLAINT WORKSPACE</Text>
             </View>
             <Text accessibilityRole="header" style={styles.title}>
-              Operational Command Center
+              Command Center
             </Text>
             <Text style={styles.subtitle}>
               Municipal incident triage, active fieldwork, and velocity monitoring.
@@ -183,7 +182,9 @@ export const AuthorityDashboardScreen = ({ navigation }: any) => {
         ) : (
           <>
             {/* KPI Cards Grid */}
-            <AdaptiveGrid minWidth={140} maxColumns={isDesktop ? 4 : 2} gap={12}>
+            <AdaptiveGrid minWidth={140} maxColumns={isDesktop ? 3 : 2} gap={12}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Total complaints: ${totalCount}`} onPress={() => navigation.navigate('AllComplaints', { from: daysAgo(7), to: today() })} style={styles.kpiCard}><View style={styles.kpiTop}><View style={[styles.kpiIcon, { backgroundColor: COLORS.primaryLight }]}><Ionicons name="documents-outline" size={20} color={COLORS.primary} /></View></View><Text style={styles.kpiValue}>{totalCount}</Text><Text style={styles.kpiLabel}>Total Complaints</Text></TouchableOpacity>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Pending complaints: ${summary?.pending ?? 0}`} onPress={() => navigation.navigate('AllComplaints', { filter: 'pending', from: daysAgo(7), to: today() })} style={styles.kpiCard}><View style={styles.kpiTop}><View style={[styles.kpiIcon, { backgroundColor: COLORS.pendingLight }]}><Ionicons name="time-outline" size={20} color={COLORS.pendingDark} /></View></View><Text style={styles.kpiValue}>{summary?.pending ?? 0}</Text><Text style={styles.kpiLabel}>Pending Complaints</Text></TouchableOpacity>
               {/* Urgent Action Card */}
               <TouchableOpacity
                 accessibilityRole="button"
@@ -755,7 +756,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: COLORS.primaryLight || '#EDF2EF',
+    backgroundColor: COLORS.primaryLight || '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },

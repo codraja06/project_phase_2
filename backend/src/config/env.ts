@@ -9,12 +9,25 @@ if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process
 }
 
 function boundedNumber(name: string, fallback: number, min: number, max: number) {
-  const value = Number(process.env[name] ?? fallback);
-  if (!Number.isFinite(value) || value < min || value > max) throw new Error(`Invalid ${name} configuration.`);
+  const value = Number(process.env[name] || fallback);
+  if (!Number.isFinite(value) || value < min || value > max || !Number.isInteger(value) && name.startsWith('OTP_')) throw new Error(`Invalid ${name} configuration.`);
   return value;
 }
 
 export const env = {
+  OTP_EXPIRY_MINUTES: boundedNumber('OTP_EXPIRY_MINUTES', 5, 5, 5),
+  OTP_RESEND_COOLDOWN_SECONDS: boundedNumber('OTP_RESEND_COOLDOWN_SECONDS', 60, 60, 3600),
+  OTP_MAX_ATTEMPTS: boundedNumber('OTP_MAX_ATTEMPTS', 5, 1, 5),
+  OTP_HOURLY_LIMIT: boundedNumber('OTP_HOURLY_LIMIT', 5, 1, 10),
+  OTP_HASH_SECRET: process.env.OTP_HASH_SECRET || process.env.JWT_SECRET || '',
+  OTP_REQUIRE_PHONE: process.env.OTP_REQUIRE_PHONE === 'true',
+  SMTP_HOST: process.env.SMTP_HOST || '', SMTP_PORT: Number(process.env.SMTP_PORT || 587),
+  SMTP_USER: process.env.SMTP_USER || '', SMTP_PASS: process.env.SMTP_PASS || '',
+  EMAIL_FROM: process.env.EMAIL_FROM || '',
+  SMS_PROVIDER: process.env.SMS_PROVIDER || '',
+  TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || '',
+  TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN || '', TWILIO_FROM: process.env.TWILIO_FROM || '',
+  DELIVERY_WORKER_ENABLED: process.env.DELIVERY_WORKER_ENABLED !== 'false',
   PORT: parseInt(process.env.PORT || '5000', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/civic_issue_db',

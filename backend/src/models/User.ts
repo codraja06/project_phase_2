@@ -13,6 +13,10 @@ export interface IUser extends Document {
   avatar?: string;
   role: UserRole;
   isAdmin?: boolean;
+  emailVerifiedAt?: Date | null;
+  phoneVerifiedAt?: Date | null;
+  phoneNormalized?: string;
+  notificationPreferences?: { email: boolean; sms: boolean; smsConsentedAt?: Date | null };
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -28,14 +32,23 @@ const UserSchema = new Schema<IUser>(
     avatar: { type: String, default: '' },
     role: { type: String, enum: ['citizen', 'authority'], default: 'citizen' },
     isAdmin: { type: Boolean, default: false },
+    emailVerifiedAt: { type: Date, default: null },
+    phoneVerifiedAt: { type: Date, default: null },
+    phoneNormalized: { type: String },
+    notificationPreferences: {
+      email: { type: Boolean, default: true }, sms: { type: Boolean, default: false },
+      smsConsentedAt: { type: Date, default: null },
+    },
   },
   {
     timestamps: true,
   }
 );
+// Do not backfill this field on legacy accounts: pre-existing phone duplicates remain intact.
+UserSchema.index({ phoneNormalized: 1 }, { unique: true, partialFilterExpression: { phoneNormalized: { $type: 'string' } } });
 
 UserSchema.pre('save', async function (next) {
-  if (!this.password || !this.isModified('password')) return next();
+  if (!this.password || !this.isModified('password') || this.$locals.passwordIsHashed) return next();
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

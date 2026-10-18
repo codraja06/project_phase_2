@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Actual signup API sends a mocked-provider OTP and creates no user before verification",
+    "Browser verifies actual stored challenge, completes registration once and enters authenticated dashboard"
+  ],
+  "errors": [],
+  "externalDelivery": "Mocked only; no real emails or SMS"
+}

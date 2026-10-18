@@ -1,3 +1,4 @@
+import { NotificationDelivery } from '../models/NotificationDelivery';
 import { publishNotificationChange } from '../services/liveNotifications';
 import { env } from '../config/env';
 import { Response, NextFunction } from 'express';
@@ -181,7 +182,9 @@ export const getNotifications = async (req: AuthRequest, res: Response, next: Ne
       Notification.find({ recipient }).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
       Notification.countDocuments({ recipient }), Notification.countDocuments({ recipient, readAt: null }),
     ]);
-    res.json(new ApiResponse('Notifications', { notifications, total, unread, page, pages: Math.ceil(total / limit) }));
+    const deliveries = await NotificationDelivery.find({ recipient, notificationId: { $in: notifications.map(item => item._id) } }).select('notificationId channel status errorCode attempts').lean();
+    const withDelivery = notifications.map(item => ({ ...item, deliveries: deliveries.filter(job => String(job.notificationId) === String(item._id)).map(({ channel, status, errorCode, attempts }) => ({ channel, status, errorCode, attempts })) }));
+    res.json(new ApiResponse('Notifications', { notifications: withDelivery, total, unread, page, pages: Math.ceil(total / limit) }));
   } catch (e) { next(e); }
 };
 export const markNotificationRead = async (req: AuthRequest, res: Response, next: NextFunction) => {

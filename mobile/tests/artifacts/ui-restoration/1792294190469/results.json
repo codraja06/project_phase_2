@@ -1,0 +1,55 @@
+{
+  "checks": [
+    "OTP layout at six widths, cooldown disabled, two accessibility scans",
+    "Invalid OTP error then six-digit paste/keyboard submit completes existing dashboard navigation",
+    "expiry state uses the signup API and preserves account verification rules",
+    "setup state uses the signup API and preserves account verification rules",
+    "network state uses the signup API and preserves account verification rules",
+    "phone state uses the signup API and preserves account verification rules",
+    "smsFailure state uses the signup API and preserves account verification rules",
+    "Resolution metadata and delivery states render, mark read and open correct complaint"
+  ],
+  "widths": [
+    {
+      "width": 320,
+      "height": 568,
+      "scroll": 320
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "scroll": 375
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scroll": 768
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scroll": 1024
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scroll": 1440
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "scroll": 1920
+    }
+  ],
+  "accessibility": [
+    {
+      "width": 320,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "violations": []
+    }
+  ],
+  "errors": []
+}

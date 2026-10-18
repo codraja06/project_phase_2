@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Actual signup API sends a mocked-provider OTP and creates no user before verification",
+    "Browser verifies actual stored challenge, completes registration once and enters authenticated dashboard",
+    "Actual profile preference API stores explicit SMS consent without falsely verifying the phone",
+    "Actual authorized resolution creates one owned in-app event and one email acceptance; repeated status save sends nothing"
+  ],
+  "errors": [],
+  "externalDelivery": "Mocked only; no real emails or SMS"
+}

@@ -20,7 +20,6 @@ import Animated, { FadeInDown, FadeInUp, Layout, ZoomIn, FadeOut } from 'react-n
 import { authorityApi } from '../../api/authorityApi';
 import { Complaint } from '../../types/complaint';
 import { COLORS } from '../../theme/colors';
-import { BrandBackdrop } from '../../components/CivicVisuals';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SHADOWS } from '../../theme/index';
 import { SPACING } from '../../theme/spacing';
@@ -516,7 +515,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
         <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
         <Animated.View entering={FadeInDown.duration(400)} style={styles.desktopHeader}>
-          <BrandBackdrop photo="bridge" opacity={.86} />
+
           <View>
             <Text style={styles.desktopTitle}>Incident Registry</Text>
             <Text style={styles.desktopSubtitle}>Showing {filteredComplaints.length} of {pagination.total} matching civic issues</Text>
@@ -580,10 +579,10 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
 
   return (
     <View style={styles.safeAreaMobile}>
-      <StatusBar barStyle="light-content" backgroundColor="#102F27" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
-      <AuthorityMobileHeader 
-        title="Incident Registry" 
+      <AuthorityMobileHeader
+        title="Incident Registry"
         rightNode={
           <View style={styles.countPill}>
             <Text style={styles.countPillText}>{filteredComplaints.length}</Text>
@@ -634,16 +633,16 @@ const styles = StyleSheet.create({
   safeAreaMobile: { flex: 1, backgroundColor: COLORS.background },
 
   // ── Desktop Table ──────────────────────────────────────────────────────────
-  desktopHeader: { position: 'relative', overflow: 'hidden', minHeight: 140, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING['4xl'], paddingTop: SPACING['3xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.cinematic },
-  desktopTitle: { ...TYPOGRAPHY.h1, color: COLORS.onCinematic },
-  desktopSubtitle: { ...TYPOGRAPHY.bodySmall, color: '#DDE9E4', fontWeight: '500', marginTop: SPACING.xs },
+  desktopHeader: { position: 'relative', overflow: 'hidden', minHeight: 140, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING['4xl'], paddingTop: SPACING['3xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.background },
+  desktopTitle: { ...TYPOGRAPHY.h1, color: COLORS.textPrimary },
+  desktopSubtitle: { ...TYPOGRAPHY.bodySmall, color: COLORS.textSecondary, fontWeight: '500', marginTop: SPACING.xs },
   desktopControls: { width: 380 },
   desktopSearch: { marginBottom: 0 },
   desktopFilterBar: { paddingHorizontal: SPACING['4xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
   desktopFilterChips: { paddingVertical: SPACING.xs },
-  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING['4xl'], paddingVertical: SPACING.md, backgroundColor: COLORS.primaryDeep, borderBottomWidth: 2, borderBottomColor: COLORS.gold },
+  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING['4xl'], paddingVertical: SPACING.md, backgroundColor: COLORS.background, borderBottomWidth: 2, borderBottomColor: COLORS.borderLight },
   tableThumbHeader: { width: 44, marginRight: 14 },
-  tableHeaderLabel: { ...TYPOGRAPHY.overline, color: COLORS.onCinematic },
+  tableHeaderLabel: { ...TYPOGRAPHY.overline, color: COLORS.textSecondary },
   desktopListContent: { paddingHorizontal: SPACING['4xl'], paddingTop: SPACING.md, paddingBottom: SPACING['6xl'] },
   tableRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, paddingVertical: SPACING.md, paddingHorizontal: SPACING.xl, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.borderLight, marginBottom: SPACING.sm, ...(Platform.OS === 'web' ? { transition: 'all 0.1s ease-in-out' as any } : {}) },
   tableRowHovered: { borderColor: COLORS.border, backgroundColor: COLORS.backgroundNeutral },
@@ -667,13 +666,13 @@ const styles = StyleSheet.create({
   tableColStatus: { width: 105, marginRight: 14 },
   tableColActionsHeader: { width: 130 },
   tableColActions: { width: 130, flexDirection: 'row', alignItems: 'center' },
-  
+
   // ── Mobile ────────────────────────────────────────────────────────────────
-  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: Platform.OS === 'ios' ? SPACING.md : SPACING.lg, paddingBottom: SPACING.lg, backgroundColor: COLORS.authorityPrimary },
+  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: Platform.OS === 'ios' ? SPACING.md : SPACING.lg, paddingBottom: SPACING.lg, backgroundColor: '#0F172A' },
   backBtn: { width: 38, height: 38, borderRadius: BORDER_RADIUS.full, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', marginRight: SPACING.md },
-  headerTitle: { ...TYPOGRAPHY.h3, color: COLORS.surface, flex: 1 },
+  headerTitle: { ...TYPOGRAPHY.h3, color: '#FFFFFF', flex: 1 },
   countPill: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: BORDER_RADIUS.full },
-  countPillText: { ...TYPOGRAPHY.caption, fontWeight: '800', color: COLORS.surface },
+  countPillText: { ...TYPOGRAPHY.caption, fontWeight: '800', color: '#FFFFFF' },
   filterSection: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: SPACING.sm, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
   searchBar: { marginBottom: SPACING.sm },
   filterChips: { paddingVertical: SPACING.xs },

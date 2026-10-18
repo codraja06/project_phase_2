@@ -1,6 +1,7 @@
 import { axiosClient } from './axiosClient';
 import { ENDPOINTS } from '../constants/endpoints';
 import { User } from '../types/auth';
+export interface SignupSession { challengeId: string; expiresAt: string; resendAvailableAt: string; smsStatus: 'sent' | 'failed' | 'not_configured'; phoneVerificationRequired: boolean; }
 
 // NOTE: axiosClient interceptor returns response.data directly.
 // Backend envelope: { success: true, data: { user, token } }
@@ -8,8 +9,20 @@ import { User } from '../types/auth';
 
 export const authApi = {
   async register(data: any): Promise<{ user: User; token: string }> {
-    const envelope: any = await axiosClient.post(ENDPOINTS.AUTH.REGISTER, data);
+    const envelope: any = await axiosClient.post('/auth/signup/complete', data);
     return envelope.data; // { user, token }
+  },
+  async requestSignupOtp(data: { name: string; email: string; phone: string; password: string }): Promise<SignupSession> {
+    const envelope: any = await axiosClient.post('/auth/signup/request-otp', data, { timeout: 60000 }); return envelope.data;
+  },
+  async resendSignupOtp(challengeId: string): Promise<SignupSession> {
+    const envelope: any = await axiosClient.post('/auth/signup/resend-otp', { challengeId }, { timeout: 60000 }); return envelope.data;
+  },
+  async verifySignupOtp(challengeId: string, channel: 'email' | 'sms', code: string): Promise<{ emailVerified: boolean; phoneVerified: boolean }> {
+    const envelope: any = await axiosClient.post('/auth/signup/verify-otp', { challengeId, channel, code }); return envelope.data;
+  },
+  async updateNotificationPreferences(email: boolean, sms: boolean): Promise<User> {
+    const envelope: any = await axiosClient.put('/auth/notification-preferences', { email, sms }); return envelope.data;
   },
 
   async login(data: any): Promise<{ user: User; token: string }> {

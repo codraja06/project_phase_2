@@ -1,3 +1,4 @@
+import { queueResolutionNotifications } from '../services/resolutionDeliveryService';
 import { env } from '../config/env';
 import { analyticsQuery, analyticsFilter } from '../services/analyticsService';
 import { Response, NextFunction } from 'express';
@@ -161,12 +162,15 @@ export const updateComplaintStatus = async (req: AuthRequest, res: Response, nex
 
     const updated = await Complaint.findOneAndUpdate(
       { _id: id, status: currentStatus },
-      { $set: { status: targetStatus, ...(targetStatus === 'Resolved' ? { resolvedAt: changedAt } : {}) },
+      { $set: { status: targetStatus, ...(targetStatus === 'Resolved' ? { resolvedAt: changedAt, resolutionNoticeAt: changedAt, resolutionNoticePending: true } : {}) },
         $push: { statusHistory: { status: targetStatus, at: changedAt, by: req.user!._id } } },
       { new: true, runValidators: true }
     );
     if (!updated) throw new ApiError(409, 'This complaint changed. Refresh before trying again.');
-    await notifyUser(updated.createdBy, { complaintId: updated._id, eventKey: `${updated._id}:status:${targetStatus}`,
+    if (targetStatus === 'Resolved') {
+      try { await queueResolutionNotifications(updated); }
+      catch { console.error('Resolution notice is pending; the worker will retry persistence.'); }
+    } else await notifyUser(updated.createdBy, { complaintId: updated._id, eventKey: `${updated._id}:status:${targetStatus}`,
       title: `Complaint ${targetStatus}`, message: `${updated.complaintId} is now ${targetStatus}.` });
     res.status(200).json(new ApiResponse('Complaint status updated successfully', withPriority(updated)));
   } catch (error) {

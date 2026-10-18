@@ -25,25 +25,25 @@ export const errorHandler = (
   } else if (err.name === 'ValidationError') {
     statusCode = 400;
     message = 'Database Validation Error';
-    errors = Object.values(err.errors).map((e: any) => e.message);
+    errors = Object.values(err.errors).map((e: any) => `${e.path}: validation failed.`);
   } else if (err.code === 11000) {
     statusCode = 400;
     message = 'Duplicate field value entered.';
   }
 
-  if (statusCode >= 500 && env.NODE_ENV === 'production') {
+  if (statusCode >= 500 && !err.safeToExpose) {
     message = 'The service could not complete this request. Please try again.';
     errors = [];
   }
 
   if (env.NODE_ENV !== 'test') {
-    console.error(`[Error Handler] ${statusCode} - ${message}:`, err);
+    // Raw errors can contain request bodies, provider credentials or database connection strings.
+    console.error(`[Error Handler] HTTP ${statusCode}`);
   }
 
   res.status(statusCode).json({
     success: false,
     message,
     errors,
-    stack: env.NODE_ENV === 'development' ? err.stack : undefined,
   });
 };

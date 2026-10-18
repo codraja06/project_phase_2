@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight || '#EDF2EF',
+    borderTopColor: COLORS.borderLight || '#F1F5F9',
   },
   statCard: {
     backgroundColor: COLORS.surface || '#FFFFFF',

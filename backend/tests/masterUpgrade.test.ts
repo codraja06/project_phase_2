@@ -7,6 +7,7 @@ import { env } from '../src/config/env';
 import { User } from '../src/models/User';
 import { Complaint } from '../src/models/Complaint';
 import { Notification } from '../src/models/Notification';
+import { NotificationDelivery } from '../src/models/NotificationDelivery';
 import { generateToken } from '../src/utils/jwt';
 import { attachLiveNotifications } from '../src/services/liveNotifications';
 import { notifyUser } from '../src/services/notificationService';
@@ -32,6 +33,7 @@ describe('Master upgrade: actual delivery, human decisions and visual evidence',
     wss.clients.forEach(socket => socket.terminate());
     await new Promise<void>(resolve => wss.close(() => resolve()));
     await new Promise<void>(resolve => server.close(() => resolve()));
+    await NotificationDelivery.deleteMany({ recipient: { $in: [citizen._id, officer._id] } });
     await Notification.deleteMany({ recipient: { $in: [citizen._id, officer._id] } });
     await Complaint.deleteMany({ createdBy: citizen._id });
     await User.deleteMany({ _id: { $in: [citizen._id, officer._id] } });

@@ -15,7 +15,6 @@ import { AuthorityMobileHeader } from './AuthorityMobileHeader';
 import { StatusBadge } from './StatusBadge';
 import { TriageSummary } from './TriageSummary';
 import { MapSurface } from './MapSurface';
-import { CivicHero } from './CivicVisuals';
 
 import { BarChart, SparkLine, MiniDonut } from './BarChart';
 import { SkeletonStatCard, SkeletonList } from './SkeletonLoader';
@@ -55,7 +54,7 @@ export const AuthorityInsights = ({ navigation, detailed = false }: { navigation
   return <SafeAreaView style={styles.root}>
     {!isWide && <AuthorityMobileHeader title={detailed ? 'Municipal Analytics' : 'Command Center'} />}
     <ScrollView contentContainerStyle={[styles.page, isWide && { padding: 24 }]} refreshControl={<RefreshControl refreshing={loading && !!data} onRefresh={load} />} keyboardShouldPersistTaps="handled">
-      <CivicHero compact photo="coast" eyebrow="CIVICTRACK / CITY INTELLIGENCE" title="A clearer view of civic progress." description="Patterns, priorities and resolution outcomes from actual complaint records." />
+
       <View style={styles.heading}>
         <View style={{ flex: 1 }}><Text style={styles.eyebrow}>OVERVIEW / {detailed ? 'ANALYTICS' : 'OPERATIONS'}</Text><Text style={styles.title}>{detailed ? 'Municipal Analytics' : 'Command Center'}</Text><Text style={styles.subtitle}>Understand demand. Focus attention. Keep work moving.</Text></View>
         <Button title="View complaints" variant="outline" onPress={() => openList()} />

@@ -21,7 +21,6 @@ import { Input, PasswordInput } from '../../components/Input';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
 import { CivicTrackLogo } from '../../components/CivicTrackLogo';
-import { BrandBackdrop } from '../../components/CivicVisuals';
 import { COLORS } from '../../theme/colors';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SHADOWS } from '../../theme/index';
@@ -121,7 +120,7 @@ export const CitizenLoginScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.desktopContainer}>
             {/* Left Branding Side */}
             <View style={styles.brandingSide}>
-              <BrandBackdrop photo="city" opacity={.67} />
+
               <Animated.View entering={FadeIn.duration(1000)} style={styles.brandingContent}>
                 <View style={styles.logoWrapper}>
                   <CivicTrackLogo size="lg" showText={false} />
@@ -259,7 +258,7 @@ export const CitizenLoginScreen: React.FC<Props> = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.mobileHeader}>
-              <BrandBackdrop photo="city" opacity={.72} />
+
               <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.logoWrapperMobile}>
                 <CivicTrackLogo size="md" showText={false} />
               </Animated.View>
@@ -354,7 +353,7 @@ export const CitizenLoginScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
 
                     <Button title="Sign In" onPress={handleSubmit(onSubmit)} loading={loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
-                    
+
                     <View style={styles.dividerRow}>
                       <View style={styles.dividerLine} />
                       <Text style={styles.dividerText}>or continue with</Text>
@@ -397,31 +396,31 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.background },
   // Desktop
   desktopContainer: { flex: 1, flexDirection: 'row' },
-  brandingSide: { flex: 1.2, backgroundColor: COLORS.backgroundNeutral, padding: 36, justifyContent: 'center', alignItems: 'flex-start', position: 'relative', overflow: 'hidden' },
-  brandingContent: { justifyContent: 'center', alignItems: 'flex-start', maxWidth: 520 },
+  brandingSide: { flex: 1.2, backgroundColor: COLORS.backgroundNeutral, padding: SPACING['7xl'], justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  brandingContent: { justifyContent: 'center', alignItems: 'center' },
   logoWrapper: { marginBottom: SPACING['3xl'], alignItems: 'center' },
-  brandingTitle: { ...TYPOGRAPHY.display, color: COLORS.onCinematic, fontSize: 42, lineHeight: 49, marginBottom: SPACING.lg, textAlign: 'left', letterSpacing: -1.2 },
-  brandingSubtitle: { ...TYPOGRAPHY.body, color: '#DDE9E4', lineHeight: 25, maxWidth: 420, textAlign: 'left' },
+  brandingTitle: { ...TYPOGRAPHY.display, color: COLORS.textPrimary, marginBottom: SPACING.lg, textAlign: 'center' },
+  brandingSubtitle: { ...TYPOGRAPHY.h3, color: COLORS.textSecondary, lineHeight: 28, maxWidth: 420, textAlign: 'center' },
   brandingFooter: { position: 'absolute', bottom: SPACING['4xl'] },
-  brandingFooterText: { ...TYPOGRAPHY.caption, color: COLORS.gold },
+  brandingFooterText: { ...TYPOGRAPHY.caption, color: COLORS.textMuted },
   authSide: { flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center' },
   authWrapper: { width: '100%', maxWidth: 460, paddingHorizontal: SPACING['3xl'], paddingVertical: SPACING['5xl'] },
   authTitle: { ...TYPOGRAPHY.h1, color: COLORS.textPrimary, marginBottom: SPACING.md },
   authSubtitle: { ...TYPOGRAPHY.body, color: COLORS.textSecondary, marginBottom: SPACING['4xl'] },
-  
+
   // Mobile
   mobileContainer: { flexGrow: 1, backgroundColor: COLORS.background, paddingBottom: SPACING['4xl'] },
-  mobileHeader: { backgroundColor: COLORS.backgroundNeutral, padding: SPACING['3xl'], paddingTop: SPACING.xl, paddingBottom: SPACING['4xl'], borderBottomLeftRadius: 20, borderBottomRightRadius: 20, alignItems: 'center', overflow: 'hidden', position: 'relative' },
+  mobileHeader: { backgroundColor: COLORS.backgroundNeutral, padding: SPACING['3xl'], paddingTop: SPACING.xl, paddingBottom: SPACING['4xl'], borderBottomLeftRadius: 32, borderBottomRightRadius: 32, alignItems: 'center' },
   logoWrapperMobile: { marginBottom: SPACING.xl },
-  mobileTitle: { ...TYPOGRAPHY.h1, color: COLORS.onCinematic, marginBottom: SPACING.xs },
-  mobileSubtitle: { ...TYPOGRAPHY.body, color: COLORS.gold },
+  mobileTitle: { ...TYPOGRAPHY.h1, color: COLORS.textPrimary, marginBottom: SPACING.xs },
+  mobileSubtitle: { ...TYPOGRAPHY.body, color: COLORS.textSecondary },
   mobileBody: { padding: SPACING['2xl'], marginTop: -20 },
 
   // Shared
   serverPillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     paddingVertical: 5,
     paddingHorizontal: 12,
     borderRadius: BORDER_RADIUS.full,
@@ -446,7 +445,7 @@ const styles = StyleSheet.create({
   savedSessionCard: { backgroundColor: COLORS.backgroundNeutral, borderColor: COLORS.borderLight, marginBottom: SPACING['3xl'] },
   savedSessionContent: { flexDirection: 'row', alignItems: 'center', padding: SPACING.xl },
   savedAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginRight: SPACING.lg },
-  savedAvatarText: { fontSize: 18, fontWeight: '900', color: COLORS.surface },
+  savedAvatarText: { fontSize: 18, fontWeight: '900', color: '#FFFFFF' },
   savedGreeting: { ...TYPOGRAPHY.overline, color: COLORS.textMuted },
   savedName: { ...TYPOGRAPHY.h4, color: COLORS.textPrimary },
   savedEmail: { ...TYPOGRAPHY.caption, color: COLORS.textSecondary },

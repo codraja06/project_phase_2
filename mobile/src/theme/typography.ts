@@ -33,10 +33,10 @@ export const FONT_FAMILY = Platform.select({
     bold: 'Roboto',
   },
   web: {
-    regular: '"Segoe UI", -apple-system, BlinkMacSystemFont, "Nirmala UI", "Noto Sans Tamil", Roboto, sans-serif',
-    medium: '"Segoe UI", -apple-system, BlinkMacSystemFont, "Nirmala UI", "Noto Sans Tamil", Roboto, sans-serif',
-    semibold: '"Segoe UI Variable Display", "Segoe UI", "Nirmala UI", sans-serif',
-    bold: '"Aptos Display", "Segoe UI Variable Display", "Segoe UI", "Nirmala UI", "Noto Sans Tamil", sans-serif',
+    regular: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif',
+    medium: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif',
+    semibold: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif',
+    bold: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif',
   },
   default: {
     regular: 'System',
@@ -61,7 +61,7 @@ export const TYPOGRAPHY = {
   // Display — hero numbers, splash branding
   display: {
     fontSize: IS_TABLET ? 40 : 32,
-    fontWeight: '700' as const,
+    fontWeight: '900' as const,
     color: COLORS.textPrimary,
     lineHeight: IS_TABLET ? 48 : 40,
     letterSpacing: -0.8,
@@ -71,7 +71,7 @@ export const TYPOGRAPHY = {
   // H1 — page titles
   h1: {
     fontSize: IS_TABLET ? 28 : 24,
-    fontWeight: '700' as const,
+    fontWeight: '800' as const,
     color: COLORS.textPrimary,
     lineHeight: IS_TABLET ? 36 : 32,
     letterSpacing: -0.5,
@@ -170,7 +170,7 @@ export const TYPOGRAPHY = {
   // KPI Number — stat cards, dashboard metrics
   kpiNumber: {
     fontSize: IS_TABLET ? 32 : 28,
-    fontWeight: '700' as const,
+    fontWeight: '800' as const,
     letterSpacing: -0.5,
     lineHeight: IS_TABLET ? 40 : 36,
     ...(Platform.OS === 'web' ? { fontFamily: FONT_FAMILY.bold } : {}),

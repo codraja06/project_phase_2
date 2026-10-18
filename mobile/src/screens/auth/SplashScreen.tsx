@@ -9,7 +9,6 @@ import { SPACING } from '../../theme/spacing';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SHADOWS } from '../../theme/index';
 import { CivicTrackLogo } from '../../components/CivicTrackLogo';
-import { BrandBackdrop } from '../../components/CivicVisuals';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
@@ -24,14 +23,14 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <BrandBackdrop photo="city" opacity={.74} />
+
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
       {/* Clean White Background for App Launch */}
 
       {/* Floating Center Brand Card */}
-      <Animated.View 
-        entering={ZoomIn.springify().damping(15).stiffness(150).delay(600)} 
+      <Animated.View
+        entering={ZoomIn.springify().damping(15).stiffness(150).delay(600)}
         style={styles.contentCard}
       >
         <Animated.View entering={FadeInDown.delay(900)} style={styles.logoBadgeContainer}>
@@ -41,7 +40,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
         <Animated.Text entering={FadeInUp.delay(1000)} style={styles.appName}>
           Civic Track
         </Animated.Text>
-        
+
         <Animated.View entering={FadeInUp.delay(1100)} style={styles.badgePill}>
           <Text style={styles.badgePillText}>SMART CIVIC RESOLUTION</Text>
         </Animated.View>
@@ -72,31 +71,31 @@ const styles = StyleSheet.create({
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.cinematic,
+    backgroundColor: COLORS.backgroundNeutral,
   },
   contentCard: {
     width: '88%',
     maxWidth: 520,
-    backgroundColor: 'rgba(44,16,27,.62)',
+    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.xl,
     paddingVertical: SPACING['5xl'],
     paddingHorizontal: SPACING['3xl'],
     alignItems: 'center',
     ...SHADOWS.card,
     borderWidth: 1,
-    borderColor: '#744335',
+    borderColor: COLORS.borderLight,
   },
   logoBadgeContainer: {
     marginBottom: SPACING.lg,
   },
   appName: {
     ...TYPOGRAPHY.display,
-    color: COLORS.onCinematic,
+    color: COLORS.textPrimary,
     marginTop: SPACING.md,
     marginBottom: SPACING.xs,
   },
   badgePill: {
-    backgroundColor: COLORS.gold,
+    backgroundColor: COLORS.primaryLight,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.full,
@@ -104,11 +103,11 @@ const styles = StyleSheet.create({
   },
   badgePillText: {
     ...TYPOGRAPHY.overline,
-    color: COLORS.cinematic,
+    color: COLORS.primary,
   },
   tagline: {
     ...TYPOGRAPHY.body,
-    color: '#DDE9E4',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: SPACING.lg,
   },
@@ -119,7 +118,7 @@ const styles = StyleSheet.create({
   },
   pillarText: {
     ...TYPOGRAPHY.overline,
-    color: COLORS.gold,
+    color: COLORS.textMuted,
   },
   pillarDot: {
     fontSize: 14,

@@ -21,7 +21,6 @@ import { aiApi } from '../../api/aiApi';
 import { complaintApi } from '../../api/complaintApi';
 import { locationService } from '../../services/location';
 import { managementApi, DuplicateMatch } from '../../api/managementApi';
-import { CivicHero } from '../../components/CivicVisuals';
 import { AIDetectResponse, DetectionResult, SeverityAssessment } from '../../types/ai';
 import { Complaint } from '../../types/complaint';
 import { ImagePickerCamera } from '../../components/ImagePickerCamera';
@@ -380,7 +379,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          {currentStep === 'capture' && <View style={{ width: '100%', marginBottom: 20 }}><CivicHero compact photo="bridge" eyebrow="PHOTO / LOCATION / ACTION" title="Make the issue visible." description="A clear photo and a precise location help your authority understand what needs attention." /></View>}
+          {currentStep === 'capture' && <View style={{ width: '100%', marginBottom: 20 }}></View>}
           <View style={[styles.reportWorkspace, isWide && styles.reportWorkspaceWide]}>
             {isWide && <View style={styles.evidencePane}>
               <Text style={styles.evidenceEyebrow}>YOUR REPORT / EVIDENCE</Text>
@@ -444,7 +443,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                         setAnalysisToken(''); setSeverity(undefined); setGeneratedDescription('');
                       }} />}
                     </Animated.View>
-                    
+
                     <Animated.View entering={FadeInUp.delay(400)} style={styles.buttonRow}>
                       <Button title="Remove / Replace Photo" onPress={handleRetake} variant="secondary" size="lg" style={{ flexGrow: 1, flexBasis: 160 }} />
                       <Button title="Continue to Location" onPress={() => animateStepChange('location')} variant="default" size="lg" style={{ flexGrow: 1, flexBasis: 220 }} />

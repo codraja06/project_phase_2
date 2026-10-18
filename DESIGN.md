@@ -1,84 +1,59 @@
-# CivicTrack — green and blue interface system
+# CivicTrack original UI restoration
 
-Public-service software for citizens and municipal officers. Keep reports, evidence,
-location and next actions clear. Preserve the existing React Native / Expo / TypeScript
-implementation and React Navigation routes. The current visual direction uses
-deep green, professional blue, restrained civic photography and light neutral surfaces.
+The latest request restores the previous CivicTrack interface rather than introducing
+another theme. This direction supersedes the earlier green/blue and photographic
+redesigns. Preserve the existing Expo/React Native/TypeScript stack and real APIs.
 
-## Direction and research
+## Source and reference evidence
 
-UI/UX Pro Max was read from the installed source at
-`.agents/skills/ui-ux-pro-max/.claude/skills/ui-ux-pro-max/SKILL.md` and its local
-design-system and React Native searches were run. Its Accessible & Ethical and Data-Dense
-Dashboard guidance fits the product. Its Enterprise Gateway marketing sections did not
-match this application, so those suggestions were excluded. The latest requested
-green and blue palette and adaptive application layouts take precedence over generated
-palette suggestions.
+The existing Phase 1 checkout at `D:/project phase 1/project1` (Git HEAD `151ccd4`)
+contains the original citizen dashboard, logo, typography, palette and screen styles.
+Its `mobile/tests/dashboard-desktop.png` provides a local visual reference: white
+sidebar, red/pink active navigation, red leaf/building logo, greeting/search, reporting
+hero, pastel category icons, activity cards and recent incidents. Repository history
+also contains `b74b27d` before the UI redesign and subsequent implementations.
 
-References studied: [shadcn sidebar](https://ui.shadcn.com/docs/components/radix/sidebar),
-[Vercel](https://vercel.com/), [Linear](https://linear.app/),
-[Material layout](https://m3.material.io/foundations/layout/canonical-examples/overview),
-[Apple layout](https://developer.apple.com/design/human-interface-guidelines/layout).
-Apply clear section hierarchy, restrained surfaces, persistent desktop navigation,
-adaptive bar/rail/pane regions and safe areas. Components are original React Native
-implementations; no web-only UI framework is added.
+The six specifically named ChatGPT Library PNGs were not supplied in this conversation
+and were not found in the local project/download/attachment locations searched. No
+Library access was established. This is restoration from available source with
+compatible adaptations, not a claim of pixel-identical reproduction of unseen images.
 
-## Tokens and components
+## Original visual system
 
-- Brand/action: green `#16634B`, dark green `#104936`, pale green `#EAF5EF`.
-- Cinematic/navigation: dark green `#102F27`, raised green `#183E34`.
-- Accent: blue `#245CB3`; pale blue `#93C5FD` for readable accent text on white.
-- Canvas `#F4F7F6`, surface white, ink `#182D28`, secondary ink `#52635E`.
-- Status colors are reserved for status: amber pending, blue in progress, green resolved,
-  red error/high priority. Every status also has a text label.
-- Display system sans-serif paired with Segoe UI/native body fonts; Nirmala UI and
-  Noto Sans Tamil fallbacks on web. Titles 24–44, sections 18–22, body 15–16, metadata 12–13.
-- Spacing uses the existing 4/8px scale. Page gutters 16/24/32px, content max 1520px.
-- Corners: inputs/buttons 8px, surfaces 12px, large panels 16px. Subtle border and shadow.
-- Primary filled green buttons, pale blue hero actions with dark text, neutral outline actions.
-- Inputs have persistent labels, inline validation, 44px minimum controls and visible focus.
-- Charts include values/labels and a readable data alternative. No decorative chart claims.
+- Primary crimson `#B71C1C`; darker action text `#7F1416`.
+- Soft red/pink `#FEF2F2` and `#FEE2E2`; white cards and sidebar.
+- Authority navy `#0F172A` / `#020617`, neutral gray surfaces and dark readable text.
+- Original system typography and Ionicons; original circular leaf/building logo.
+- Reuse prior screen colors, type scale, radii and border styles. Retain current
+  responsive wrapping, safe areas, focus indicators, error handling and loading states.
+- Restore the original citizen reporting hero and icon category tiles. Remove the
+  later decorative photographic banners. Real complaint images remain evidence.
 
-## Adaptive shell
+## Layout and navigation
 
-- Under 768px: compact content and at most five primary bottom navigation actions;
-  secondary destinations remain available through workspace actions/profile/drawer.
-- 768–1199px: compact labeled navigation rail; useful two-column content without squeezing forms.
-- 1200px and above: 232px sidebar, persistent workspace header, multi-column content.
-- Use measured available width for grids and forms; never infer content width only from screen width.
-- Report workflow: wide evidence/workflow panes; mobile stacked image/results/form/actions.
-- Tables begin only where available content width supports them. Mobile uses complaint cards.
-- Maps occupy the available pane with a separate scrollable list rather than oversized margins.
-- Chat uses an optional guidance pane on wide screens and a single conversation on mobile.
-- The hotspot view places filters above the map, with a report list beside the map on
-  desktop and below it on phones. Every cluster has a text count and records can be
-  opened without relying on marker interaction alone.
-- Repair comparison uses labeled original/completion images in two columns when space
-  permits and stacks them on phones. Its review state remains text-visible.
-- Notifications show title, event time and an unread mark, and a tap both records read
-  state and opens the authorized complaint.
+Desktop uses the original light sidebar (260px) with red/pink selection and full-width
+content. Tablet retains a compact navigation rail. Mobile retains compact headers and
+at most five bottom destinations; desktop never shows the mobile bottom bar.
 
-## Interaction and accessibility
+Citizen primary destinations are Dashboard, Report Issue, My Complaints, Notifications,
+and Profile & Settings. Map and Civic Assistance remain accessible as additional
+navigation entries; mobile assistance remains in the existing profile menu.
 
-Keep Ionicons consistent, remove emoji used as icons, preserve visible keyboard focus,
-label icon buttons, respect reduced motion, retain field values on errors, and provide
-loading/empty/error/retry states. No automatic complaint status updates, invented metrics,
-model results or private-data access. Keep long text within a readable measure. Target widths
-320, 375, 430, 768, 1024, 1280, 1440, 1920 plus a short landscape viewport.
+The citizen dashboard reuses the prior greeting/search/report hero/recent incidents
+layout. Summary cards use actual own-report and unread-notification counts. Nearby
+Issues is a map shortcut, not an invented count of nearby private complaints. The
+shield denotes a signed-in citizen account; government identity verification is not
+asserted without verification data.
 
-## Photography and screen composition
+Authority keeps Command Center, actual complaint KPIs, triage list, category analytics,
+map, notification and profile destinations. Current Phase 2 controls remain reachable.
+All operational counts and lists use the current backend and MongoDB records.
 
-Seven locally bundled Commons photographs cover Chennai infrastructure, Marina Beach,
-road damage, waste, street lighting and leaking water infrastructure. Each has source,
-author, license and transformation metadata in `mobile/assets/civic/credits.json`.
-Attribution is available in both profile screens. No reference photo is inserted as a
-citizen's complaint evidence or an AI result. Actual uploaded photos retain their
-aspect ratio and measured bounding-box coordinate logic.
+## Preservation and verification
 
-`CivicVisuals.tsx` provides photographic mastheads, dark green scrims, green/blue edge rules
-and a small original geometric detail. Auth pages use immersive photographic panes
-beside the existing forms; phones use compact image headers. The citizen dashboard
-uses an image-led reporting hero and photographic category shortcuts. Authority views
-keep charts, filters and tables on neutral surfaces beneath restrained image banners.
-Profiles, notifications, assistance, upload/empty states, maps and detail controls use
-the same tokens. Validation for the latest implementation is recorded in MASTER_IMPLEMENTATION_VERIFICATION.md.
+Do not roll back backend models, AI behavior, signed evidence, severity reviews,
+priority overrides, department routing, duplicates, repair verification or notifications.
+Only frontend styling/layout and directly related test selectors change.
+
+See `UI_RESTORATION_VERIFICATION.md` for the restoration file list, actual test results,
+known reference limitations and the frontend snapshot saved before restoration.

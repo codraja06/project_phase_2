@@ -15,6 +15,7 @@ async function mockApi(page, role='citizen', options={}) {
   if(p.endsWith('/auth/login')||p.endsWith('/auth/register')) data={user:account,token:'isolated-browser-fixture'};
   else if(p.endsWith('/auth/me')) data=account;
   else if(p.endsWith('/auth/profile')) data={...account,...r.request().postDataJSON()};
+  else if(p.endsWith('/auth/notification-preferences')) {account.notificationPreferences=r.request().postDataJSON();data=account;}
   else if(p.endsWith('/auth/change-password')||p.endsWith('/auth/logout')) data=null;
   else if(p.endsWith('/ai/models')) data={available:true,models:[{id:'fixture',state:'ready',categories:['pothole']}]};
   else if(p.endsWith('/uploads/image')) data={imageUrl:'http://localhost:8081/qa-image.png'};
@@ -47,6 +48,6 @@ async function login(page,role='citizen') {
  await page.getByLabel(role==='citizen'?'Password':'Officer Security Password',{exact:true}).fill('FixturePassword123!');
  const button=page.getByRole('button',{name:role==='citizen'?'Sign In':'Authenticate as Officer',exact:true});
  if(await button.count()) await button.click(); else await page.getByRole('button').filter({hasText:/sign in|authenticate/i}).click();
- await page.getByText(role==='citizen'?'Quick Issue Categories':'Operational Command Center',{exact:true}).last().waitFor();
+ await page.getByText(role==='citizen'?'Quick Issue Categories':'Command Center',{exact:true}).last().waitFor();
 }
 module.exports={chromium,mockApi,login,complaints,user};

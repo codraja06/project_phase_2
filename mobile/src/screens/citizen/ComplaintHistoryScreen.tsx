@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { complaintApi } from '../../api/complaintApi';
 import { Complaint } from '../../types/complaint';
 import { COLORS } from '../../theme/colors';
-import { BrandBackdrop, CivicHero } from '../../components/CivicVisuals';
 import { BORDER_RADIUS } from '../../theme/radius';
 import { SHADOWS } from '../../theme/index';
 import { SPACING } from '../../theme/spacing';
@@ -139,7 +138,7 @@ export const ComplaintHistoryScreen = ({ navigation, route }: any) => {
 
         {/* Desktop Header */}
         <Animated.View entering={FadeInDown.duration(400)} style={styles.desktopHeader}>
-          <BrandBackdrop photo="bridge" opacity={.81} />
+
           <View style={styles.desktopHeaderLeft}>
             <Text style={styles.desktopTitle}>My Complaints</Text>
             <Text style={styles.desktopSubtitle}>
@@ -254,7 +253,7 @@ export const ComplaintHistoryScreen = ({ navigation, route }: any) => {
             </Animated.View>
           )}
           contentContainerStyle={styles.listContent}
-          ListHeaderComponent={<View style={{ marginBottom: 16 }}><CivicHero compact photo="bridge" eyebrow="YOUR REPORTS / YOUR PROGRESS" title="Every report has a story." description="Follow your submissions and their latest recorded status." /></View>}
+          ListHeaderComponent={<View style={{ marginBottom: 16 }}></View>}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -293,10 +292,10 @@ const styles = StyleSheet.create({
     flex: 1},
   desktopTitle: {
     ...TYPOGRAPHY.h1,
-    color: COLORS.onCinematic},
+    color: COLORS.textPrimary},
   desktopSubtitle: {
     ...TYPOGRAPHY.bodySmall,
-    color: '#DDE9E4',
+    color: COLORS.textSecondary,
     fontWeight: '500',
     marginTop: SPACING.xs},
   desktopControls: {
@@ -407,5 +406,5 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     marginTop: SPACING.xl},
   emptyReportBtnText: {
-    ...TYPOGRAPHY.bodySmall, color: COLORS.surface,
+    ...TYPOGRAPHY.bodySmall, color: '#FFFFFF',
     fontWeight: '700'}});

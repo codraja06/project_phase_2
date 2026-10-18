@@ -264,7 +264,7 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
             <View style={styles.infoCard}>
               <Animated.View entering={FadeInUp.delay(200)} style={styles.codeDateRowMobile}>
                 <Text style={styles.complaintCode}>{complaintCode}</Text>
-                
+
                 {/* Priority Pill */}
                 <View style={[styles.priorityPill, isHighPriority ? styles.priorityHigh : styles.priorityNormal]}>
                   <Ionicons name="flame" size={10} color={isHighPriority ? COLORS.error : COLORS.primaryDark} style={{ marginRight: 3 }} />
@@ -377,8 +377,8 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.sm,
     paddingBottom: SPACING.md,
     borderBottomWidth: 1.5,
-    borderBottomColor: COLORS.gold,
-    backgroundColor: COLORS.cinematic},
+    borderBottomColor: COLORS.borderLight,
+    backgroundColor: COLORS.background},
   headerRightBadges: {
     marginLeft: 'auto',
     flexDirection: 'row',
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     marginRight: SPACING.md},
   headerTitle: {
     ...TYPOGRAPHY.h3,
-    color: COLORS.onCinematic},
+    color: COLORS.textPrimary},
   container: {
     flex: 1,
     backgroundColor: COLORS.background},

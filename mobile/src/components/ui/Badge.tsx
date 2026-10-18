@@ -41,7 +41,7 @@ export const Badge: React.FC<BadgeProps> = ({
         base.borderColor = COLORS.primarySurface;
         break;
       case 'secondary':
-        base.backgroundColor = COLORS.slateLight;
+        base.backgroundColor = COLORS.backgroundNeutral;
         break;
       case 'destructive':
         base.backgroundColor = COLORS.errorLight;

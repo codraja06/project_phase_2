@@ -21,7 +21,7 @@ describe('Auth API Endpoints', () => {
     await mongoose.connection.close();
   });
 
-  it('should register a new citizen user', async () => {
+  it('rejects direct registration without a verified challenge', async () => {
     const res = await request(app).post('/api/auth/register').send({
       name: 'John Citizen',
       email: 'john@example.com',
@@ -30,11 +30,8 @@ describe('Auth API Endpoints', () => {
       role: 'citizen',
     });
 
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.user.email).toBe('john@example.com');
-    expect(res.body.data.user.role).toBe('citizen');
-    expect(res.body.data.token).toBeDefined();
+    expect(res.status).toBe(400);
+    expect(await User.exists({ email: 'john@example.com' })).toBeNull();
   });
 
   it('should login an existing user and return token', async () => {

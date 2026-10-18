@@ -49,8 +49,8 @@ export const FilterChip: React.FC<FilterChipProps> = ({
 
   const animatedContainerStyle = useAnimatedStyle(() => {
     return {
-      backgroundColor: withTiming(isSelected ? COLORS.secondary : COLORS.surface, { duration: 200 }),
-      borderColor: withTiming(isSelected ? COLORS.secondary : COLORS.border, { duration: 200 }),
+      backgroundColor: withTiming(isSelected ? COLORS.primary : COLORS.surface, { duration: 200 }),
+      borderColor: withTiming(isSelected ? COLORS.primary : COLORS.border, { duration: 200 }),
     };
   }, [isSelected]);
 

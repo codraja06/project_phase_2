@@ -30,7 +30,7 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
   const { logout, user } = useAuth();
   const { toggleMenu } = useMobileMenu();
   const [notifications, setNotifications] = useState(initialNotifications);
-  
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAllRead = () => {
@@ -93,8 +93,8 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
 
         <View style={styles.actionsWrapper}>
           <View style={{ position: 'relative' }}>
-            <TouchableOpacity 
-              style={[styles.iconBtn, isNotifOpen && styles.iconBtnActive]} 
+            <TouchableOpacity
+              style={[styles.iconBtn, isNotifOpen && styles.iconBtnActive]}
               onPress={(e) => {
                 if (Platform.OS === 'web') e.stopPropagation();
                 toggleNotif();
@@ -110,7 +110,7 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
 
               {/* Notification Dropdown */}
               {isNotifOpen && (
-                <View 
+                <View
                   style={[styles.notifDropdown, { right: isMobile ? -50 : 0, maxWidth: isMobile ? width - 32 : 360 }]}
                   //@ts-ignore
                   onClick={(e: any) => e.stopPropagation()}
@@ -121,7 +121,7 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
                     <Text style={styles.notifHeaderLink}>Mark all as read</Text>
                   </TouchableOpacity>
                 </View>
-                
+
                 <ScrollView style={styles.notifScroll} showsVerticalScrollIndicator={false}>
                   {notifications.length === 0 ? (
                     <View style={styles.notifEmpty}>
@@ -129,8 +129,8 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
                     </View>
                   ) : (
                     notifications.map(notif => (
-                      <TouchableOpacity 
-                        key={notif.id} 
+                      <TouchableOpacity
+                        key={notif.id}
                         style={[styles.notifItem, !notif.read && styles.notifItemUnread]}
                       >
                         <View style={styles.notifIconWrapper}>
@@ -150,7 +150,7 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
                     ))
                   )}
                 </ScrollView>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.notifFooter}
                   onPress={() => {
                     setIsNotifOpen(false);
@@ -169,11 +169,11 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
               <Ionicons name="time-outline" size={20} color={COLORS.slateDark} />
             </TouchableOpacity>
           )}
-          
+
           <View style={styles.divider} />
-          
+
           <View style={{ position: 'relative' }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.profileDropdown, isProfileOpen && styles.iconBtnActive]}
               onPress={(e) => {
                 if (Platform.OS === 'web') e.stopPropagation();
@@ -196,7 +196,7 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
             </TouchableOpacity>
 
               {isProfileOpen && (
-                <View 
+                <View
                   style={[styles.profileMenu, { right: 0 }]}
                   //@ts-ignore
                   onClick={(e: any) => e.stopPropagation()}
@@ -244,7 +244,7 @@ export const AuthorityHeader: React.FC<AuthorityHeaderProps> = ({
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
     ...(Platform.OS === 'web' ? { position: 'relative' } : {}),
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   searchWrapperMobile: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EDF2EF',
+    backgroundColor: '#F1F5F9',
     paddingHorizontal: 12,
     height: 40,
     borderRadius: BORDER_RADIUS.md,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EDF2EF',
+    backgroundColor: '#F1F5F9',
     paddingHorizontal: 12,
     height: 40,
     borderRadius: BORDER_RADIUS.md,
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}),
   },
   shortcutKey: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: COLORS.borderLight,
     borderRadius: 4,
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
   },
   dateText: {
     ...TYPOGRAPHY.bodySmall,
@@ -366,12 +366,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
   iconBtnActive: {
-    backgroundColor: '#EDF2EF',
+    backgroundColor: '#F1F5F9',
   },
   notificationBadge: {
     position: 'absolute',
@@ -384,14 +384,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: COLORS.surface,
+    borderColor: '#FFFFFF',
   },
   notificationBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.surface,
+    color: '#FFFFFF',
   },
-  
+
   // Notification Dropdown
   notifDropdown: {
     position: 'absolute',
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     right: -12,
     width: 340,
     maxWidth: 'calc(100vw - 32px)' as any,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
@@ -444,13 +444,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   notifItemUnread: {
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
   },
   notifIconWrapper: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.borderLight,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
     borderBottomLeftRadius: BORDER_RADIUS.lg,
     borderBottomRightRadius: BORDER_RADIUS.lg,
   },
@@ -519,13 +519,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: BORDER_RADIUS.md,
   },
-  
+
   profileMenu: {
     position: 'absolute',
     top: 50,
     right: 0,
     width: 240,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC',
     borderTopLeftRadius: BORDER_RADIUS.lg,
     borderTopRightRadius: BORDER_RADIUS.lg,
   },

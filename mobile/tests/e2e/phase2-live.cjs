@@ -6,6 +6,8 @@ const path = require('path');
 const mongoose = require('../../../backend/node_modules/mongoose');
 const { User } = require('../../../backend/dist/models/User');
 const { Complaint } = require('../../../backend/dist/models/Complaint');
+const { Notification } = require('../../../backend/dist/models/Notification');
+const { NotificationDelivery } = require('../../../backend/dist/models/NotificationDelivery');
 const API = 'http://127.0.0.1:5052/api';
 const WEB = process.env.PHASE2_WEB_URL || 'http://localhost:8083';
 const DB = 'mongodb://127.0.0.1:27017/civictrack_phase2_e2e';
@@ -32,7 +34,7 @@ async function login(page, email, role) {
   await page.getByLabel(role === 'citizen' ? 'Email Address' : 'Department Official Email', { exact: true }).fill(email);
   await page.getByLabel(role === 'citizen' ? 'Password' : 'Officer Security Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: role === 'citizen' ? 'Sign In' : 'Authenticate as Officer', exact: true }).click();
-  await page.getByText(role === 'citizen' ? 'Quick Issue Categories' : 'Operational Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
+  await page.getByText(role === 'citizen' ? 'Quick Issue Categories' : 'Command Center', { exact: true }).filter({ visible: true }).last().waitFor();
 }
 
 (async () => {
@@ -205,6 +207,8 @@ async function login(page, email, role) {
   } finally {
     if (browser) await browser.close();
     if (users.length) {
+      await NotificationDelivery.deleteMany({ recipient: { $in: users.map(u => u._id) } });
+      await Notification.deleteMany({ recipient: { $in: users.map(u => u._id) } });
       await Complaint.deleteMany({ createdBy: { $in: users.map(u => u._id) } });
       await User.deleteMany({ _id: { $in: users.map(u => u._id) } });
     }

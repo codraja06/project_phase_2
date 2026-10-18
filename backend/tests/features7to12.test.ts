@@ -6,6 +6,7 @@ import { User } from '../src/models/User';
 import { Complaint } from '../src/models/Complaint';
 import { DepartmentRule } from '../src/models/DepartmentRule';
 import { Notification } from '../src/models/Notification';
+import { NotificationDelivery } from '../src/models/NotificationDelivery';
 import { generateToken } from '../src/utils/jwt';
 import * as storage from '../src/services/cloudinaryService';
 
@@ -30,6 +31,7 @@ describe('Duplicate review, departments, repair evidence, notifications and oper
   });
   afterAll(async () => {
     const users = [citizen._id, other._id, officer._id, admin._id];
+    await NotificationDelivery.deleteMany({ recipient: { $in: users } });
     await Notification.deleteMany({ recipient: { $in: users } });
     await Complaint.deleteMany({ createdBy: { $in: users } });
     await DepartmentRule.deleteMany({ category: 'features712_pothole' });

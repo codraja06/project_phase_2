@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
-import { CivicHero, PhotoCredits } from '../../components/CivicVisuals';
+import { PhotoCredits } from '../../components/CivicVisuals';
 import { authApi } from '../../api/authApi';
 import { googleAuthService } from '../../services/googleAuth';
 import { Input, PasswordInput } from '../../components/Input';
@@ -62,22 +62,32 @@ export const ProfileScreen = ({ navigation }: any) => {
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
   const [smsAlertsEnabled, setSmsAlertsEnabled] = useState(false);
+  const [savingPreferences, setSavingPreferences] = useState(false);
 
   const preferencesKey = `notification-preferences:${user?._id || user?.email}`;
   useEffect(() => {
     let active = true;
     AsyncStorage.getItem(preferencesKey).then(value => {
       if (!value || !active) return;
-      const settings = JSON.parse(value); setPushEnabled(Boolean(settings.push)); setEmailAlertsEnabled(Boolean(settings.email)); setSmsAlertsEnabled(Boolean(settings.sms));
+      const settings = JSON.parse(value); setPushEnabled(Boolean(settings.push));
     }).catch(() => showMessage('Preferences unavailable', 'Please save your notification preferences again.'));
     return () => { active = false; };
   }, [preferencesKey]);
+  useEffect(() => {
+    setEmailAlertsEnabled(user?.notificationPreferences?.email ?? true);
+    setSmsAlertsEnabled(user?.notificationPreferences?.sms ?? false);
+  }, [user?.notificationPreferences?.email, user?.notificationPreferences?.sms]);
   const savePreferences = async () => {
+    if (savingPreferences) return;
+    setSavingPreferences(true);
     try {
+      const updated = await authApi.updateNotificationPreferences(emailAlertsEnabled, smsAlertsEnabled);
+      updateUser(updated);
       await AsyncStorage.setItem(preferencesKey, JSON.stringify({ push: pushEnabled, email: emailAlertsEnabled, sms: smsAlertsEnabled }));
       setNotifSettingsVisible(false);
-      showMessage('Preferences saved on this device', 'Push, email and SMS delivery require municipal notification services, which are not configured yet.');
+      showMessage('Notification preferences saved', 'Email requires a verified email address and configured provider. SMS also requires a verified phone number and your consent.');
     } catch { showMessage('Unable to save preferences', 'Please retry.'); }
+    finally { setSavingPreferences(false); }
   };
   const handleUpdateProfile = async () => {
     try {
@@ -221,7 +231,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         contentContainerStyle={isDesktop ? styles.desktopContent : styles.mobileContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ marginBottom: 20 }}><CivicHero compact photo="coast" eyebrow="CIVICTRACK / YOUR ACCOUNT" title="Your place in a better city." description="Your profile, preferences and civic activity." /></View>
+        <View style={{ marginBottom: 20 }}></View>
         <Animated.View entering={FadeInDown.duration(400)} style={isDesktop ? styles.desktopHeader : styles.mobileHeader}>
           <TouchableOpacity
             style={styles.backBtn}
@@ -420,31 +430,33 @@ export const ProfileScreen = ({ navigation }: any) => {
                 <Text style={styles.toggleTitle}>Push Notifications</Text>
                 <Text style={styles.toggleSubtitle}>Preference only; delivery service not configured</Text>
               </View>
-              <Switch value={pushEnabled} onValueChange={setPushEnabled} trackColor={{ false: COLORS.borderStrong, true: COLORS.primary }} />
+              <Switch accessibilityLabel="Push notification preference" disabled={savingPreferences} value={pushEnabled} onValueChange={setPushEnabled} trackColor={{ false: COLORS.borderStrong, true: COLORS.primary }} />
             </View>
 
             <View style={styles.divider} />
 
             <View style={styles.toggleRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.toggleTitle}>Email Digest</Text>
-                <Text style={styles.toggleSubtitle}>Preference only; delivery service not configured</Text>
+                <Text style={styles.toggleTitle}>Resolution Emails</Text>
+                <Text style={styles.toggleSubtitle}>{user?.emailVerifiedAt ? 'Verified email; sent when the provider is configured' : 'Email not verified; external delivery will be skipped'}</Text>
               </View>
-              <Switch value={emailAlertsEnabled} onValueChange={setEmailAlertsEnabled} trackColor={{ false: COLORS.borderStrong, true: COLORS.primary }} />
+              <Switch accessibilityLabel="Email resolution notifications" disabled={savingPreferences} value={emailAlertsEnabled} onValueChange={setEmailAlertsEnabled} trackColor={{ false: COLORS.borderStrong, true: COLORS.primary }} />
             </View>
 
             <View style={styles.divider} />
 
             <View style={styles.toggleRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.toggleTitle}>SMS Priority Updates</Text>
-                <Text style={styles.toggleSubtitle}>Preference only; delivery service not configured</Text>
+                <Text style={styles.toggleTitle}>I consent to SMS resolution updates</Text>
+                <Text style={styles.toggleSubtitle}>{user?.phoneVerifiedAt ? 'Verified phone; requires a configured SMS provider' : 'Phone not verified; SMS delivery will be skipped'}</Text>
               </View>
-              <Switch value={smsAlertsEnabled} onValueChange={setSmsAlertsEnabled} trackColor={{ false: COLORS.borderStrong, true: COLORS.primary }} />
+              <Switch accessibilityLabel="Consent to SMS resolution notifications" disabled={savingPreferences} value={smsAlertsEnabled} onValueChange={setSmsAlertsEnabled} trackColor={{ false: COLORS.borderStrong, true: COLORS.primary }} />
             </View>
 
             <Button
               title="Save Preferences"
+              loading={savingPreferences}
+              disabled={savingPreferences}
               onPress={savePreferences}
               style={{ marginTop: SPACING.lg }}
             />

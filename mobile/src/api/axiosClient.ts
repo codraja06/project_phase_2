@@ -94,7 +94,7 @@ axiosClient.interceptors.response.use(
       }
 
       // Extract meaningful server error message
-      if (status === 503 && (isCredentialEndpoint || error.config?.url === '/ai/detect') && typeof responseData?.message === 'string') {
+      if (status === 503 && (isCredentialEndpoint || error.config?.url?.startsWith('/auth/signup/') || error.config?.url === '/ai/detect') && typeof responseData?.message === 'string') {
         userFriendlyMessage = responseData.message;
       } else if (status >= 500) {
         userFriendlyMessage = 'Backend server encountered an error. Please try again later.';

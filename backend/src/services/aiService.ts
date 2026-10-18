@@ -54,6 +54,9 @@ export const detectCivicIssue = async (filePath: string, category = 'auto'): Pro
     if (error.response) {
       const status = error.response.status;
       const data = error.response.data;
+      if (status === 503 && typeof data.detail === 'string' && data.detail.startsWith('No compatible trained model')) {
+        throw new ApiError(503, `No compatible trained model is available for ${category.replace(/_/g, ' ')}. Select another category or enter the report manually.`, [], true);
+      }
       throw new ApiError(
         status,
         data.detail || data.message || 'AI service prediction error.'
@@ -61,7 +64,7 @@ export const detectCivicIssue = async (filePath: string, category = 'auto'): Pro
     } else if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
       throw new ApiError(
         503,
-        'AI Computer Vision service is currently unavailable. Please ensure python AI microservice is running.'
+        'AI Computer Vision service is currently unavailable. Please ensure python AI microservice is running.', [], true
       );
     }
     throw new ApiError(500, `AI Service error: ${error.message}`);

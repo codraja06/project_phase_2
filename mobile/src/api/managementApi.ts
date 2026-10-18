@@ -2,7 +2,11 @@ import { Platform } from 'react-native';
 import { axiosClient } from './axiosClient';
 import { Complaint } from '../types/complaint';
 
-export interface CivicNotification { _id: string; title: string; message: string; complaintId: string; readAt?: string | null; createdAt: string }
+export interface CivicNotification {
+  _id: string; title: string; message: string; complaintId: string; readAt?: string | null; createdAt: string;
+  resolution?: { category: string; resolvedAt: string };
+  deliveries?: { channel: 'email' | 'sms'; status: string; errorCode?: string; attempts: number }[];
+}
 export interface DuplicateMatch { id: string | null; complaintId: string | null; distanceMeters: number; status: string; disclosure: 'own' | 'nearby'; imageComparison?: 'similar' | 'unavailable'; similarity?: { hashDistance: number; colorSimilarity: number } | null }
 export interface DepartmentRule { category: string; department: string; enabled: boolean }
 export interface HotspotCluster { latitude: number; longitude: number; count: number; records: { _id: string; complaintId: string; title: string; status: string; category: string }[] }
