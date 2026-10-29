@@ -1,6 +1,6 @@
-import { authApi, SignupSession } from '../../api/authApi';
+import { authApi, SignupOptions, SignupSession } from '../../api/authApi';
 import { SignupVerificationScreen } from './SignupVerificationScreen';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,17 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
   const { isDesktop, isWide } = useBreakpoint();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [verificationOptions, setVerificationOptions] = useState<SignupOptions | null>(null);
+  const [checkingVerification, setCheckingVerification] = useState(true);
+  const [availabilityError, setAvailabilityError] = useState('');
+  const checkVerification = useCallback(async () => {
+    setCheckingVerification(true); setAvailabilityError('');
+    try { setVerificationOptions(await authApi.getSignupOptions()); }
+    catch { setVerificationOptions(null); setAvailabilityError('Could not check verification availability. Check your connection and retry.'); }
+    finally { setCheckingVerification(false); }
+  }, []);
+  useEffect(() => { void checkVerification(); }, [checkVerification]);
+  const verificationReady = !!verificationOptions?.emailAvailable && (!verificationOptions.phoneVerificationRequired || verificationOptions.smsAvailable);
 
   const {
     control,
@@ -51,6 +62,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
       confirmPassword: ''}});
 
   const onSubmit = async (data: CitizenRegisterForm) => {
+    if (checkingVerification || !verificationReady || loading) return;
     try {
       setErrorMessage(null);
       setLoading(true);
@@ -69,6 +81,15 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+  const verificationNotice = <View style={{ marginBottom: SPACING.md, gap: SPACING.xs }} accessibilityLiveRegion="polite">
+    {checkingVerification ? <Text style={{ color: COLORS.textSecondary }}>Checking verification availability…</Text> : <>
+      {!!availabilityError ? <Text accessibilityRole="alert" style={{ color: COLORS.errorDark }}>{availabilityError}</Text> : !verificationReady ?
+        <Text accessibilityRole="alert" style={{ color: COLORS.errorDark }}>Verification is currently unavailable. No code can be sent. Please contact support or sign in to an existing account.</Text> :
+        <Text style={{ color: COLORS.textSecondary }}>{verificationOptions?.smsAvailable ? 'Separate verification codes will be requested for your email and phone. Use your phone number with its country code.' : 'Email verification only. SMS is unavailable, so no code will be sent to your phone.'}</Text>}
+      {(!verificationReady || !!availabilityError) && <Button title="Check verification again" variant="ghost" onPress={checkVerification} disabled={loading} />}
+    </>}
+  </View>;
 
   if (signupSession) return <SignupVerificationScreen session={signupSession} onSessionChange={setSignupSession} onBack={() => setSignupSession(null)} onSignIn={() => { setSignupSession(null); navigation.navigate('CitizenLogin'); }} />;
 
@@ -114,6 +135,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
 
                 <Animated.Text entering={FadeInDown.delay(200)} style={styles.authTitle}>Create Account</Animated.Text>
                 <Animated.Text entering={FadeInDown.delay(300)} style={styles.authSubtitle}>Enter your details below to register.</Animated.Text>
+                {verificationNotice}
 
                 {errorMessage && (
                   <Animated.View entering={FadeIn.duration(300)} style={styles.errorBanner}>
@@ -202,7 +224,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
                         )}
                       />
 
-                      <Button title="Send verification code" onPress={handleSubmit(onSubmit)} loading={loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
+                      <Button title="Send verification code" onPress={handleSubmit(onSubmit)} loading={loading} disabled={checkingVerification || !verificationReady || loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
                     </CardContent>
                   </Card>
                 </Animated.View>
@@ -241,6 +263,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.mobileBody}>
+              {verificationNotice}
               {errorMessage && (
                 <Animated.View entering={FadeIn.duration(300)} style={styles.errorBanner}>
                   <Ionicons name="alert-circle" size={18} color={COLORS.error} style={{ marginRight: SPACING.xs }} />
@@ -328,7 +351,7 @@ export const CitizenRegisterScreen: React.FC<Props> = ({ navigation }) => {
                       )}
                     />
 
-                    <Button title="Send verification code" onPress={handleSubmit(onSubmit)} loading={loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
+                    <Button title="Send verification code" onPress={handleSubmit(onSubmit)} loading={loading} disabled={checkingVerification || !verificationReady || loading} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
                   </CardContent>
                 </Card>
               </Animated.View>

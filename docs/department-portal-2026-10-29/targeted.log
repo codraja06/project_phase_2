@@ -1,0 +1,56 @@
+
+> civic-complaint-backend@1.0.0 test
+> jest --runInBand --detectOpenHandles --runTestsByPath tests/features7to12.test.ts tests/partialCompletion.test.ts
+
+PASS tests/partialCompletion.test.ts (12.028 s)
+  ● Console
+
+    console.error
+      Complaint update saved; durable notification intent awaits retry.
+
+      37 | export async function attemptNotificationFlush(complaintId: unknown) {
+      38 |   try { await flushComplaintNotifications(complaintId); }
+    > 39 |   catch { console.error('Complaint update saved; durable notification intent awaits retry.'); }
+         |                   ^
+      40 | }
+      41 |
+      42 | export async function runNotificationOutboxPass(limit = 20) {
+
+      at attemptNotificationFlush (src/services/notificationOutboxService.ts:39:19)
+      at createComplaint (src/controllers/complaintController.ts:71:5)
+
+    console.error
+      Complaint update saved; durable notification intent awaits retry.
+
+      37 | export async function attemptNotificationFlush(complaintId: unknown) {
+      38 |   try { await flushComplaintNotifications(complaintId); }
+    > 39 |   catch { console.error('Complaint update saved; durable notification intent awaits retry.'); }
+         |                   ^
+      40 | }
+      41 |
+      42 | export async function runNotificationOutboxPass(limit = 20) {
+
+      at attemptNotificationFlush (src/services/notificationOutboxService.ts:39:19)
+      at updateComplaintStatus (src/controllers/authorityController.ts:175:12)
+
+    console.error
+      Complaint update saved; durable notification intent awaits retry.
+
+      37 | export async function attemptNotificationFlush(complaintId: unknown) {
+      38 |   try { await flushComplaintNotifications(complaintId); }
+    > 39 |   catch { console.error('Complaint update saved; durable notification intent awaits retry.'); }
+         |                   ^
+      40 | }
+      41 |
+      42 | export async function runNotificationOutboxPass(limit = 20) {
+
+      at attemptNotificationFlush (src/services/notificationOutboxService.ts:39:19)
+      at assignDepartment (src/controllers/managementController.ts:116:5)
+
+PASS tests/features7to12.test.ts
+
+Test Suites: 2 passed, 2 total
+Tests:       15 passed, 15 total
+Snapshots:   0 total
+Time:        16.289 s
+Ran all test suites within paths "tests/features7to12.test.ts", "tests/partialCompletion.test.ts".

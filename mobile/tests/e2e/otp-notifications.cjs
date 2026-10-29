@@ -20,8 +20,10 @@ async function fixture(page, options = {}) {
   const state = await mockApi(page); const events = [];
   let emailVerified = false, completeAttempts = 0;
   await page.route('**/api/auth/signup/**', async route => {
-    const endpoint = new URL(route.request().url()).pathname.split('/').pop(); events.push(endpoint);
-    const input = route.request().postDataJSON(); let status = 200, data, message = 'OK';
+    const endpoint = new URL(route.request().url()).pathname.split('/').pop();
+    if (endpoint === 'options') return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true,data:{emailAvailable:!options.emailUnavailable,smsAvailable:options.sms==='sent',phoneVerificationRequired:!!options.requirePhone}})});
+    events.push(endpoint);
+    const input = route.request().postDataJSON(); let status = 200, data, message = 'OK', responseErrors;
     if (endpoint === 'request-otp' || endpoint === 'resend-otp') {
       status = options.deliveryFailure ? 503 : 202;
       message = options.deliveryFailure ? 'Email verification is not configured. Ask the administrator to configure SMTP_HOST, SMTP_USER, SMTP_PASS and EMAIL_FROM.' : 'Verification requested';
@@ -34,10 +36,11 @@ async function fixture(page, options = {}) {
     } else if (endpoint === 'complete') {
       completeAttempts++;
       if (!emailVerified) { status = 400; message = 'Complete required verification'; }
+      else if (options.existingEmail) { status=400; message='Your email is verified. An account already exists with this email. Go to sign in to access it, or use a different email to create a new account.'; responseErrors=[{field:'email',code:'SIGN_IN_REQUIRED'}]; }
       else if (options.retryCompletion && completeAttempts === 1) { status = 503; message = 'Registration temporarily unavailable. Please retry.'; }
       else data = { user: { ...user, emailVerifiedAt: new Date().toISOString() }, token: 'isolated-browser-fixture' };
     }
-    await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ success: status < 400, data, message }) });
+    await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ success: status < 400, data, message, errors:responseErrors }) });
   });
   return { state, events };
 }
@@ -52,8 +55,9 @@ async function fixture(page, options = {}) {
   for (const [width, height] of [[320,568],[375,667],[768,1024],[1024,768],[1440,900],[1920,1080]]) {
     await page.setViewportSize({ width, height });
     const scroll = await page.evaluate(() => document.documentElement.scrollWidth); widths.push({ width, height, scroll }); expect(scroll).toBeLessThanOrEqual(width);
+    await page.getByLabel('Email verification code', { exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(artifact, `verification-${width}.png`), fullPage: true });
     if ([320,1440].includes(width)) {
-      await page.screenshot({ path: path.join(artifact, `verification-${width}.png`), fullPage: true });
       const scan = await new AxeBuilder({ page }).withTags(['wcag2a','wcag2aa']).disableRules(['region']).analyze();
       accessibility.push({ width, violations: scan.violations.map(v => v.id) }); expect(scan.violations.map(v => v.id)).toEqual([]);
     }
@@ -67,7 +71,15 @@ async function fixture(page, options = {}) {
   await expect(page.getByText('Quick Issue Categories', { exact: true }).last()).toBeVisible();
   expect(state.events.filter(e => e === 'complete')).toHaveLength(1); checks.push('Invalid OTP error then six-digit paste/keyboard submit completes existing dashboard navigation');
   await context.close();
-  for (const [name, options] of [['expiry',{expired:true}],['setup',{deliveryFailure:true}],['network',{networkFailure:true}],['phone',{sms:'sent',requirePhone:true}],['smsFailure',{sms:'failed'}],['completionRetry',{retryCompletion:true}],['legacyDev',{legacyDevPayload:true}]]) {
+  const unavailableContext = await browser.newContext({viewport:{width:375,height:812},reducedMotion:'reduce'});
+  const unavailablePage = await unavailableContext.newPage(); const unavailable = await fixture(unavailablePage,{emailUnavailable:true});
+  await unavailablePage.goto(`${WEB}/citizen-register`);
+  await expect(unavailablePage.getByText(/Verification is currently unavailable/)).toBeVisible();
+  await expect(unavailablePage.getByRole('button',{name:'Send verification code',exact:true})).toBeDisabled();
+  await expect(unavailablePage.getByRole('button',{name:'Check verification again',exact:true})).toBeVisible();
+  expect(unavailable.events).toEqual([]); checks.push('Actual provider availability disables OTP requests before submission when email delivery is unavailable');
+  await unavailableContext.close();
+  for (const [name, options] of [['expiry',{expired:true}],['setup',{deliveryFailure:true}],['network',{networkFailure:true}],['phone',{sms:'sent',requirePhone:true}],['smsFailure',{sms:'failed'}],['completionRetry',{retryCompletion:true}],['legacyDev',{legacyDevPayload:true}],['existingEmail',{existingEmail:true,sms:'failed'}]]) {
     const c = await browser.newContext({ viewport: { width: 375, height: 667 }, reducedMotion: 'reduce' });
     const p = await c.newPage(); p.on('pageerror', e => errors.push(e.message)); const data = await fixture(p, options);
     await form(p);
@@ -79,7 +91,7 @@ async function fixture(page, options = {}) {
     } else {
       await expect(p.getByText('Development Mode',{exact:true})).toHaveCount(0);
       await expect(p.getByLabel('Email verification code',{exact:true})).toHaveValue('');
-      if (name === 'smsFailure') await expect(p.getByText(/SMS delivery failed/)).toBeVisible();
+      if (name === 'smsFailure') await expect(p.getByText(/SMS could not be sent/)).toBeVisible();
       await p.getByLabel('Email verification code',{exact:true}).fill('420731');
       if (name === 'phone') await p.getByLabel('SMS verification code',{exact:true}).fill('731024');
       await p.getByRole('button',{name:'Verify and create account',exact:true}).click();
@@ -89,7 +101,14 @@ async function fixture(page, options = {}) {
         await p.getByRole('button',{name:'Create account',exact:true}).click();
         expect(data.events.filter(event=>event==='verify-otp')).toHaveLength(1);
       }
-      if (name === 'network') { await expect(p.getByRole('alert')).toBeVisible(); expect(data.events).not.toContain('complete'); }
+      if (name === 'existingEmail') {
+        await expect(p.getByRole('alert')).toContainText('An account already exists with this email');
+        await expect(p.getByRole('button',{name:'Create account',exact:true})).toHaveCount(0);
+        await expect(p.getByRole('button',{name:/Resend/})).toHaveCount(0);
+        await p.screenshot({path:path.join(artifact,'existing-email-375.png'),fullPage:true});
+        await p.getByRole('button',{name:'Go to sign in',exact:true}).click();
+        await expect(p.getByLabel('Email Address',{exact:true}).filter({visible:true})).toBeVisible();
+      } else if (name === 'network') { await expect(p.getByRole('alert')).toBeVisible(); expect(data.events).not.toContain('complete'); }
       else await expect(p.getByText('Quick Issue Categories',{exact:true}).last()).toBeVisible();
     }
     checks.push(`${name} state uses the signup API and preserves account verification rules`); await c.close();

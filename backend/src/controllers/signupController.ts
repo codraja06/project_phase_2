@@ -10,12 +10,23 @@ import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
 import { generateToken } from '../utils/jwt';
 import * as delivery from '../services/contactDeliveryService';
+import { verificationEmailTemplate } from '../services/verificationEmailTemplate';
 
 export const normalizePhone = (phone: string) => (phone.trim().startsWith('+') ? '+' : '') + phone.replace(/\D/g, '');
 const key = (value: string) => createHmac('sha256', env.OTP_HASH_SECRET || env.JWT_SECRET).update(value).digest('hex');
 const digest = (id: string, channel: string, otp: string) => key(`${id}:${channel}:${otp}`);
 const idSchema = z.string().regex(/^[a-f0-9]{64}$/);
 const invalidCode = () => new ApiError(400, 'The code is invalid, expired, already used, or has too many attempts. Request a new code if needed.');
+const existingEmail = () => new ApiError(400,
+  'Your email is verified. An account already exists with this email. Go to sign in to access it, or use a different email to create a new account.',
+  [{ field: 'email', code: 'SIGN_IN_REQUIRED' }]);
+
+export const getSignupOptions = (_req: Request, res: Response) => {
+  res.json(new ApiResponse('Registration verification availability', {
+    emailAvailable: delivery.emailConfigured(), smsAvailable: delivery.smsConfigured(),
+    phoneVerificationRequired: env.OTP_REQUIRE_PHONE,
+  }));
+};
 
 async function consumeQuota(value: string) {
   const now = new Date(), contactKey = key(value), hourAgo = new Date(now.getTime() - 3600000);
@@ -50,9 +61,8 @@ async function issue(input: { name: string; email: string; phone: string; passwo
     resendAvailableAt: new Date(now.getTime() + env.OTP_RESEND_COOLDOWN_SECONDS * 1000),
   });
   try {
-    challenge.emailProviderId = await delivery.sendEmail(input.email, 'Your CivicTrack verification code',
-      `Your CivicTrack email verification code is ${emailOtp}. It expires in 5 minutes. Do not share it. If you did not request it, ignore this email.`,
-      `<div style="font-family:Arial,sans-serif;color:#17243a"><h2>CivicTrack email verification</h2><p>Your verification code:</p><p style="font-size:28px;letter-spacing:6px"><strong>${emailOtp}</strong></p><p>Expires in 5 minutes. Do not share this code. If you did not request it, ignore this email.</p></div>`, `signup-${id}`);
+    const email = verificationEmailTemplate(emailOtp, env.OTP_EXPIRY_MINUTES);
+    challenge.emailProviderId = await delivery.sendEmail(input.email, email.subject, email.text, email.html, `signup-${id}`);
     challenge.emailDelivery = 'sent';
   } catch {
     await SignupChallenge.deleteOne({ _id: id });
@@ -115,7 +125,9 @@ export const completeSignup = async (req: Request, res: Response, next: NextFunc
     if (!pending) throw new ApiError(400, 'This verification session is expired, already used, or was not delivered by a provider. Start registration again, or sign in if the account was already created.');
     const canonicalPhone = pending.phone!.replace(/\D/g, '');
     const legacyPhone = new RegExp(`^\\s*\\+?${canonicalPhone.split('').join('[\\s()-]*')}\\s*$`);
-    if (await User.exists({ $or: [{ email: pending.email }, { phoneNormalized: canonicalPhone }, { phone: legacyPhone }] })) {
+    // Email ownership is established before revealing an existing account to its owner.
+    if (await User.exists({ email: pending.email })) throw existingEmail();
+    if (await User.exists({ $or: [{ phoneNormalized: canonicalPhone }, { phone: legacyPhone }] })) {
       throw new ApiError(400, 'Registration cannot complete with these details. Sign in to your existing account or use different contact details.');
     }
     const claim = randomBytes(16).toString('hex');
@@ -128,7 +140,10 @@ export const completeSignup = async (req: Request, res: Response, next: NextFunc
     try { await user.save(); }
     catch (error: any) {
       await SignupChallenge.updateOne({ _id: challengeId, completionClaim: claim }, { $unset: { completionClaim: 1, completionClaimedAt: 1 } });
-      if (error.code === 11000) throw new ApiError(400, 'Registration cannot complete with these details. Sign in or use different contact details.');
+      if (error.code === 11000) {
+        if (await User.exists({ email: pending.email })) throw existingEmail();
+        throw new ApiError(400, 'Registration cannot complete with these details. Sign in or use different contact details.');
+      }
       throw error;
     }
     // A cleanup outage must not turn a successfully created account into a failed response.

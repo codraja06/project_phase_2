@@ -13,6 +13,7 @@ export interface IUser extends Document {
   avatar?: string;
   role: UserRole;
   isAdmin?: boolean;
+  sessionVersion?: number;
   emailVerifiedAt?: Date | null;
   phoneVerifiedAt?: Date | null;
   phoneNormalized?: string;
@@ -32,6 +33,7 @@ const UserSchema = new Schema<IUser>(
     avatar: { type: String, default: '' },
     role: { type: String, enum: ['citizen', 'authority'], default: 'citizen' },
     isAdmin: { type: Boolean, default: false },
+    sessionVersion: { type: Number, default: 0 },
     emailVerifiedAt: { type: Date, default: null },
     phoneVerifiedAt: { type: Date, default: null },
     phoneNormalized: { type: String },

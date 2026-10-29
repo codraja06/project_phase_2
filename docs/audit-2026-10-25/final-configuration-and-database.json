@@ -1,0 +1,316 @@
+{
+  "capturedFor": "2026-10-25 Asia/Calcutta",
+  "configuration": {
+    "MONGODB_URI": "present (not authenticated)",
+    "JWT_SECRET": "present (not authenticated)",
+    "AI_SERVICE_URL": "present (not authenticated)",
+    "BACKEND_PUBLIC_URL": "present (not authenticated)",
+    "CLOUDINARY_CLOUD_NAME": "missing or placeholder",
+    "CLOUDINARY_API_KEY": "missing or placeholder",
+    "CLOUDINARY_API_SECRET": "missing or placeholder",
+    "GOOGLE_CLIENT_ID": "present (not authenticated)",
+    "CHAT_PROVIDER_URL": "missing or placeholder",
+    "CHAT_PROVIDER_API_KEY": "missing or placeholder",
+    "CHAT_PROVIDER_MODEL": "missing or placeholder",
+    "SMTP_HOST": "present (not authenticated)",
+    "SMTP_PORT": "present (not authenticated)",
+    "SMTP_USER": "present (not authenticated)",
+    "SMTP_PASS": "present (not authenticated)",
+    "EMAIL_FROM": "present (not authenticated)",
+    "SMS_PROVIDER": "present (not authenticated)",
+    "TWILIO_ACCOUNT_SID": "present (not authenticated)",
+    "TWILIO_AUTH_TOKEN": "present (not authenticated)",
+    "TWILIO_FROM": "present (not authenticated)",
+    "OTP_HASH_SECRET": "present (not authenticated)",
+    "RESOLUTION_TARGET_HOURS": "present (not authenticated)"
+  },
+  "duplicateConfigurationKeys": [],
+  "database": {
+    "access": "read-only aggregate inspection; no model initialization or writes",
+    "collections": {
+      "users": {
+        "records": 4,
+        "indexes": [
+          {
+            "name": "_id_",
+            "key": {
+              "_id": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "email_1",
+            "key": {
+              "email": 1
+            },
+            "unique": true
+          },
+          {
+            "name": "googleId_1",
+            "key": {
+              "googleId": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "phoneNormalized_1",
+            "key": {
+              "phoneNormalized": 1
+            },
+            "unique": true
+          }
+        ]
+      },
+      "complaints": {
+        "records": 4,
+        "indexes": [
+          {
+            "name": "_id_",
+            "key": {
+              "_id": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "complaintId_1",
+            "key": {
+              "complaintId": 1
+            },
+            "unique": true
+          },
+          {
+            "name": "createdAt_-1",
+            "key": {
+              "createdAt": -1
+            },
+            "unique": false
+          },
+          {
+            "name": "status_1_createdAt_-1",
+            "key": {
+              "status": 1,
+              "createdAt": -1
+            },
+            "unique": false
+          },
+          {
+            "name": "category_1_createdAt_-1",
+            "key": {
+              "category": 1,
+              "createdAt": -1
+            },
+            "unique": false
+          },
+          {
+            "name": "createdBy_1_createdAt_-1",
+            "key": {
+              "createdBy": 1,
+              "createdAt": -1
+            },
+            "unique": false
+          },
+          {
+            "name": "category_1_status_1_createdAt_-1",
+            "key": {
+              "category": 1,
+              "status": 1,
+              "createdAt": -1
+            },
+            "unique": false
+          },
+          {
+            "name": "assignedDepartment_1_resolvedAt_-1",
+            "key": {
+              "assignedDepartment": 1,
+              "resolvedAt": -1
+            },
+            "unique": false
+          },
+          {
+            "name": "latitude_1_longitude_1_createdAt_-1",
+            "key": {
+              "latitude": 1,
+              "longitude": 1,
+              "createdAt": -1
+            },
+            "unique": false
+          },
+          {
+            "name": "duplicateOf_1",
+            "key": {
+              "duplicateOf": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "status_1_resolutionNoticePending_1",
+            "key": {
+              "status": 1,
+              "resolutionNoticePending": 1
+            },
+            "unique": false
+          }
+        ]
+      },
+      "departmentrules": {
+        "records": 0,
+        "indexes": [
+          {
+            "name": "_id_",
+            "key": {
+              "_id": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "category_1",
+            "key": {
+              "category": 1
+            },
+            "unique": true
+          }
+        ]
+      },
+      "notifications": {
+        "records": 2,
+        "indexes": [
+          {
+            "name": "_id_",
+            "key": {
+              "_id": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "recipient_1_eventKey_1",
+            "key": {
+              "recipient": 1,
+              "eventKey": 1
+            },
+            "unique": true
+          },
+          {
+            "name": "recipient_1_createdAt_-1",
+            "key": {
+              "recipient": 1,
+              "createdAt": -1
+            },
+            "unique": false
+          }
+        ]
+      },
+      "notificationdeliveries": {
+        "records": 0,
+        "indexes": [
+          {
+            "name": "_id_",
+            "key": {
+              "_id": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "eventKey_1",
+            "key": {
+              "eventKey": 1
+            },
+            "unique": true
+          },
+          {
+            "name": "status_1_nextAttemptAt_1",
+            "key": {
+              "status": 1,
+              "nextAttemptAt": 1
+            },
+            "unique": false
+          }
+        ]
+      },
+      "conversations": {
+        "records": 2,
+        "indexes": [
+          {
+            "name": "_id_",
+            "key": {
+              "_id": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "userId_1",
+            "key": {
+              "userId": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "userId_1_updatedAt_-1",
+            "key": {
+              "userId": 1,
+              "updatedAt": -1
+            },
+            "unique": false
+          }
+        ]
+      },
+      "signupchallenges": {
+        "records": 0,
+        "indexes": [
+          {
+            "name": "_id_",
+            "key": {
+              "_id": 1
+            },
+            "unique": false
+          },
+          {
+            "name": "contactKey_1",
+            "key": {
+              "contactKey": 1
+            },
+            "unique": true
+          },
+          {
+            "name": "expiresAt_1",
+            "key": {
+              "expiresAt": 1
+            },
+            "unique": false,
+            "expireAfterSeconds": 0
+          }
+        ]
+      }
+    },
+    "accountRoles": [
+      {
+        "_id": {
+          "role": "citizen",
+          "administrator": false
+        },
+        "count": 3
+      },
+      {
+        "_id": {
+          "role": "authority",
+          "administrator": false
+        },
+        "count": 1
+      }
+    ],
+    "complaintQuality": {
+      "statusCounts": [
+        {
+          "_id": "Pending",
+          "count": 1
+        },
+        {
+          "_id": "Resolved",
+          "count": 3
+        }
+      ],
+      "missingSeverity": 4,
+      "missingCoordinates": 0,
+      "resolvedWithoutTimestamp": 0
+    }
+  }
+}

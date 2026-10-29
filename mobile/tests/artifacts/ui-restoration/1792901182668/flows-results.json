@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Citizen profile save at 320x390",
+    "Citizen password change",
+    "Notification preferences persist through the API and local cache",
+    "Photo upload, AI response, manual southern coordinate pin, submit, real returned ID and details",
+    "Authority verify, progress, resolution and absence of Purge Record at 320x390",
+    "Mobile hotspot record opens the selected dossier"
+  ],
+  "errors": []
+}

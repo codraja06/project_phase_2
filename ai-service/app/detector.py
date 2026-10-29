@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image, ImageOps
 from typing import List, Dict, Any
 from app.config import settings
+from dotenv import dotenv_values
 
 # Base directory for ai-service (contains models/, app/, etc.)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -92,6 +93,7 @@ def _weights_version(path):
 class CivicIssueDetector:
     def __init__(self, registry_path=None, model_factory=None):
         self.models, self.registry, self.model_status = {}, {}, {}
+        self.local_config = dotenv_values(os.path.join(BASE_DIR, '.env'))
         self._inference_lock = Lock()
         path = self._resolve_path(registry_path or settings.MODEL_REGISTRY_PATH)
         try:
@@ -125,8 +127,10 @@ class CivicIssueDetector:
                 return
         for name, entry in self.registry.items():
             env_name = entry.get("pathEnv", "")
-            configured_path = os.getenv(env_name, entry.get("path", ""))
-            enabled = entry.get("enabled", True) and os.getenv(env_name.replace("_PATH", "_ENABLED"), "true").lower() not in ("false", "0", "no")
+            # Empty path is an intentional disable, including in the .env file.
+            configured_path = os.environ.get(env_name, self.local_config.get(env_name, entry.get("path", "")))
+            enabled_name = env_name.replace("_PATH", "_ENABLED")
+            enabled = entry.get("enabled", True) and (os.getenv(enabled_name) or self.local_config.get(enabled_name) or "true").lower() not in ("false", "0", "no")
             state = {"state": "unavailable", "reason": "Trained weights are not configured.", "categories": entry["categories"], "version": entry.get('version')}
             self.model_status[name] = state
             if not enabled or not configured_path:
@@ -136,7 +140,8 @@ class CivicIssueDetector:
             if not os.path.isfile(path):
                 continue
             try:
-                threshold = float(os.getenv(env_name.replace("_PATH", "_CONFIDENCE"), str(max(settings.CONF_THRESHOLD, entry.get("confidence", .25)))))
+                confidence_name = env_name.replace("_PATH", "_CONFIDENCE")
+                threshold = float(os.getenv(confidence_name) or self.local_config.get(confidence_name) or str(max(settings.CONF_THRESHOLD, entry.get("confidence", .25))))
                 if not 0 <= threshold <= 1:
                     raise ValueError("Confidence must be between zero and one")
                 entry["threshold"] = threshold

@@ -1,0 +1,168 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "height": 568,
+      "scroll": 320,
+      "offenders": []
+    },
+    {
+      "width": 320,
+      "height": 640,
+      "scroll": 320,
+      "offenders": []
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "scroll": 360,
+      "offenders": []
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "scroll": 360,
+      "offenders": []
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "scroll": 375,
+      "offenders": []
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scroll": 375,
+      "offenders": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scroll": 390,
+      "offenders": []
+    },
+    {
+      "width": 393,
+      "height": 852,
+      "scroll": 393,
+      "offenders": []
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "scroll": 412,
+      "offenders": []
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "scroll": 430,
+      "offenders": []
+    },
+    {
+      "width": 480,
+      "height": 960,
+      "scroll": 480,
+      "offenders": []
+    },
+    {
+      "width": 540,
+      "height": 960,
+      "scroll": 540,
+      "offenders": []
+    },
+    {
+      "width": 600,
+      "height": 960,
+      "scroll": 600,
+      "offenders": []
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scroll": 768,
+      "offenders": []
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scroll": 800,
+      "offenders": []
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scroll": 820,
+      "offenders": []
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scroll": 1024,
+      "offenders": []
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scroll": 1180,
+      "offenders": []
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "scroll": 1280,
+      "offenders": []
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "scroll": 1366,
+      "offenders": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scroll": 1440,
+      "offenders": []
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "scroll": 1536,
+      "offenders": []
+    },
+    {
+      "width": 1600,
+      "height": 900,
+      "scroll": 1600,
+      "offenders": []
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "scroll": 1920,
+      "offenders": []
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "scroll": 2560,
+      "offenders": []
+    },
+    {
+      "width": 3440,
+      "height": 1440,
+      "scroll": 3440,
+      "offenders": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "scroll": 844,
+      "offenders": []
+    }
+  ],
+  "errors": [],
+  "axe": []
+}

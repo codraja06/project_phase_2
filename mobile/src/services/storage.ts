@@ -1,20 +1,20 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { tokenStore } from './tokenStore';
 
-const TOKEN_KEY = '@civic_auth_token';
 const USER_KEY = '@civic_auth_user';
 const SERVER_URL_KEY = '@civic_server_url';
 
 export const storageService = {
   async setToken(token: string): Promise<void> {
-    await AsyncStorage.setItem(TOKEN_KEY, token);
+    await tokenStore.set(token);
   },
 
   async getToken(): Promise<string | null> {
-    return await AsyncStorage.getItem(TOKEN_KEY);
+    return await tokenStore.get();
   },
 
   async removeToken(): Promise<void> {
-    await AsyncStorage.removeItem(TOKEN_KEY);
+    await tokenStore.remove();
   },
 
   async setUser(user: any): Promise<void> {
@@ -31,7 +31,8 @@ export const storageService = {
   },
 
   async clearSession(): Promise<void> {
-    await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+    await tokenStore.remove();
+    await AsyncStorage.removeItem(USER_KEY);
   },
 
   async setCustomServerUrl(url: string): Promise<void> {

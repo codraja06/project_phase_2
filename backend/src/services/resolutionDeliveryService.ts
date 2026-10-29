@@ -6,6 +6,7 @@ import { NotificationDelivery } from '../models/NotificationDelivery';
 import { notifyUser } from './notificationService';
 import { publishNotificationChange } from './liveNotifications';
 import * as delivery from './contactDeliveryService';
+import { runNotificationOutboxPass } from './notificationOutboxService';
 
 function eligibility(user: any, channel: string): string | null {
   if (!user) return 'account_unavailable';
@@ -41,7 +42,7 @@ export async function queueResolutionNotifications(complaint: any) {
     } }, { upsert: true });
   }
   await Complaint.updateOne({ _id: complaint._id, resolutionNoticeAt: at }, { $set: { resolutionNoticePending: false } });
-  publishNotificationChange(String(complaint.createdBy));
+  await publishNotificationChange(String(complaint.createdBy));
 }
 
 export function resolutionEmail(user: any, complaint: any) {
@@ -56,6 +57,7 @@ export function resolutionEmail(user: any, complaint: any) {
 }
 
 export async function runDeliveryWorkerPass(limit = 20) {
+  await runNotificationOutboxPass(limit);
   // Resolution and this flag commit atomically in the complaint; a crash before enqueue is recoverable.
   const pending = await Complaint.find({ status: 'Resolved', resolutionNoticePending: true }).limit(limit);
   for (const complaint of pending) {
@@ -91,7 +93,7 @@ export async function runDeliveryWorkerPass(limit = 20) {
         ...(retry ? { nextAttemptAt: new Date(Date.now() + Math.min(3600000, 60000 * 2 ** (job.attempts! - 1))) } : {}) };
     }
     await NotificationDelivery.updateOne({ _id: job._id, claimedBy: owner, status: 'Processing' }, { $set: outcome, $unset: { claimedBy: 1, leaseUntil: 1 } });
-    publishNotificationChange(String(job.recipient));
+    await publishNotificationChange(String(job.recipient));
   }
 }
 

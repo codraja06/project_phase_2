@@ -16,9 +16,10 @@ export const loginSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').optional(),
   phone: z.string().min(8, 'Phone number must be at least 8 digits').optional(),
-});
+}).strict();
 
 export const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+  newPassword: z.string().min(6, 'New password must be at least 6 characters')
+    .refine(value => Buffer.byteLength(value, 'utf8') <= 72, 'Password must be at most 72 UTF-8 bytes'),
 });

@@ -63,6 +63,8 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
   const [aiDetected, setAiDetected] = useState<boolean>(false);
   const [severity, setSeverity] = useState<SeverityAssessment>();
   const [generatedDescription, setGeneratedDescription] = useState('');
+  const [regeneratingDescription, setRegeneratingDescription] = useState(false);
+  const [regenerationMessage, setRegenerationMessage] = useState('');
   const [analysisToken, setAnalysisToken] = useState('');
   const [uploadToken, setUploadToken] = useState('');
 
@@ -128,6 +130,27 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const regenerateDescription = async () => {
+    if (!localImageUri || regeneratingDescription) return;
+    const request = imageRequest.current;
+    setRegeneratingDescription(true); setRegenerationMessage('');
+    try {
+      const result = await aiApi.detectIssue(localImageUri, detectionMode);
+      if (request !== imageRequest.current) return;
+      if (!result.detected || !result.generatedDescription || !result.analysisToken || !result.detections.length) {
+        setRegenerationMessage('A new AI draft is unavailable. Your current description is unchanged.'); return;
+      }
+      setDescription(current => !current || current === generatedDescription ? result.generatedDescription! : current);
+      setGeneratedDescription(result.generatedDescription);
+      setAnalysisToken(result.analysisToken); setSeverity(result.severity);
+      setAiDetections(result.detections); setAiDetected(true);
+      setAiConfidence(result.detections[0].confidence); setAiDetectedClass(result.detections[0].category);
+      setRegenerationMessage('New AI draft ready. Use Restore draft to replace your edited text.');
+    } catch (error: any) {
+      if (request === imageRequest.current) setRegenerationMessage(error.message || 'AI draft generation failed. Your description is unchanged.');
+    } finally { setRegeneratingDescription(false); }
+  };
+
   const handleImageSelected = async (uri: string) => {
     const request = ++imageRequest.current;
     setServerImageUrl('');
@@ -138,6 +161,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
     setAiDetected(false);
     setSeverity(undefined);
     setGeneratedDescription('');
+    setRegenerationMessage('');
     setAnalysisToken('');
     setUploadToken('');
     setDescription('');
@@ -439,14 +463,16 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                     </Animated.View>
                     <Animated.View entering={FadeInUp.delay(300)}>
                       <DescriptionEditor category={selectedCategory} customCategory={customCategory} description={description} onChangeDescription={setDescription} address={address} generatedDescription={generatedDescription} />
-                      {analysisToken && <Button title="Continue without AI assessment" variant="ghost" onPress={() => {
+                      <Button title={regeneratingDescription ? 'Generating…' : 'Regenerate AI draft'} variant="outline" disabled={regeneratingDescription} onPress={regenerateDescription} />
+                      {!!regenerationMessage && <Text accessibilityLiveRegion="polite" style={styles.evidenceText}>{regenerationMessage}</Text>}
+                      {analysisToken && <Button title="Continue without AI assessment" variant="ghost" disabled={regeneratingDescription} onPress={() => {
                         setAnalysisToken(''); setSeverity(undefined); setGeneratedDescription('');
                       }} />}
                     </Animated.View>
 
                     <Animated.View entering={FadeInUp.delay(400)} style={styles.buttonRow}>
                       <Button title="Remove / Replace Photo" onPress={handleRetake} variant="secondary" size="lg" style={{ flexGrow: 1, flexBasis: 160 }} />
-                      <Button title="Continue to Location" onPress={() => animateStepChange('location')} variant="default" size="lg" style={{ flexGrow: 1, flexBasis: 220 }} />
+                      <Button title="Continue to Location" disabled={regeneratingDescription} onPress={() => animateStepChange('location')} variant="default" size="lg" style={{ flexGrow: 1, flexBasis: 220 }} />
                     </Animated.View>
                   </>
                 ) : null}

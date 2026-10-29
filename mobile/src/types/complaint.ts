@@ -56,6 +56,7 @@ export interface Complaint {
   duplicateConfirmedAt?: string | null;
   duplicateReason?: string;
   assignedDepartment?: string;
+  assignedDepartmentInfo?: { municipality: string; verificationStatus: 'proposed' | 'verified' } | null;
   assignedAt?: string | null;
   completionImageUrl?: string;
   completionSubmittedAt?: string | null;

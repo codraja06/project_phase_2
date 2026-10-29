@@ -1,0 +1,17 @@
+{
+  "phase": "baseline",
+  "scope": "Actual generated native HTML in Chromium; physical WebView untested",
+  "checks": [
+    {
+      "name": "Untrusted native map popup text stays inert",
+      "passed": false,
+      "executedMarkup": true,
+      "insertedImageTags": 1
+    },
+    {
+      "name": "Native map script signals unavailable Leaflet through the bridge",
+      "passed": false
+    }
+  ],
+  "errors": []
+}

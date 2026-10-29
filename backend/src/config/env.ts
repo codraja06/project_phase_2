@@ -1,11 +1,12 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { randomBytes } from 'crypto';
+import { usableSigningSecret } from '../utils/secretPolicy';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) {
-  throw new Error('Set JWT_SECRET to at least 32 random characters in production.');
+if (process.env.NODE_ENV === 'production' && !usableSigningSecret(process.env.JWT_SECRET)) {
+  throw new Error('Set JWT_SECRET to at least 32 random characters in production; placeholders are not allowed.');
 }
 
 function boundedNumber(name: string, fallback: number, min: number, max: number) {
@@ -30,6 +31,8 @@ export const env = {
   DELIVERY_WORKER_ENABLED: process.env.DELIVERY_WORKER_ENABLED !== 'false',
   PORT: parseInt(process.env.PORT || '5000', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
+  CORS_ORIGINS: (process.env.CORS_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean),
+  RATE_LIMIT_STORE: process.env.RATE_LIMIT_STORE || (process.env.NODE_ENV === 'test' ? 'memory' : 'mongo'),
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/civic_issue_db',
   JWT_SECRET: process.env.JWT_SECRET || randomBytes(48).toString('hex'),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',

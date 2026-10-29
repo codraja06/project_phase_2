@@ -1,0 +1,25 @@
+{
+  "phase": "baseline",
+  "checks": [
+    {
+      "name": "Actual Leaflet markers match filtered API clusters; invalid legacy GPS excluded",
+      "passed": true,
+      "markers": 1,
+      "loadedTiles": 0
+    },
+    {
+      "name": "Blocked Leaflet CDN produces an actionable fallback",
+      "passed": false
+    }
+  ],
+  "errors": [
+    {
+      "offline": true,
+      "message": "L is not defined"
+    },
+    {
+      "offline": true,
+      "message": "L is not defined"
+    }
+  ]
+}

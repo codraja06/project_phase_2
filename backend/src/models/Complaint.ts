@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { SeverityAssessment } from '../services/triageService';
+import { NotificationIntentSchema, NotificationIntent } from './NotificationIntent';
 
 export type ComplaintCategory =
   | 'pothole'
@@ -73,6 +74,7 @@ export interface IComplaint extends Document {
   duplicateConfirmedBy?: mongoose.Types.ObjectId | null;
   duplicateReason?: string;
   assignedDepartment?: string;
+  assignedDepartmentInfo?: { municipality: string; verificationStatus: 'proposed' | 'verified' } | null;
   assignedAt?: Date | null;
   assignedBy?: mongoose.Types.ObjectId | null;
   completionImageUrl?: string;
@@ -83,6 +85,8 @@ export interface IComplaint extends Document {
   completionReviewedBy?: mongoose.Types.ObjectId | null;
   completionReviewNote?: string;
   statusHistory?: { status: ComplaintStatus; at: Date; by?: mongoose.Types.ObjectId }[];
+  notificationOutbox?: NotificationIntent[];
+  notificationOutboxPending?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -180,11 +184,14 @@ const ComplaintSchema = new Schema<IComplaint>(
     resolvedAt: { type: Date, default: null },
       resolutionNoticePending: { type: Boolean, default: false },
       resolutionNoticeAt: { type: Date, default: null },
+    notificationOutbox: { type: [NotificationIntentSchema], default: undefined, select: false },
+    notificationOutboxPending: { type: Boolean, default: false, select: false },
     duplicateOf: { type: Schema.Types.ObjectId, ref: 'Complaint', default: null },
     duplicateConfirmedAt: { type: Date, default: null },
     duplicateConfirmedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     duplicateReason: { type: String, trim: true, default: '' },
     assignedDepartment: { type: String, trim: true, default: '' },
+    assignedDepartmentInfo: { type: new Schema({ municipality: String, verificationStatus: { type: String, enum: ['proposed', 'verified'] } }, { _id: false }), default: null },
     assignedAt: { type: Date, default: null },
     assignedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     completionImageUrl: { type: String, default: '' },
@@ -230,10 +237,13 @@ ComplaintSchema.set('toJSON', {
   virtuals: true,
   transform: function (_doc, ret: Record<string, any>) {
     delete ret.__v;
+    delete ret.notificationOutbox;
+    delete ret.notificationOutboxPending;
     return ret;
   },
 });
 
 ComplaintSchema.index({ status: 1, resolutionNoticePending: 1 });
+ComplaintSchema.index({ notificationOutboxPending: 1 });
 
 export const Complaint = mongoose.model<IComplaint>('Complaint', ComplaintSchema);

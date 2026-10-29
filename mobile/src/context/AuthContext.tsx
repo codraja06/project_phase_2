@@ -22,6 +22,7 @@ interface AuthContextType {
   clearSavedSession: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
+  updateSession: (session: { user: User; token: string }) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -36,6 +37,7 @@ export const AuthContext = createContext<AuthContextType>({
   clearSavedSession: async () => {},
   logout: async () => {},
   updateUser: () => {},
+  updateSession: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -162,13 +164,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (e) {
       // ignore network errors on logout
     } finally {
-      await storageService.clearSession();
-      setToken(null);
-      setUser(null);
-      setSavedSession(null);
+      try { await storageService.clearSession(); }
+      finally { setToken(null); setUser(null); setSavedSession(null); }
     }
   };
 
+  const updateSession = async (session: { user: User; token: string }) => {
+    await storageService.setToken(session.token);
+    await storageService.setUser(session.user);
+    setToken(session.token); setUser(session.user); setSavedSession(session);
+  };
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
     storageService.setUser(updatedUser);
@@ -191,6 +196,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         clearSavedSession,
         logout,
         updateUser,
+        updateSession,
       }}
     >
       {children}

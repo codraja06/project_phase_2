@@ -138,6 +138,10 @@ axiosClient.interceptors.response.use(
       userFriendlyMessage = error.message;
     }
 
-    return Promise.reject(new Error(userFriendlyMessage));
+    const friendlyError = new Error(userFriendlyMessage) as Error & { nextAction?: 'sign_in' };
+    if (error.config?.url === '/auth/signup/complete' && error.response?.data?.errors?.some?.((entry: any) => entry?.code === 'SIGN_IN_REQUIRED')) {
+      friendlyError.nextAction = 'sign_in';
+    }
+    return Promise.reject(friendlyError);
   }
 );

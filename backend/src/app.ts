@@ -12,12 +12,17 @@ import aiRoutes from './routes/aiRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import chatRoutes from './routes/chatRoutes';
 import managementRoutes from './routes/managementRoutes';
+import { env } from './config/env';
+import { ApiError } from './utils/apiError';
 
 const app = express();
 
 // Security and parser middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors());
+app.use(cors({ origin: (origin, callback) => {
+  if (!origin || env.CORS_ORIGINS.includes(origin) || (!env.CORS_ORIGINS.length && env.NODE_ENV !== 'production')) return callback(null, true);
+  callback(new ApiError(403, 'This browser origin is not allowed.'));
+} }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

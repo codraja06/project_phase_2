@@ -1,0 +1,1 @@
+{"configured":false,"required":["CHAT_PROVIDER_URL","CHAT_PROVIDER_MODEL","CHAT_PROVIDER_API_KEY (if required by provider)"],"liveProviderVerified":false}

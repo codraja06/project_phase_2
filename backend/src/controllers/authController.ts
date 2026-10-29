@@ -6,6 +6,10 @@ import { User } from '../models/User';
 import { generateToken } from '../utils/jwt';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
+import { revokeSession } from '../services/sessionService';
+import { closeSessionConnections } from '../services/liveNotifications';
+import { closeAccountConnections } from '../services/liveNotifications';
+import bcrypt from 'bcryptjs';
 import {
   loginSchema,
   updateProfileSchema,
@@ -28,7 +32,7 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
       throw new ApiError(401, 'Invalid email or password.');
     }
 
-    const token = generateToken({ userId: user._id.toString(), role: user.role });
+    const token = generateToken({ userId: user._id.toString(), role: user.role, sessionVersion: user.sessionVersion });
 
     res.status(200).json(
       new ApiResponse('Login successful', {
@@ -69,7 +73,7 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     if (!user.emailVerifiedAt) { user.emailVerifiedAt = new Date(); await user.save(); }
-    const appToken = generateToken({ userId: user._id.toString(), role: user.role });
+    const appToken = generateToken({ userId: user._id.toString(), role: user.role, sessionVersion: user.sessionVersion });
 
     res.status(200).json(
       new ApiResponse('Google authentication successful', {
@@ -118,8 +122,12 @@ export const linkGoogle = async (req: AuthRequest, res: Response, next: NextFunc
   }
 };
 
-export const logout = async (_req: AuthRequest, res: Response) => {
-  res.status(200).json(new ApiResponse('Logged out successfully', null));
+export const logout = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    await revokeSession(req.authToken!);
+    closeSessionConnections(req.authToken!);
+    res.status(200).json(new ApiResponse('Logged out successfully', null));
+  } catch (error) { next(error); }
 };
 
 export const getMe = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -179,10 +187,14 @@ export const changePassword = async (req: AuthRequest, res: Response, next: Next
       throw new ApiError(400, 'Incorrect old password.');
     }
 
-    user.password = validated.newPassword;
-    await user.save();
-
-    res.status(200).json(new ApiResponse('Password changed successfully', null));
+    const passwordHash = await bcrypt.hash(validated.newPassword, 10);
+    const updated = await User.findOneAndUpdate({ _id: user._id, password: user.password,
+      ...((user.sessionVersion || 0) ? { sessionVersion: user.sessionVersion } : { $or: [{ sessionVersion: 0 }, { sessionVersion: { $exists: false } }] }) },
+      { $set: { password: passwordHash }, $inc: { sessionVersion: 1 } }, { new: true, runValidators: true });
+    if (!updated) throw new ApiError(409, 'Credentials changed concurrently. Sign in again before retrying.');
+    closeAccountConnections(String(updated._id));
+    const token = generateToken({ userId: String(updated._id), role: updated.role, sessionVersion: updated.sessionVersion });
+    res.status(200).json(new ApiResponse('Password changed successfully. Other sessions have ended.', { user: updated, token }));
   } catch (error) {
     next(error);
   }

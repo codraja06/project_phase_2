@@ -351,6 +351,7 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
         <View style={{ maxWidth: 1440, width: '100%', alignSelf: 'center', padding: 16, gap: 8, backgroundColor: COLORS.surface, marginTop: 12, borderRadius: 10 }}>
           <Text style={{ color: COLORS.textPrimary, fontSize: 17, fontWeight: '700' }}>Routing and repair</Text>
           <Text style={{ color: COLORS.textSecondary }}>Assigned department: {complaint.assignedDepartment || 'Awaiting assignment'}</Text>
+          {complaint.assignedDepartmentInfo?.verificationStatus === 'proposed' && <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>Provisional municipal routing. The official department structure has not been verified.</Text>}
           {!!complaint.duplicateReference && <Text style={{ color: COLORS.textSecondary }}>Authority linked this report to earlier complaint {complaint.duplicateReference}. Your report remains in the system.</Text>}
           {!!complaint.completionImageUrl && <>
             <Text style={{ color: COLORS.textSecondary }}>Repair photo: {complaint.completionReview || 'awaiting review'}. A photo alone does not confirm repair.</Text>

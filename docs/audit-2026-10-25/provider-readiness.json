@@ -1,0 +1,16 @@
+{
+  "checkedFor": "2026-10-25 Asia/Calcutta",
+  "messagesSent": 0,
+  "smtp": {
+    "status": "authentication_passed",
+    "delivery": "Not tested; no email sent"
+  },
+  "twilio": {
+    "status": "authentication_passed",
+    "senderUsesInternationalFormat": true,
+    "configuredSenderFoundOnInspectedPage": false,
+    "configuredSenderSmsCapable": false,
+    "additionalPages": false,
+    "delivery": "Not tested; no SMS sent"
+  }
+}

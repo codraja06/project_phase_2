@@ -5,6 +5,9 @@ export interface IDepartmentRule extends Document {
   department: string;
   enabled: boolean;
   updatedBy: mongoose.Types.ObjectId;
+  municipality?: string;
+  verificationStatus?: 'proposed' | 'verified';
+  sourceNote?: string;
 }
 
 const schema = new Schema<IDepartmentRule>({
@@ -12,6 +15,9 @@ const schema = new Schema<IDepartmentRule>({
   department: { type: String, required: true, trim: true },
   enabled: { type: Boolean, default: true },
   updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  municipality: { type: String, trim: true, maxlength: 160, default: '' },
+  verificationStatus: { type: String, enum: ['proposed', 'verified'], default: 'proposed' },
+  sourceNote: { type: String, trim: true, maxlength: 500, default: '' },
 }, { timestamps: true });
 
 export const DepartmentRule = mongoose.model<IDepartmentRule>('DepartmentRule', schema);

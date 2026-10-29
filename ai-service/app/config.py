@@ -1,5 +1,5 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     AI_PORT: int = int(os.getenv("AI_PORT", "8000"))
@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     CONF_THRESHOLD: float = float(os.getenv("CONF_THRESHOLD", "0.25"))
     MODEL_REGISTRY_PATH: str = os.getenv("MODEL_REGISTRY_PATH", "models/registry.json")
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=os.path.join(os.path.dirname(__file__), '..', '.env'), extra='ignore')
 
 settings = Settings()

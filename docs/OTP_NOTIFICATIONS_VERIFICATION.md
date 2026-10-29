@@ -1,22 +1,22 @@
 # OTP and resolution-notification verification — 18 October 2026
 
 Implementation and automated/local integration checks completed in the existing
-project. Real SMTP/Twilio delivery has **not** been validated. No real email or SMS
-was sent during these checks. The supplied example settings are not working sender
-credentials; exposed credentials must be replaced before any real test.
+project. Real SMTP/Twilio delivery was not exercised by the automated checks below.
+No real email or SMS was sent during these checks. Email previews use synthetic
+codes and do not contain account or provider credentials.
 
 ## Actual results
 
 | Check | Result |
 | --- | --- |
 | Backend TypeScript build | Passed |
-| Backend Jest + isolated MongoDB | **88 tests passed, 13 suites** after the development-OTP/retry fix |
+| Backend Jest + isolated MongoDB | **96 tests passed, 14 suites** including delivery availability, the development-OTP/retry fix and verification email content |
 | Mobile TypeScript | Passed |
 | Expo Android and web export | Both passed; this is build evidence, not a physical-device test |
 | Existing AI pytest suite | **23 passed**; two existing dependency deprecation warnings |
 | Browser regression suite | 108 auth-layout checks, 27 dashboard layouts, 351 route/width checks; no overflow/runtime failures |
 | Existing browser interaction flows | Six groups passed: profile, password, server preferences, reporting, authority updates and map navigation |
-| New OTP/notification browser API-fixture suite | Ten groups, six viewport sizes, two accessibility scans; passed, including completion retry and ignoring an old development-code payload |
+| New OTP/notification browser API-fixture suite | Twelve groups, six viewport sizes, two accessibility scans; passed, including disabling unavailable OTP requests, completion retry, existing-email sign-in navigation and ignoring an old development-code payload |
 | New browser → real Express → MongoDB flow, mocked external senders | Five groups passed, including actual account creation, JWT dashboard, persisted SMS consent, idempotent resolution, delivery states and read/details navigation |
 | Existing real local operations flow | Eight groups, 32 width checks, eight accessibility scans; passed, including live WebSocket resolution updates without reload |
 | Existing real local AI/report flow | Eight groups passed, including four-model inference, signed evidence, final editable description, manual fallback, priority and explicit authority status control |
@@ -107,9 +107,46 @@ and reports. Keep provider variables empty during regression runs.
 - Existing actual AI/report flow: `mobile/tests/artifacts/phase2-live-results.json`
 - Latest OTP fix browser fixtures: `mobile/tests/artifacts/otp/1792297118670/results.json`
 - Latest actual API/MongoDB OTP fix flow: `mobile/tests/artifacts/otp-live/1792297215472/results.json`
+- Current signup-availability fixtures: `mobile/tests/artifacts/otp/1792297827725/results.json`
+- Current actual API/MongoDB signup-availability flow: `mobile/tests/artifacts/otp-live/1792297843239/results.json`
+- Actual running app signup status screenshot: `mobile/tests/artifacts/signup-provider-status-fixed.png`
+- Existing-email sign-in action fixtures: `mobile/tests/artifacts/otp/1792299487944/results.json`
+- Actual API/MongoDB flow after the sign-in action change: `mobile/tests/artifacts/otp-live/1792299504248/results.json`
 
 The screenshots of the OTP screen were captured with empty inputs. Real codes,
 passwords, auth tokens and provider secrets are not recorded in these artifacts.
+
+## Verification email and OTP screen polish (2026-10-18)
+
+The email HTML now lives in `backend/src/services/verificationEmailTemplate.ts`.
+It renders the actual issued code and configured expiry, with a plain-text alternative,
+responsive table layout, no remote assets and optional dark-mode styles. The existing
+signup controller uses this template for both initial requests and resends.
+The Expo verification screen retains the existing APIs while adding a prominent
+numeric input, focus state, expiry timer, grouped status panels and simpler actions.
+
+Checks completed after these changes:
+
+- Backend TypeScript build and 96 tests across 14 suites passed.
+- Mobile TypeScript check and Android/web bundle export passed.
+- OTP browser regression passed all 12 groups at six viewport sizes, including
+  320×568; both WCAG A/AA automated scans reported zero violations.
+- The actual Expo → Express → isolated MongoDB flow passed all five groups;
+  external email/SMS senders were mocked in the test process.
+- Synthetic email previews passed at 320px and 600px in light and dark browser modes,
+  with no horizontal overflow and a contiguous, copyable six-digit code.
+
+Evidence:
+
+- `mobile/tests/artifacts/otp/1792300083388/results.json`
+- `mobile/tests/artifacts/otp-live/1792300085230/results.json`
+- `mobile/tests/artifacts/verification-email/1792300145813/results.json`
+- Email preview HTML and light/dark screenshots are beside the last results file.
+
+No real email or SMS was sent by these tests. Browser-rendered email previews do
+not establish identical rendering in every Gmail/Outlook client. Physical-device
+keyboard/autofill behavior remains untested; Android bundling passed. Existing
+inbox messages retain their old appearance; newly requested codes use the new template.
 
 ## Remaining external setup and practical limits
 

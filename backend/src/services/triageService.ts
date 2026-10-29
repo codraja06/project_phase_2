@@ -83,5 +83,6 @@ export const calculatePriority = (complaint: {
 
 export const withPriority = (complaint: any, now = new Date()) => {
   const data = typeof complaint.toObject === 'function' ? complaint.toObject() : complaint;
-  return { ...data, severity: data.severity || unavailableSeverity(), ...calculatePriority(data, now) };
+  const { notificationOutbox: _outbox, notificationOutboxPending: _pending, ...visible } = data;
+  return { ...visible, severity: data.severity || unavailableSeverity(), ...calculatePriority(data, now) };
 };

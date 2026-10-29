@@ -1,6 +1,6 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
-import { createHmac } from 'crypto';
+import { createHmac, randomBytes, randomInt } from 'crypto';
 import app from '../src/app';
 import { env } from '../src/config/env';
 import { SignupChallenge, SignupThrottle } from '../src/models/SignupChallenge';
@@ -10,10 +10,11 @@ import * as delivery from '../src/services/contactDeliveryService';
 jest.setTimeout(30000);
 describe('OTP registration with actual API and isolated MongoDB, mocked delivery', () => {
   const emailCodes = new Map<string, string>(), smsCodes = new Map<string, string>();
-  const contacts: string[] = [], ids: string[] = []; let sequence = 0;
+  const contacts: string[] = [], phones: string[] = [], ids: string[] = []; let sequence = 0;
+  const runKey = randomBytes(4).toString('hex'), phonePrefix = randomInt(1000, 9999);
   const secret = env.OTP_HASH_SECRET || env.JWT_SECRET;
   const key = (s: string) => createHmac('sha256', secret).update(s).digest('hex');
-  const input = () => { sequence++; const email = `otp-${sequence}@signup-test.example`; contacts.push(email); return { name: 'OTP Citizen', email, phone: `+919001${String(sequence).padStart(6, '0')}`, password: 'Registration123!' }; };
+  const input = () => { sequence++; const email = `otp-${runKey}-${sequence}@signup-test.example`, phone = `+91${phonePrefix}${String(sequence).padStart(6, '0')}`; contacts.push(email); phones.push(phone); return { name: 'OTP Citizen', email, phone, password: 'Registration123!' }; };
   async function issue(data = input()) {
     const response = await request(app).post('/api/auth/signup/request-otp').send(data);
     expect(response.status).toBe(202); ids.push(response.body.data.challengeId);
@@ -33,7 +34,7 @@ describe('OTP registration with actual API and isolated MongoDB, mocked delivery
     await User.deleteMany({ email: { $in: contacts } });
     await SignupChallenge.deleteMany({ email: { $in: contacts } });
     await SignupThrottle.deleteMany({ _id: { $in: contacts.map(e => key(`email:${e}`)) } });
-    await SignupThrottle.deleteMany({ _id: { $in: Array.from(smsCodes.keys()).map(p => key(`phone:${p.replace(/\D/g, '')}`)) } });
+    await SignupThrottle.deleteMany({ _id: { $in: phones.map(p => key(`phone:${p.replace(/\D/g, '')}`)) } });
     await mongoose.disconnect();
   });
   it('registers only after a valid OTP, keeps hashes private, returns login token and preserves password sign-in', async () => {
@@ -55,6 +56,14 @@ describe('OTP registration with actual API and isolated MongoDB, mocked delivery
     expect((await request(app).get('/api/auth/me').set('Authorization', `Bearer ${result.body.data.token}`)).status).toBe(200);
     expect((await request(app).post('/api/auth/login').send({ email: data.email, password: data.password })).status).toBe(200);
     expect((await complete(id)).status).toBe(400);
+  });
+  it('exposes only safe delivery availability before sign-up, without sending or disclosing credentials', async () => {
+    let result = await request(app).get('/api/auth/signup/options');
+    expect(result.status).toBe(200); expect(result.body.data).toEqual({emailAvailable:true,smsAvailable:false,phoneVerificationRequired:false});
+    jest.mocked(delivery.emailConfigured).mockReturnValue(false); env.OTP_REQUIRE_PHONE = true;
+    result = await request(app).get('/api/auth/signup/options');
+    expect(result.body.data).toEqual({emailAvailable:false,smsAvailable:false,phoneVerificationRequired:true});
+    expect(delivery.sendEmail).not.toHaveBeenCalled(); expect(delivery.sendSms).not.toHaveBeenCalled();
   });
   it('rejects invalid codes and blocks all attempts after five guesses', async () => {
     const { data, id } = await issue(), correct = emailCodes.get(data.email)!;
@@ -100,10 +109,16 @@ describe('OTP registration with actual API and isolated MongoDB, mocked delivery
   it('does not reveal existing accounts on OTP request and prevents duplicate email or legacy formatted phone registration after verification', async () => {
     const data = input(); await User.create({ ...data, phone: data.phone.replace('+91', '+91 ') });
     const existing = await issue(data); expect((await verify(existing.id, emailCodes.get(data.email)!)).status).toBe(200);
-    expect((await complete(existing.id)).status).toBe(400);
+    const existingResult = await complete(existing.id);
+    expect(existingResult.status).toBe(400);
+    expect(existingResult.body.message).toContain('An account already exists with this email');
+    expect(existingResult.body.errors).toContainEqual({field:'email',code:'SIGN_IN_REQUIRED'});
     const other = input(); other.phone = data.phone;
     const duplicatePhone = await issue(other); await verify(duplicatePhone.id, emailCodes.get(other.email)!);
-    expect((await complete(duplicatePhone.id)).status).toBe(400);
+    const phoneResult = await complete(duplicatePhone.id);
+    expect(phoneResult.status).toBe(400);
+    expect(phoneResult.body.message).toContain('Registration cannot complete with these details');
+    expect(phoneResult.body.errors).not.toContainEqual({field:'email',code:'SIGN_IN_REQUIRED'});
     expect(await User.countDocuments({ email: data.email })).toBe(1);
   });
   it('rejects bypasses and malformed inputs without creating a user or disclosing hashes', async () => {
@@ -185,7 +200,7 @@ describe('OTP registration with actual API and isolated MongoDB, mocked delivery
   it('does not consume verification on duplicate details and serializes concurrent completion attempts', async () => {
     const duplicate = input(); await User.create(duplicate); const first = await issue(duplicate);
     await verify(first.id, emailCodes.get(duplicate.email)!);
-    for (let i = 0; i < 2; i++) expect((await complete(first.id)).body.message).toContain('Registration cannot complete with these details');
+    for (let i = 0; i < 2; i++) expect((await complete(first.id)).body.message).toContain('An account already exists with this email');
     expect((await SignupChallenge.findById(first.id))!.emailVerifiedAt).toBeTruthy();
     const { data, id } = await issue(); await verify(id, emailCodes.get(data.email)!);
     const results = await Promise.all([complete(id), complete(id)]);

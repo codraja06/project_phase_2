@@ -2,12 +2,21 @@ import { axiosClient } from './axiosClient';
 import { ENDPOINTS } from '../constants/endpoints';
 import { User } from '../types/auth';
 export interface SignupSession { challengeId: string; expiresAt: string; resendAvailableAt: string; smsStatus: 'sent' | 'failed' | 'not_configured'; phoneVerificationRequired: boolean; }
+export interface SignupOptions { emailAvailable: boolean; smsAvailable: boolean; phoneVerificationRequired: boolean }
 
 // NOTE: axiosClient interceptor returns response.data directly.
 // Backend envelope: { success: true, data: { user, token } }
 // So axiosClient returns the envelope object { success, data: { user, token } }
 
 export const authApi = {
+  async getSignupOptions(): Promise<SignupOptions> {
+    const envelope: any = await axiosClient.get('/auth/signup/options');
+    const data = envelope?.data;
+    if (!data || ['emailAvailable', 'smsAvailable', 'phoneVerificationRequired'].some(key => typeof data[key] !== 'boolean')) {
+      throw new Error('Verification availability could not be checked. Please retry.');
+    }
+    return data;
+  },
   async register(data: any): Promise<{ user: User; token: string }> {
     const envelope: any = await axiosClient.post('/auth/signup/complete', data);
     return envelope.data; // { user, token }
@@ -68,7 +77,8 @@ export const authApi = {
     return envelope.data;
   },
 
-  async changePassword(data: any): Promise<void> {
-    await axiosClient.put(ENDPOINTS.AUTH.CHANGE_PASSWORD, data);
+  async changePassword(data: any): Promise<{ user: User; token: string } | undefined> {
+    const envelope: any = await axiosClient.put(ENDPOINTS.AUTH.CHANGE_PASSWORD, data);
+    return envelope?.data?.token ? envelope.data : undefined;
   },
 };

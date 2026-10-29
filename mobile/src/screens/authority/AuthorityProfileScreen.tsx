@@ -39,7 +39,7 @@ import { DepartmentMappingManager } from '../../components/DepartmentMappingMana
 export const AuthorityProfileScreen = ({ navigation }: any) => {
   const { toggleMenu } = useMobileMenu();
   const { isWide: isDesktop } = useBreakpoint();
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, updateSession } = useAuth();
 
   const { complaints, loading: statsLoading, error: statsError, refresh: refreshStats } = useComplaintSummary('officer');
   const count = (status?: string) => statsLoading || statsError ? '—' : String(status ? complaints.filter(c => c.status === status).length : complaints.length);
@@ -82,7 +82,8 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
     }
     try {
       setUpdatingPassword(true);
-      await authApi.changePassword({ oldPassword, newPassword });
+      const session = await authApi.changePassword({ oldPassword, newPassword });
+      if (session) await updateSession(session);
       setOldPassword('');
       setNewPassword('');
       setChangePasswordVisible(false);

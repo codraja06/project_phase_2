@@ -28,8 +28,8 @@ export const reportIssueSchema = z.object({
   description: z.string().min(5, 'Detailed description must be at least 5 characters'),
   category: z.enum(['pothole', 'road_damage', 'garbage', 'drainage', 'broken_streetlight']),
   imageUrl: z.string().min(1, 'An issue image must be captured or uploaded'),
-  latitude: z.number({ required_error: 'GPS latitude coordinate is required' }),
-  longitude: z.number({ required_error: 'GPS longitude coordinate is required' }),
+  latitude: z.number({ error: 'GPS latitude coordinate is required' }).min(-90).max(90),
+  longitude: z.number({ error: 'GPS longitude coordinate is required' }).min(-180).max(180),
   address: z.string().min(1, 'Address is required'),
 });
 

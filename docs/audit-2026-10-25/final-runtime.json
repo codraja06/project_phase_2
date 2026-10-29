@@ -1,0 +1,88 @@
+{
+  "phase": "final",
+  "checks": [
+    {
+      "name": "Untrusted AI evidence without signed analysis",
+      "requestStatus": 201,
+      "passed": true,
+      "observed": "Untrusted fields rejected or discarded"
+    },
+    {
+      "name": "Logout token replay",
+      "logoutStatus": 200,
+      "replayStatus": 401,
+      "passed": true,
+      "observed": "Old token rejected"
+    }
+  ],
+  "models": {
+    "available": true,
+    "models": [
+      {
+        "id": "pothole",
+        "state": "ready",
+        "reason": "Weights loaded; accuracy is not validated here.",
+        "categories": [
+          "pothole"
+        ],
+        "version": "sha256:47fa325eb9ff5658",
+        "unsupportedCategories": []
+      },
+      {
+        "id": "road_damage",
+        "state": "ready",
+        "reason": "Weights loaded; accuracy is not validated here.",
+        "categories": [
+          "pothole"
+        ],
+        "version": "sha256:3b99fcfc47e284ca",
+        "unsupportedCategories": [
+          "road_damage"
+        ]
+      },
+      {
+        "id": "garbage_overflow",
+        "state": "ready",
+        "reason": "Weights loaded; accuracy is not validated here.",
+        "categories": [
+          "garbage",
+          "garbage_overflow"
+        ],
+        "version": "sha256:9248868c58ec16cc",
+        "unsupportedCategories": []
+      },
+      {
+        "id": "dead_animal_broken_tree",
+        "state": "ready",
+        "reason": "Weights loaded; accuracy is not validated here.",
+        "categories": [
+          "broken_tree",
+          "dead_animal",
+          "garbage_overflow"
+        ],
+        "version": "sha256:7c1879aec69b40f1",
+        "unsupportedCategories": []
+      },
+      {
+        "id": "streetlight",
+        "state": "unavailable",
+        "reason": "Trained weights are not configured.",
+        "categories": [
+          "broken_streetlight"
+        ],
+        "version": null
+      },
+      {
+        "id": "water_leakage",
+        "state": "unavailable",
+        "reason": "Trained weights are not configured.",
+        "categories": [
+          "water_leakage",
+          "drainage",
+          "drainage_problem"
+        ],
+        "version": null
+      }
+    ]
+  }
+}

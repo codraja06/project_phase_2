@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Actual registry and category-specific pothole/garbage inference; incompatible or missing road/streetlight/water models return explicit 503",
+    "Real YOLO bounding-box geometry remains aligned within 2px at all eight requested widths",
+    "Real uploaded image -> Express -> FastAPI -> four YOLO models -> severity and grounded draft",
+    "Citizen edits draft, reviews at 320px, submits; signed evidence and approved text persist in MongoDB",
+    "Real non-civic image -> empty AI draft and unknown severity -> manual description and category -> successful submission",
+    "Older low-severity unresolved report escalates to High Priority through the actual API",
+    "Authority dashboard/list/details show real severity, priority and approved text; real priority filtering/sorting; 320/768/1440px layouts",
+    "Only explicit authority status updates resolve a complaint; resolved priority becomes zero"
+  ],
+  "errors": []
+}

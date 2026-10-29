@@ -1,0 +1,147 @@
+
+> civic-complaint-backend@1.0.0 test
+> jest --runInBand --detectOpenHandles --json --outputFile=../docs/partial-fixes-2026-10-25/backend-tests.json
+
+PASS tests/partialCompletion.test.ts (7.599 s)
+  ● Console
+
+    console.error
+      Complaint update saved; durable notification intent awaits retry.
+
+      37 | export async function attemptNotificationFlush(complaintId: unknown) {
+      38 |   try { await flushComplaintNotifications(complaintId); }
+    > 39 |   catch { console.error('Complaint update saved; durable notification intent awaits retry.'); }
+         |                   ^
+      40 | }
+      41 |
+      42 | export async function runNotificationOutboxPass(limit = 20) {
+
+      at attemptNotificationFlush (src/services/notificationOutboxService.ts:39:19)
+      at createComplaint (src/controllers/complaintController.ts:71:5)
+
+    console.error
+      Complaint update saved; durable notification intent awaits retry.
+
+      37 | export async function attemptNotificationFlush(complaintId: unknown) {
+      38 |   try { await flushComplaintNotifications(complaintId); }
+    > 39 |   catch { console.error('Complaint update saved; durable notification intent awaits retry.'); }
+         |                   ^
+      40 | }
+      41 |
+      42 | export async function runNotificationOutboxPass(limit = 20) {
+
+      at attemptNotificationFlush (src/services/notificationOutboxService.ts:39:19)
+      at updateComplaintStatus (src/controllers/authorityController.ts:175:12)
+
+    console.error
+      Complaint update saved; durable notification intent awaits retry.
+
+      37 | export async function attemptNotificationFlush(complaintId: unknown) {
+      38 |   try { await flushComplaintNotifications(complaintId); }
+    > 39 |   catch { console.error('Complaint update saved; durable notification intent awaits retry.'); }
+         |                   ^
+      40 | }
+      41 |
+      42 | export async function runNotificationOutboxPass(limit = 20) {
+
+      at attemptNotificationFlush (src/services/notificationOutboxService.ts:39:19)
+      at assignDepartment (src/controllers/managementController.ts:115:5)
+
+PASS tests/signupVerification.test.ts
+PASS tests/resolutionDelivery.test.ts
+  ● Console
+
+    console.error
+      Resolution notice is pending; the worker will retry persistence.
+
+      172 |     if (targetStatus === 'Resolved') {
+      173 |       try { await queueResolutionNotifications(updated); }
+    > 174 |       catch { console.error('Resolution notice is pending; the worker will retry persistence.'); }
+          |                       ^
+      175 |     } else await attemptNotificationFlush(updated._id);
+      176 |     res.status(200).json(new ApiResponse('Complaint status updated successfully', withPriority(updated)));
+      177 |   } catch (error) {
+
+      at updateComplaintStatus (src/controllers/authorityController.ts:174:23)
+
+PASS tests/audit20261025.test.ts
+PASS tests/features7to12.test.ts
+PASS tests/authority.test.ts
+PASS tests/features456.test.ts
+PASS tests/masterUpgrade.test.ts
+PASS tests/phase2.test.ts
+PASS tests/auth.test.ts
+PASS tests/googleAuth.test.ts
+PASS tests/complaint.test.ts
+PASS tests/security.test.ts
+PASS tests/contactDelivery.test.ts
+PASS tests/productionUpload.test.ts
+  ● Console
+
+    console.error
+      Cloudinary upload error: ApiError: Image storage is not configured.
+          at uploadToCloudinary (D:\project phase 2\project1\backend\src\services\cloudinaryService.ts:24:13)
+          at Object.<anonymous> (D:\project phase 2\project1\backend\tests\productionUpload.test.ts:39:36)
+          at Promise.then.completed (D:\project phase 2\project1\backend\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\project phase 2\project1\backend\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:316:40)
+          at _runTest (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\project phase 2\project1\backend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\project phase 2\project1\backend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\project phase 2\project1\backend\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\project phase 2\project1\backend\node_modules\jest-runner\build\runTest.js:444:34) {
+        safeToExpose: false,
+        statusCode: 503,
+        errors: []
+      }
+
+      32 |     if (env.NODE_ENV === 'production') {
+      33 |       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    > 34 |       console.error('Cloudinary upload error:', error);
+         |               ^
+      35 |       throw new ApiError(503, 'Image storage is temporarily unavailable. Please try again.');
+      36 |     }
+      37 |     console.error('Cloudinary upload error, falling back to local storage URL:', error);
+
+      at uploadToCloudinary (src/services/cloudinaryService.ts:34:15)
+      at Object.<anonymous> (tests/productionUpload.test.ts:39:36)
+
+    console.error
+      Cloudinary upload error: Error: unavailable
+          at Object.<anonymous> (D:\project phase 2\project1\backend\tests\productionUpload.test.ts:48:69)
+          at Promise.then.completed (D:\project phase 2\project1\backend\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\project phase 2\project1\backend\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:316:40)
+          at _runTest (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\project phase 2\project1\backend\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\project phase 2\project1\backend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\project phase 2\project1\backend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\project phase 2\project1\backend\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\project phase 2\project1\backend\node_modules\jest-runner\build\runTest.js:444:34)
+
+      32 |     if (env.NODE_ENV === 'production') {
+      33 |       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    > 34 |       console.error('Cloudinary upload error:', error);
+         |               ^
+      35 |       throw new ApiError(503, 'Image storage is temporarily unavailable. Please try again.');
+      36 |     }
+      37 |     console.error('Cloudinary upload error, falling back to local storage URL:', error);
+
+      at uploadToCloudinary (src/services/cloudinaryService.ts:34:15)
+      at Object.<anonymous> (tests/productionUpload.test.ts:51:5)
+
+PASS tests/verificationEmailTemplate.test.ts
+
+Test Suites: 16 passed, 16 total
+Tests:       112 passed, 112 total
+Snapshots:   0 total
+Time:        25.534 s
+Ran all test suites.
+Test results written to: ..\docs\partial-fixes-2026-10-25\backend-tests.json

@@ -6,7 +6,7 @@ import { ApiResponse } from '../utils/apiResponse';
 import { createComplaintSchema } from '../validators/complaintValidator';
 import { calculatePriority, readEvidence, unavailableSeverity, withPriority } from '../services/triageService';
 import { DepartmentRule } from '../models/DepartmentRule';
-import { notifyAuthorities, notifyUser } from '../services/notificationService';
+import { appendNotificationIntent, attemptNotificationFlush, notificationIntent } from '../services/notificationOutboxService';
 
 export const createComplaint = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -33,12 +33,18 @@ export const createComplaint = async (req: AuthRequest, res: Response, next: Nex
       input.aiDetected = input.boundingBoxes.length > 0;
       input.aiClass = input.boundingBoxes[0]?.category || '';
       input.aiConfidence = input.boundingBoxes[0]?.confidence || 0;
+    } else {
+      // Manual observations are valid reports, but client fields are not AI evidence.
+      input.aiDetected = false;
+      input.aiClass = '';
+      input.aiConfidence = 0;
+      input.boundingBoxes = [];
     }
 
     // Manual category selection is explicit citizen input; uncertain or mismatched AI labels need human routing.
     const routingEligible = input.category !== 'other' && (!analysisToken || input.boundingBoxes.some(box => box.category === input.category && box.confidence >= .6));
     const rule = routingEligible ? await DepartmentRule.findOne({ category: input.category.toLowerCase(), enabled: true }).lean() : null;
-    const complaint = await Complaint.create({
+    const complaint = new Complaint({
       ...input,
       severity,
       generatedDescription,
@@ -47,18 +53,22 @@ export const createComplaint = async (req: AuthRequest, res: Response, next: Nex
       createdBy: req.user._id,
       status: 'Pending',
       assignedDepartment: rule?.department || '',
+      assignedDepartmentInfo: rule ? { municipality: rule.municipality || '', verificationStatus: rule.verificationStatus || 'proposed' } : null,
       assignedAt: rule ? new Date() : null,
       auditHistory: rule ? [{ action: 'department-assigned', at: new Date(), after: rule.department, reason: 'Configured category routing rule.' }] : [],
       statusHistory: [{ status: 'Pending', at: new Date(), by: req.user._id }],
     });
 
-    await notifyUser(req.user._id, { complaintId: complaint._id, eventKey: `${complaint._id}:received`,
-      title: 'Complaint received', message: `${complaint.complaintId} was received and awaits authority review.` });
-    if (rule) await notifyUser(req.user._id, { complaintId: complaint._id, eventKey: `${complaint._id}:department:initial`,
-      title: 'Department assigned', message: `${rule.department} is assigned to ${complaint.complaintId}.` });
-    await notifyAuthorities({ complaintId: complaint._id, eventKey: `${complaint._id}:new`,
-      title: complaint.priority === 'high' ? 'High-priority complaint received' : 'New complaint received',
-      message: `${complaint.complaintId} needs review.` });
+    await complaint.validate();
+    appendNotificationIntent(complaint, notificationIntent(`${complaint._id}:received`, 'Complaint received',
+      `${complaint.complaintId} was received and awaits authority review.`));
+    if (rule) appendNotificationIntent(complaint, notificationIntent(`${complaint._id}:department:initial`,
+      'Department assigned', `${rule.department} is assigned to ${complaint.complaintId}.${rule.verificationStatus !== 'verified' ? ' This uses a provisional local routing rule.' : ''}`));
+    appendNotificationIntent(complaint, notificationIntent(`${complaint._id}:new`,
+      complaint.priority === 'high' ? 'High-priority complaint received' : 'New complaint received',
+      `${complaint.complaintId} needs review.`, 'authorities'));
+    await complaint.save();
+    await attemptNotificationFlush(complaint._id);
 
     res.status(201).json(new ApiResponse('Complaint created successfully', withPriority(complaint)));
   } catch (error) {

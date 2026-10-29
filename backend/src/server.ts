@@ -9,12 +9,15 @@ import { Complaint } from './models/Complaint';
 import { Notification } from './models/Notification';
 import { SignupChallenge, SignupThrottle } from './models/SignupChallenge';
 import { NotificationDelivery } from './models/NotificationDelivery';
+import { RevokedToken } from './models/RevokedToken';
+import { RateLimitBucket } from './models/RateLimitBucket';
+import { DepartmentRule } from './models/DepartmentRule';
 import { emailConfigured, smsConfigured } from './services/contactDeliveryService';
 
 const startServer = async () => {
   await connectDB();
   // Let declared unique/TTL indexes finish before accepting registration or delivery work.
-  await Promise.all([User.init(), Complaint.init(), Notification.init(), SignupChallenge.init(), SignupThrottle.init(), NotificationDelivery.init()]);
+  await Promise.all([User.init(), Complaint.init(), Notification.init(), SignupChallenge.init(), SignupThrottle.init(), NotificationDelivery.init(), RevokedToken.init(), RateLimitBucket.init(), DepartmentRule.init()]);
   if (!emailConfigured()) console.warn('Email OTP unavailable: configure real SMTP settings in backend/.env. Development codes are never issued.');
   if (!smsConfigured()) console.warn('SMS OTP unavailable: configure Twilio credentials and an authorized sender in international format in backend/.env.');
 

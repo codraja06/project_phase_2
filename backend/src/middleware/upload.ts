@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { ApiError } from '../utils/apiError';
 import { Request, Response, NextFunction } from 'express';
+import sharp from 'sharp';
 
 // Ensure uploads directory exists for local fallback
 const uploadDir = path.join(__dirname, '../../uploads');
@@ -35,7 +36,8 @@ export const upload = multer({
   fileFilter,
 });
 
-export const validateImageContent = (req: Request, _res: Response, next: NextFunction) => {
+export const validateImageContent = async (req: Request, _res: Response, next: NextFunction) => {
+  try {
   if (!req.file) return next(new ApiError(400, 'An image is required.'));
   const file = req.file;
   const fd = fs.openSync(file.path, 'r');
@@ -48,5 +50,16 @@ export const validateImageContent = (req: Request, _res: Response, next: NextFun
     fs.unlinkSync(file.path);
     return next(new ApiError(400, 'The file content is not a supported image.'));
   }
+  try {
+    const image = sharp(file.path, { limitInputPixels: 24_000_000, failOn: 'warning' });
+    const info = await image.metadata();
+    const expected = ({ 'image/jpeg': 'jpeg', 'image/png': 'png', 'image/webp': 'webp' } as Record<string, string>)[file.mimetype];
+    if (info.format !== expected || !info.width || !info.height || (info.pages || 1) > 1) throw new Error('Unsupported image');
+    await image.stats(); // Decode locally even when the optional Python service is offline.
+  } catch {
+    if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+    return next(new ApiError(400, 'Choose a valid JPEG, PNG or WebP image up to 24 megapixels.'));
+  }
   next();
+  } catch (error) { next(error); }
 };

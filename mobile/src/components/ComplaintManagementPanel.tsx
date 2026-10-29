@@ -6,6 +6,7 @@ import { selectImage } from '../services/imageSelection';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { COLORS } from '../theme/colors';
 import { Button } from './ui/Button';
+import { useAuth } from '../hooks/useAuth';
 
 const section = { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.borderLight, borderTopWidth: 3, borderTopColor: COLORS.secondarySurface, borderRadius: 12, padding: 18, gap: 12 } as const;
 const field = { minHeight: 44, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 10, color: COLORS.textPrimary } as const;
@@ -13,6 +14,7 @@ const heading = { fontSize: 17, fontWeight: '700' as const, color: COLORS.textPr
 const body = { color: COLORS.textSecondary, lineHeight: 20 };
 
 export const ComplaintManagementPanel = ({ complaint, onChange }: { complaint: Complaint; onChange: (next: Complaint) => void }) => {
+  const { user } = useAuth();
   const { isWide } = useBreakpoint();
   const [triageReason, setTriageReason] = useState('');
   const [department, setDepartment] = useState(complaint.assignedDepartment || '');
@@ -58,10 +60,11 @@ export const ComplaintManagementPanel = ({ complaint, onChange }: { complaint: C
     <View style={section}>
       <Text style={heading}>Department assignment</Text>
       <Text style={body}>Current: {complaint.assignedDepartment || 'Unassigned. An administrator can configure category mappings.'}</Text>
-      <Text style={body}>Assign or reassign internally. This does not change complaint status.</Text>
+      {complaint.assignedDepartmentInfo?.verificationStatus === 'proposed' && <Text style={body}>Provisional mapping for {complaint.assignedDepartmentInfo.municipality || 'the configured municipality'}; official structure not verified.</Text>}
+      {user?.isAdmin ? <><Text style={body}>Assign or reassign internally. This does not change complaint status.</Text>
       <TextInput accessibilityLabel="Department name" style={field} value={department} onChangeText={setDepartment} placeholder="Department name" />
       <TextInput accessibilityLabel="Assignment reason" style={field} value={reason} onChangeText={setReason} placeholder="Reason for assignment" />
-      <Button title="Save assignment" disabled={working || department.trim().length < 2 || reason.trim().length < 5} onPress={() => run(() => managementApi.assignDepartment(complaint._id, department.trim(), reason.trim()), 'Assignment saved.')} />
+      <Button title="Save assignment" disabled={working || department.trim().length < 2 || reason.trim().length < 5} onPress={() => run(() => managementApi.assignDepartment(complaint._id, department.trim(), reason.trim()), 'Assignment saved.')} /></> : <Text style={body}>Only administrators can change the assigned department.</Text>}
     </View>
     <View style={section}>
       <Text style={heading}>Related reports</Text>

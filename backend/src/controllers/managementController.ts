@@ -11,7 +11,7 @@ import { Complaint } from '../models/Complaint';
 import { DepartmentRule } from '../models/DepartmentRule';
 import { Notification } from '../models/Notification';
 import { possibleDuplicates } from '../services/duplicateService';
-import { notifyUser } from '../services/notificationService';
+import { appendNotificationIntent, attemptNotificationFlush, notificationIntent } from '../services/notificationOutboxService';
 import { uploadToCloudinary } from '../services/cloudinaryService';
 import { withPriority, priorityScoreExpression, readEvidence, calculatePriority } from '../services/triageService';
 import { analyticsQuery, analyticsFilter } from '../services/analyticsService';
@@ -50,11 +50,11 @@ export const confirmDuplicate = async (req: AuthRequest, res: Response, next: Ne
     if (complaint.createdAt < original.createdAt) throw new ApiError(400, 'Original complaint must predate the duplicate.');
     const note = z.string().trim().min(10).max(500).parse(req.body.reason);
     const updated = await Complaint.findOneAndUpdate({ _id: complaintId, duplicateOf: null }, { $set: {
-      duplicateOf: original._id, duplicateConfirmedAt: new Date(), duplicateConfirmedBy: req.user!._id, duplicateReason: note,
-    } }, { new: true, runValidators: true });
+      duplicateOf: original._id, duplicateConfirmedAt: new Date(), duplicateConfirmedBy: req.user!._id, duplicateReason: note, notificationOutboxPending: true,
+    }, $push: { notificationOutbox: notificationIntent(`${complaintId}:duplicate-confirmed`, 'Related complaint confirmed',
+      `Your report is linked to ${original.complaintId}. Authority note: ${note}`) } }, { new: true, runValidators: true });
     if (!updated) throw new ApiError(409, 'Complaint changed. Refresh and retry.');
-    await notifyUser(updated.createdBy, { complaintId: updated._id, eventKey: `${updated._id}:duplicate-confirmed`, title: 'Related complaint confirmed',
-      message: `Your report is linked to ${original.complaintId}. Authority note: ${note}` });
+    await attemptNotificationFlush(updated._id);
     res.json(new ApiResponse('Duplicate relationship confirmed', withPriority(updated)));
   } catch (e) { next(e); }
 };
@@ -85,26 +85,35 @@ export const upsertDepartmentRule = async (req: AuthRequest, res: Response, next
   try {
     if (!req.user?.isAdmin) throw new ApiError(403, 'Administrator access required for department mappings.');
     const key = category.parse(req.params.category);
-    const input = z.object({ department, enabled: z.boolean().default(true) }).parse(req.body);
-    const rule = await DepartmentRule.findOneAndUpdate({ category: key }, { $set: { ...input, updatedBy: req.user._id } }, { upsert: true, new: true, runValidators: true });
+    const input = z.object({ department, enabled: z.boolean().default(true),
+      municipality: z.string().trim().max(160).optional(), verificationStatus: z.enum(['proposed', 'verified']).optional(),
+      sourceNote: z.string().trim().max(500).optional() }).parse(req.body);
+    if (input.verificationStatus === 'verified' && (!input.sourceNote || input.sourceNote.length < 10)) throw new ApiError(400, 'Record the source used to verify the department mapping.');
+    const previous = await DepartmentRule.findOne({ category: key }).lean();
+    const verificationStatus = input.verificationStatus || (previous?.department === input.department ? previous.verificationStatus : 'proposed') || 'proposed';
+    const rule = await DepartmentRule.findOneAndUpdate({ category: key }, { $set: { ...input,
+      verificationStatus, updatedBy: req.user._id } }, { upsert: true, new: true, runValidators: true });
     res.json(new ApiResponse('Department mapping saved', rule));
   } catch (e) { next(e); }
 };
 
 export const assignDepartment = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    if (!req.user?.isAdmin) throw new ApiError(403, 'Administrator access required for department assignment.');
     const complaintId = id.parse(req.params.id);
     const name = department.parse(req.body.department);
     const reason = z.string().trim().min(5).max(300).parse(req.body.reason);
-    const complaint = await Complaint.findById(complaintId);
+    const complaint = await Complaint.findById(complaintId).select('+notificationOutbox');
     if (!complaint) throw new ApiError(404, 'Complaint not found');
     if (complaint.assignedDepartment === name) return res.json(new ApiResponse('Department already assigned', withPriority(complaint)));
     const before = complaint.assignedDepartment || 'Unassigned';
     complaint.assignedDepartment = name; complaint.assignedAt = new Date(); complaint.assignedBy = req.user!._id;
+    complaint.assignedDepartmentInfo = null;
     complaint.auditHistory = [...(complaint.auditHistory || []), { action: 'department-reassigned', at: complaint.assignedAt, by: req.user!._id, before, after: name, reason }];
+    appendNotificationIntent(complaint, notificationIntent(`${complaint._id}:department:${complaint.assignedAt.getTime()}`,
+      'Department assigned', `${name} is assigned to your report. Reason: ${reason}`));
     await complaint.save();
-    await notifyUser(complaint.createdBy, { complaintId: complaint._id, eventKey: `${complaint._id}:department:${complaint.assignedAt.getTime()}`,
-      title: 'Department assigned', message: `${name} is assigned to your report. Reason: ${reason}` });
+    await attemptNotificationFlush(complaint._id);
     res.json(new ApiResponse('Department reassigned', withPriority(complaint)));
   } catch (e) { next(e); }
 };
@@ -112,7 +121,7 @@ export const assignDepartment = async (req: AuthRequest, res: Response, next: Ne
 export const submitCompletion = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const complaintId = id.parse(req.params.id);
-    const complaint = await Complaint.findById(complaintId);
+    const complaint = await Complaint.findById(complaintId).select('+notificationOutbox');
     if (!complaint) throw new ApiError(404, 'Complaint not found');
     if (complaint.status !== 'In Progress') throw new ApiError(400, 'Repair evidence requires an in-progress complaint.');
     if (!req.file) throw new ApiError(400, 'Completion image required.');
@@ -120,9 +129,10 @@ export const submitCompletion = async (req: AuthRequest, res: Response, next: Ne
     complaint.auditHistory = [...(complaint.auditHistory || []), { action: 'repair-evidence-submitted', at: new Date(), by: req.user!._id, before: complaint.completionImageUrl || '', after: url, reason: 'Completion photo submitted for human review.' }];
     complaint.completionImageUrl = url; complaint.completionSubmittedAt = new Date(); complaint.completionSubmittedBy = req.user!._id;
     complaint.completionReview = 'pending'; complaint.completionReviewedAt = null; complaint.completionReviewedBy = null; complaint.completionReviewNote = '';
+    appendNotificationIntent(complaint, notificationIntent(`${complaint._id}:completion:${complaint.completionSubmittedAt.getTime()}`,
+      'Repair evidence submitted', 'An officer submitted a completion photo. It awaits authority review.'));
     await complaint.save();
-    await notifyUser(complaint.createdBy, { complaintId: complaint._id, eventKey: `${complaint._id}:completion:${complaint.completionSubmittedAt.getTime()}`,
-      title: 'Repair evidence submitted', message: 'An officer submitted a completion photo. It awaits authority review.' });
+    await attemptNotificationFlush(complaint._id);
     res.json(new ApiResponse('Repair evidence submitted for review', withPriority(complaint)));
   } catch (e) { next(e); }
 };
@@ -132,16 +142,17 @@ export const reviewCompletion = async (req: AuthRequest, res: Response, next: Ne
     const complaintId = id.parse(req.params.id);
     const input = z.object({ decision: z.enum(['accepted', 'rejected']), note: z.string().trim().max(500).default('') }).parse(req.body);
     if (input.decision === 'rejected' && input.note.length < 10) throw new ApiError(400, 'Explain why the evidence is insufficient.');
-    const complaint = await Complaint.findById(complaintId);
+    const complaint = await Complaint.findById(complaintId).select('+notificationOutbox');
     if (!complaint) throw new ApiError(404, 'Complaint not found');
     if (!complaint.completionImageUrl || complaint.completionReview !== 'pending') throw new ApiError(409, 'No pending repair evidence to review.');
     complaint.completionReview = input.decision; complaint.completionReviewNote = input.note;
     complaint.completionReviewedAt = new Date(); complaint.completionReviewedBy = req.user!._id;
     complaint.auditHistory = [...(complaint.auditHistory || []), { action: 'repair-evidence-reviewed', at: complaint.completionReviewedAt, by: req.user!._id, after: input.decision, reason: input.note || 'Authority accepted the submitted evidence.' }];
+    if (input.decision === 'rejected') appendNotificationIntent(complaint,
+      notificationIntent(`${complaint._id}:completion-rejected:${complaint.completionReviewedAt.getTime()}`,
+        'Repair evidence needs further work', input.note));
     await complaint.save();
-    if (input.decision === 'rejected') await notifyUser(complaint.createdBy, { complaintId: complaint._id,
-      eventKey: `${complaint._id}:completion-rejected:${complaint.completionReviewedAt.getTime()}`,
-      title: 'Repair evidence needs further work', message: input.note });
+    await attemptNotificationFlush(complaint._id);
     res.json(new ApiResponse('Repair evidence reviewed', withPriority(complaint)));
   } catch (e) { next(e); }
 };
@@ -193,7 +204,7 @@ export const markNotificationRead = async (req: AuthRequest, res: Response, next
     const notification = await Notification.findOneAndUpdate({ _id: notificationId, recipient: req.user!._id },
       { $set: { readAt: new Date() } }, { new: true });
     if (!notification) throw new ApiError(404, 'Notification not found');
-    publishNotificationChange(String(req.user!._id));
+    await publishNotificationChange(String(req.user!._id));
     res.json(new ApiResponse('Notification marked read', notification));
   } catch (e) { next(e); }
 };

@@ -6,11 +6,9 @@ import { User } from '../models/User';
 type Notice = { title: string; message: string; complaintId: mongoose.Types.ObjectId; eventKey: string; resolution?: { category: string; resolvedAt: Date } };
 
 export async function notifyUser(recipient: mongoose.Types.ObjectId, notice: Notice) {
-  try {
     const result = await Notification.updateOne({ recipient, eventKey: notice.eventKey },
       { $setOnInsert: { ...notice, recipient } }, { upsert: true });
-    if (result.upsertedCount) publishNotificationChange(String(recipient));
-  } catch { console.error('Notification write failed.'); }
+    if (result.upsertedCount) await publishNotificationChange(String(recipient));
 }
 
 export async function notifyAuthorities(notice: Notice) {

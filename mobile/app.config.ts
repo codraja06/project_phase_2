@@ -22,6 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     ...(config.plugins || []),
+    'expo-secure-store',
     ['expo-build-properties', {
       android: {
         // Only the local LAN preview profile needs HTTP. Other builds keep cleartext disabled.

@@ -2,13 +2,13 @@
 
 This microservice provides automated object detection for civic issue images using Ultralytics YOLOv8.
 
-## Supported Civic Issue Classes
+## Available civic issue classes
 
-- `0`: pothole
-- `1`: road_damage
-- `2`: garbage
-- `3`: drainage
-- `4`: broken_streetlight
+Class IDs belong to each trained model, not to a single application-wide numbered
+list. See [the actual model coverage](models/MODEL_CONFIGURATION.md). Current
+weights support pothole, garbage/overflow, dead animal and broken tree categories.
+The existing road-model file contains a pothole class only. Road damage, broken
+streetlight, water leakage and drainage require compatible trained weights.
 
 ## API Endpoints
 
@@ -23,7 +23,8 @@ This microservice provides automated object detection for civic issue images usi
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    pip install -r requirements.txt
    ```
-2. Place model weights at `ai-service/models/best.pt` or specify `MODEL_PATH` in environment.
+2. Configure independent weights through `models/registry.json` or the model path
+   variables in `ai-service/.env`. `MODEL_PATH` is only a legacy fallback.
 3. Run the microservice:
    ```bash
    uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -35,3 +36,14 @@ See [independent model configuration](models/MODEL_CONFIGURATION.md) and
 category routing, actual class compatibility, and availability limits. `MODEL_PATH`
 remains a legacy fallback. The existing `best_road.pt` exposes a pothole class;
 road-damage, streetlight, and water-leakage inference require compatible weights.
+
+The service reads `ai-service/.env` regardless of the working directory. Process
+environment variables override that file. An explicitly empty model path disables
+that model. Restart after changes, then run:
+
+```powershell
+.\venv\Scripts\python.exe -m app.model_readiness
+```
+
+The command loads actual weights and reports actual normalized classes; exit code
+2 means required coverage is missing. A loaded model is not an accuracy validation.

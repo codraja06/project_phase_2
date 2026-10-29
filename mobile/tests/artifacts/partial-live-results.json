@@ -1,0 +1,36 @@
+{
+  "checks": [
+    "Nine actual proposed Avadi mappings render at 320/375/768/1440px with no overflow or WCAG A/AA violations",
+    "Administrator edits stored routing through the real API while retaining provisional metadata",
+    "Actual browser password change stores replacement session, resumes after reload, authorizes a subsequent mutation and rejects an older token"
+  ],
+  "widths": [
+    {
+      "width": 320,
+      "scrollWidth": 320
+    },
+    {
+      "width": 375,
+      "scrollWidth": 375
+    },
+    {
+      "width": 768,
+      "scrollWidth": 768
+    },
+    {
+      "width": 1440,
+      "scrollWidth": 1440
+    }
+  ],
+  "accessibility": [
+    {
+      "width": 320,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "violations": []
+    }
+  ],
+  "errors": []
+}

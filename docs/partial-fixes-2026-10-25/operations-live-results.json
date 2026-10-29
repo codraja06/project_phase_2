@@ -1,0 +1,217 @@
+{
+  "checks": [
+    "Administrator saved an internal category-to-department rule in the real application",
+    "Citizen saw privacy-safe nearby warning, continued, and stored a real assigned complaint",
+    "Authority inspected hotspot record and confirmed a duplicate without deleting or resolving it",
+    "Officer severity correction, priority override and reset persisted with audit history",
+    "Citizen notification list received authority resolution live without reload or manual refresh",
+    "Repair photo required review and an explicit authority resolution confirmation",
+    "Stored citizen notification marked read and opened its own complaint",
+    "Real resolution analytics include the assigned department and completed report"
+  ],
+  "widthChecks": [
+    {
+      "screen": "Citizen duplicate review",
+      "width": 320,
+      "documentWidth": 320
+    },
+    {
+      "screen": "Citizen duplicate review",
+      "width": 375,
+      "documentWidth": 375
+    },
+    {
+      "screen": "Citizen duplicate review",
+      "width": 430,
+      "documentWidth": 430
+    },
+    {
+      "screen": "Citizen duplicate review",
+      "width": 768,
+      "documentWidth": 768
+    },
+    {
+      "screen": "Citizen duplicate review",
+      "width": 1024,
+      "documentWidth": 1024
+    },
+    {
+      "screen": "Citizen duplicate review",
+      "width": 1280,
+      "documentWidth": 1280
+    },
+    {
+      "screen": "Citizen duplicate review",
+      "width": 1440,
+      "documentWidth": 1440
+    },
+    {
+      "screen": "Citizen duplicate review",
+      "width": 1920,
+      "documentWidth": 1920
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 320,
+      "documentWidth": 320
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 375,
+      "documentWidth": 375
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 430,
+      "documentWidth": 430
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 768,
+      "documentWidth": 768
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 1024,
+      "documentWidth": 1024
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 1280,
+      "documentWidth": 1280
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 1440,
+      "documentWidth": 1440
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 1920,
+      "documentWidth": 1920
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 320,
+      "documentWidth": 320
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 375,
+      "documentWidth": 375
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 430,
+      "documentWidth": 430
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 768,
+      "documentWidth": 768
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 1024,
+      "documentWidth": 1024
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 1280,
+      "documentWidth": 1280
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 1440,
+      "documentWidth": 1440
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 1920,
+      "documentWidth": 1920
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 320,
+      "documentWidth": 320
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 375,
+      "documentWidth": 375
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 430,
+      "documentWidth": 430
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 768,
+      "documentWidth": 768
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 1024,
+      "documentWidth": 1024
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 1280,
+      "documentWidth": 1280
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 1440,
+      "documentWidth": 1440
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 1920,
+      "documentWidth": 1920
+    }
+  ],
+  "errors": [],
+  "accessibility": [
+    {
+      "screen": "Citizen duplicate review",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "Citizen duplicate review",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "Filtered hotspot map",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "Authority complaint management",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 320,
+      "violations": []
+    },
+    {
+      "screen": "Stored citizen notifications",
+      "width": 1440,
+      "violations": []
+    }
+  ]
+}

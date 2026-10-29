@@ -11,6 +11,20 @@ and [Features 4–6 verification](FEATURES456_VERIFICATION.md).
 
 For internet deployment, follow the [Render deployment procedure](RENDER_DEPLOYMENT.md). It covers the API, private AI service, MongoDB Atlas, Cloudinary, and a new Android APK.
 
+The [25 October implementation audit](docs/CIVICTRACK_PHASE2_AUDIT_2026-10-25.md)
+records all 18 feature statuses, real local execution, provider readiness, confirmed
+fixes and remaining deployment/model work. Logout now revokes the current token in
+MongoDB and closes its local live connection; raw bearer tokens are never stored in
+the revocation collection. Manual complaints retain citizen text but cannot supply
+trusted AI detection evidence without matching signed image analysis.
+
+The [partial-feature follow-up](docs/PHASE2_PARTIAL_COMPLETION_2026-10-25.md)
+records the subsequent fixes: editable provisional Avadi routing, authorization of
+the existing authority administrator, durable complaint notification recovery,
+cross-process live updates, shared MongoDB rate limits, password-session rotation
+and native secure token storage. Missing trained weights/provider configuration
+and remaining Expo dependency advisories are explicitly listed there.
+
 ---
 
 ## Architecture
@@ -171,6 +185,13 @@ TWILIO_AUTH_TOKEN=
 TWILIO_FROM=
 # Default true. Run at least one persistent Node process for background delivery.
 DELIVERY_WORKER_ENABLED=
+
+# Shared rate limits default to MongoDB outside tests. Use the same database/key
+# across API replicas. Memory is suitable only for isolated tests/local diagnosis.
+RATE_LIMIT_STORE=mongo
+# Production: comma-separated trusted web origins; no wildcard. Empty denies
+# browser origins in production. Native requests without Origin are supported.
+CORS_ORIGINS=
 ```
 
 ### 2. AI Service — `ai-service/.env` (create if not present)
@@ -288,6 +309,7 @@ See [`ai-service/training/README.md`](ai-service/training/README.md) for full tr
 ### Auth Endpoints
 ```
 POST   /api/auth/signup/request-otp  Request email OTP; optional configured SMS
+GET    /api/auth/signup/options      Check email/SMS configuration availability
 POST   /api/auth/signup/verify-otp   Verify email or phone independently
 POST   /api/auth/signup/resend-otp   Replace challenge subject to limits
 POST   /api/auth/signup/complete     Create citizen after required verification
@@ -596,6 +618,12 @@ models and external chat credentials produce explicit fallback states.
 
 ## OTP registration and resolution notifications
 
+Verification emails use CivicTrack's red-and-white layout with a large, copyable
+code, expiry notice, plain-text alternative and dark-mode styling for supporting
+email clients. The OTP screen has a larger numeric field with paste/autofill support,
+a live expiry timer, resend cooldown and separate verification/error messages.
+Newly requested codes use the new email design; emails already in an inbox do not change.
+
 Citizen sign-up now requires email verification before account creation. Codes last
 five minutes, allow at most five guesses, have a 60-second resend cooldown and a
 five-request contact limit per hour. The original sign-up page leads to a matching
@@ -646,3 +674,12 @@ code-display/logging fallback has been removed. Example strings such as `your_gm
 or `your_twilio_account_sid` cannot send messages and are rejected as configuration.
 `TWILIO_FROM` is the authorized sending number, while your receiving phone number
 belongs in the sign-up form. See the setup guide's troubleshooting section above.
+
+Sign-up now checks delivery availability before allowing an OTP request. It shows
+an unavailable message when a required provider is missing, and explicitly says
+when verification is email-only and no SMS will be sent. This check reveals no
+credentials and never generates or displays a code.
+
+After a successful Gmail OTP, an existing email leads to a clear sign-in action.
+Use the account's existing login method, or change registration details for a new
+email. Optional SMS failure does not block a new account's email verification.

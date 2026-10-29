@@ -14,6 +14,7 @@ async function mockApi(page, role='citizen', options={}) {
   let data=null; let status=200;
   if(p.endsWith('/auth/login')||p.endsWith('/auth/register')) data={user:account,token:'isolated-browser-fixture'};
   else if(p.endsWith('/auth/me')) data=account;
+  else if(p.endsWith('/auth/signup/options')) data={emailAvailable:true,smsAvailable:false,phoneVerificationRequired:false};
   else if(p.endsWith('/auth/profile')) data={...account,...r.request().postDataJSON()};
   else if(p.endsWith('/auth/notification-preferences')) {account.notificationPreferences=r.request().postDataJSON();data=account;}
   else if(p.endsWith('/auth/change-password')||p.endsWith('/auth/logout')) data=null;

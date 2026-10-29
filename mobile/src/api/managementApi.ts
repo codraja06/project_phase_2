@@ -8,7 +8,7 @@ export interface CivicNotification {
   deliveries?: { channel: 'email' | 'sms'; status: string; errorCode?: string; attempts: number }[];
 }
 export interface DuplicateMatch { id: string | null; complaintId: string | null; distanceMeters: number; status: string; disclosure: 'own' | 'nearby'; imageComparison?: 'similar' | 'unavailable'; similarity?: { hashDistance: number; colorSimilarity: number } | null }
-export interface DepartmentRule { category: string; department: string; enabled: boolean }
+export interface DepartmentRule { category: string; department: string; enabled: boolean; municipality?: string; verificationStatus?: 'proposed' | 'verified'; sourceNote?: string }
 export interface HotspotCluster { latitude: number; longitude: number; count: number; records: { _id: string; complaintId: string; title: string; status: string; category: string }[] }
 
 export const managementApi = {
@@ -27,8 +27,8 @@ export const managementApi = {
   async getDepartments(): Promise<DepartmentRule[]> {
     const envelope: any = await axiosClient.get('/management/departments'); return envelope.data;
   },
-  async saveDepartment(category: string, department: string, enabled = true): Promise<DepartmentRule> {
-    const envelope: any = await axiosClient.put(`/management/departments/${encodeURIComponent(category)}`, { department, enabled }); return envelope.data;
+  async saveDepartment(category: string, department: string, enabled = true, metadata: Partial<Pick<DepartmentRule, 'municipality' | 'verificationStatus' | 'sourceNote'>> = {}): Promise<DepartmentRule> {
+    const envelope: any = await axiosClient.put(`/management/departments/${encodeURIComponent(category)}`, { department, enabled, ...metadata }); return envelope.data;
   },
   async assignDepartment(id: string, department: string, reason: string): Promise<Complaint> {
     const envelope: any = await axiosClient.patch(`/management/complaints/${id}/department`, { department, reason }); return envelope.data;

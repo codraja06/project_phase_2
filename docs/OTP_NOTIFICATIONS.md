@@ -78,6 +78,14 @@ minutes; completed accounts remain protected by the existing unique indexes.
 
 ## Registration API and interface
 
+Before submission the sign-up screen calls `GET /api/auth/signup/options` for
+`emailAvailable`, `smsAvailable` and `phoneVerificationRequired`. These are safe
+configuration flags, not a guarantee that the provider will accept a message.
+If a required channel is unavailable, the screen explains that no code can be sent
+and disables the OTP request. Email-only registration explicitly says that no SMS
+will be sent. A retry control refreshes availability after a connection/setup issue.
+The backend still rechecks delivery and eligibility on every request.
+
 The original sign-up form sends name, email, phone and password to:
 
 ```text
@@ -129,7 +137,11 @@ atomic MongoDB operations. A consumed challenge cannot create another account.
 Prior challenges are invalidated before issuing a replacement.
 
 OTP requests do not disclose whether a contact has an account. Eligibility is
-checked only after required contact verification, with generic duplicate errors.
+checked only after required contact verification. A verified email's owner gets
+an explicit existing-account message and a primary sign-in action, while a phone
+conflict stays generic because optional email verification does not prove phone
+ownership. This never creates a duplicate account or changes an existing password.
+An optional SMS failure is informational: a new email can still complete registration.
 Phone digits are compared against canonical new records and formatted legacy
 values. When SMS is enabled, full E.164 input is required. Without a country code,
 local numbers cannot be matched to every possible international representation.

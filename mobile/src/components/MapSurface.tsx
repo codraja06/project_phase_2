@@ -112,6 +112,11 @@ function generateLeafletHtml({
       var canSelectLocation = ${hasLocationSelector ? 'true' : 'false'};
       var pinsData = ${safeJson(safePins)};
 
+      if (typeof L === 'undefined') {
+        postMsg({ type: 'map-error' });
+        return;
+      }
+
       var map = L.map('map', {
         center: [initialLat, initialLng],
         zoom: ${zoom},
@@ -125,10 +130,12 @@ function generateLeafletHtml({
       });
 
       // Standard OpenStreetMap Tile Layer with required attribution
+      var loadedTiles = 0;
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
-      }).addTo(map);
+      }).on('tileload', function() { loadedTiles++; postMsg({ type: 'map-ready' }); })
+        .on('load', function() { if (!loadedTiles) postMsg({ type: 'map-error' }); }).addTo(map);
 
       // Create Custom SVG-like HTML Marker Icon
       var customIcon = L.divIcon({
@@ -154,10 +161,9 @@ function generateLeafletHtml({
             var marker = L.marker([pin.latitude, pin.longitude], { icon: customIcon, title: pin.title || 'Reported civic issue', alt: pin.title || 'Reported civic issue' }).addTo(map);
             if (marker.getElement()) marker.getElement().setAttribute('aria-label', pin.title || 'Reported civic issue');
             if (pin.title || pin.address) {
-              var content = '<div class="popup-title">' + (pin.title || 'Civic Issue') + '</div>';
-              if (pin.address) {
-                content += '<div class="popup-address">' + pin.address + '</div>';
-              }
+              var content = document.createElement('div');
+              var heading = document.createElement('div'); heading.className = 'popup-title'; heading.textContent = pin.title || 'Civic Issue'; content.appendChild(heading);
+              if (pin.address) { var address = document.createElement('div'); address.className = 'popup-address'; address.textContent = pin.address; content.appendChild(address); }
               marker.bindPopup(content);
             }
             marker.on('click', function() {
@@ -215,6 +221,8 @@ export function MapSurface({
   const webViewRef = useRef<WebView>(null);
   const [loadError, setLoadError] = useState(false);
   const [externalError, setExternalError] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
+  const ready = useRef(false);
 
   const validCoords =
     Number.isFinite(latitude) &&
@@ -246,9 +254,18 @@ export function MapSurface({
     [lat, lng, interactive, pins, !!onSelectLocation, zoom]
   );
 
+  useEffect(() => {
+    ready.current = false; setLoadError(false); setExternalError('');
+    if (!validCoords) return;
+    const timer = setTimeout(() => { if (!ready.current) setLoadError(true); }, 12000);
+    return () => clearTimeout(timer);
+  }, [htmlContent, validCoords, retryKey]);
+
   const handleMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'map-error') setLoadError(true);
+      if (data.type === 'map-ready') ready.current = true;
       if (data.type === 'zoom_changed' && onZoomChange) onZoomChange(data.zoom);
       if (data.type === 'location_selected' && onSelectLocation) {
         onSelectLocation(data.latitude, data.longitude);
@@ -300,6 +317,9 @@ export function MapSurface({
         <Ionicons name="alert-circle-outline" size={32} color="#DC2626" />
         <Text style={styles.fallbackTitle}>OpenStreetMap preview unavailable</Text>
         <Text style={styles.coordsText}>Coordinates: {lat.toFixed(5)}, {lng.toFixed(5)}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => setRetryKey(key => key + 1)} accessibilityRole="button">
+          <Text style={styles.coordsText}>Retry map</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.externalButton}
           onPress={openInExternalMap}
@@ -317,6 +337,7 @@ export function MapSurface({
   return (
     <View style={styles.container}>
       <WebView
+        key={retryKey}
         ref={webViewRef}
         source={{ html: htmlContent, baseUrl: 'https://www.openstreetmap.org' }}
         style={styles.webView}
@@ -326,7 +347,7 @@ export function MapSurface({
         startInLoadingState={true}
         renderLoading={() => (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#B71C1C" />
+            <ActivityIndicator size="small" color="#B71C1C" accessibilityLabel="Loading map" />
             <Text style={styles.loadingText}>Loading OpenStreetMap...</Text>
           </View>
         )}
@@ -390,6 +411,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 6,
   },
+  retryButton: { minHeight: 44, paddingHorizontal: 16, justifyContent: 'center', borderWidth: 1, borderColor: '#64748B', borderRadius: 8 },
   externalButtonText: {
     color: '#FFFFFF',
     fontWeight: '700',

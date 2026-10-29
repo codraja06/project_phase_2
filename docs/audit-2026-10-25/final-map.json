@@ -1,0 +1,16 @@
+{
+  "phase": "final",
+  "checks": [
+    {
+      "name": "Actual Leaflet markers match filtered API clusters; invalid legacy GPS excluded",
+      "passed": true,
+      "markers": 2,
+      "loadedTiles": 0
+    },
+    {
+      "name": "Blocked Leaflet CDN produces an actionable fallback",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

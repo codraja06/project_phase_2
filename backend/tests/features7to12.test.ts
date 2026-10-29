@@ -9,12 +9,20 @@ import { Notification } from '../src/models/Notification';
 import { NotificationDelivery } from '../src/models/NotificationDelivery';
 import { generateToken } from '../src/utils/jwt';
 import * as storage from '../src/services/cloudinaryService';
+import sharp from 'sharp';
 
 jest.setTimeout(20000);
 
 describe('Duplicate review, departments, repair evidence, notifications and operations', () => {
   let citizen: any, other: any, officer: any, admin: any;
   let citizenToken: string, otherToken: string, officerToken: string, adminToken: string;
+
+  it('rejects role and department fields in a profile update', async () => {
+    const response = await request(app).put('/api/auth/profile').set(authorized(officerToken))
+      .send({ name: 'Officer', isAdmin: true, departmentId: 'unauthorized' });
+    expect(response.status).toBe(400);
+    expect((await User.findById(officer._id))?.isAdmin).toBe(false);
+  });
   let original: any, nearby: any, submitted: any;
   const authorized = (token: string) => ({ Authorization: `Bearer ${token}` });
   beforeAll(async () => {
@@ -76,11 +84,12 @@ describe('Duplicate review, departments, repair evidence, notifications and oper
   it('requires review for submitted repair evidence and keeps status changes authorized', async () => {
     const report = await request(app).post('/api/complaints').set(authorized(citizenToken)).send({ ...base, latitude: 12.93, longitude: 80.23 });
     submitted = report.body.data;
-    expect((await request(app).patch(`/api/management/complaints/${submitted._id}/department`).set(authorized(officerToken))
+    expect((await request(app).patch(`/api/management/complaints/${submitted._id}/department`).set(authorized(officerToken)).send({ department: 'Field Repairs', reason: 'Unauthorized reassignment attempt' })).status).toBe(403);
+    expect((await request(app).patch(`/api/management/complaints/${submitted._id}/department`).set(authorized(adminToken))
       .send({ department: 'Field Repairs', reason: 'Field team reassigned work' })).body.data.assignedDepartment).toBe('Field Repairs');
     expect((await request(app).patch(`/api/authority/complaints/${submitted._id}/status`).set(authorized(officerToken)).send({ status: 'In Progress' })).status).toBe(200);
     const mocked = jest.spyOn(storage, 'uploadToCloudinary').mockResolvedValue('http://example.test/completed.png');
-    const image = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==', 'base64');
+    const image = await sharp({ create: { width: 2, height: 2, channels: 4, background: '#dddddd' } }).png().toBuffer();
     const uploaded = await request(app).post(`/api/management/complaints/${submitted._id}/completion`).set(authorized(officerToken))
       .attach('image', image, { filename: 'repair.png', contentType: 'image/png' });
     mocked.mockRestore();

@@ -1,0 +1,29 @@
+{
+  "checks": [
+    {
+      "colorScheme": "light",
+      "width": 320,
+      "horizontalOverflow": false,
+      "contiguousCode": true
+    },
+    {
+      "colorScheme": "light",
+      "width": 600,
+      "horizontalOverflow": false,
+      "contiguousCode": true
+    },
+    {
+      "colorScheme": "dark",
+      "width": 320,
+      "horizontalOverflow": false,
+      "contiguousCode": true
+    },
+    {
+      "colorScheme": "dark",
+      "width": 600,
+      "horizontalOverflow": false,
+      "contiguousCode": true
+    }
+  ],
+  "delivery": "No real email sent; synthetic browser preview only"
+}

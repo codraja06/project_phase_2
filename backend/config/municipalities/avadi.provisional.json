@@ -1,0 +1,16 @@
+{
+  "municipality": "Avadi City Municipal Corporation, Tamil Nadu, India",
+  "verificationStatus": "proposed",
+  "sourceNote": "User-provided provisional mapping; official department structure not yet verified.",
+  "mappings": {
+    "pothole": "Roads and Engineering Department",
+    "road_damage": "Roads and Engineering Department",
+    "garbage": "Solid Waste Management Department",
+    "garbage_overflow": "Solid Waste Management Department",
+    "drainage": "Public Health / Drainage Department",
+    "drainage_problem": "Public Health / Drainage Department",
+    "water_leakage": "Water Supply Department",
+    "broken_streetlight": "Electrical / Street Lighting Department",
+    "broken_tree": "Parks / Horticulture or the relevant emergency department"
+  }
+}

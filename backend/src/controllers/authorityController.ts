@@ -9,7 +9,7 @@ import { ApiResponse } from '../utils/apiResponse';
 import { updateStatusSchema } from '../validators/complaintValidator';
 import { withPriority, priorityScoreExpression } from '../services/triageService';
 import { z } from 'zod';
-import { notifyUser } from '../services/notificationService';
+import { attemptNotificationFlush, notificationIntent } from '../services/notificationOutboxService';
 
 export const getAllComplaints = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -162,16 +162,17 @@ export const updateComplaintStatus = async (req: AuthRequest, res: Response, nex
 
     const updated = await Complaint.findOneAndUpdate(
       { _id: id, status: currentStatus },
-      { $set: { status: targetStatus, ...(targetStatus === 'Resolved' ? { resolvedAt: changedAt, resolutionNoticeAt: changedAt, resolutionNoticePending: true } : {}) },
-        $push: { statusHistory: { status: targetStatus, at: changedAt, by: req.user!._id } } },
+      { $set: { status: targetStatus, ...(targetStatus === 'Resolved' ? { resolvedAt: changedAt, resolutionNoticeAt: changedAt, resolutionNoticePending: true } : { notificationOutboxPending: true }) },
+        $push: { statusHistory: { status: targetStatus, at: changedAt, by: req.user!._id },
+          ...(targetStatus !== 'Resolved' ? { notificationOutbox: notificationIntent(`${complaint._id}:status:${targetStatus}`,
+            `Complaint ${targetStatus}`, `${complaint.complaintId} is now ${targetStatus}.`) } : {}) } },
       { new: true, runValidators: true }
     );
     if (!updated) throw new ApiError(409, 'This complaint changed. Refresh before trying again.');
     if (targetStatus === 'Resolved') {
       try { await queueResolutionNotifications(updated); }
       catch { console.error('Resolution notice is pending; the worker will retry persistence.'); }
-    } else await notifyUser(updated.createdBy, { complaintId: updated._id, eventKey: `${updated._id}:status:${targetStatus}`,
-      title: `Complaint ${targetStatus}`, message: `${updated.complaintId} is now ${targetStatus}.` });
+    } else await attemptNotificationFlush(updated._id);
     res.status(200).json(new ApiResponse('Complaint status updated successfully', withPriority(updated)));
   } catch (error) {
     next(error);

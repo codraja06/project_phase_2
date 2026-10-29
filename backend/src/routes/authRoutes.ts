@@ -12,7 +12,7 @@ import {
 import { authenticate } from '../middleware/auth';
 import { authRateLimiter } from '../middleware/rateLimiter';
 import { signupRequestLimiter, signupVerifyLimiter } from '../middleware/rateLimiter';
-import { requestSignupOtp, resendSignupOtp, verifySignupOtp, completeSignup } from '../controllers/signupController';
+import { getSignupOptions, requestSignupOtp, resendSignupOtp, verifySignupOtp, completeSignup } from '../controllers/signupController';
 import { saveNotificationPreferences } from '../controllers/notificationPreferencesController';
 
 const router = Router();
@@ -30,6 +30,7 @@ router.get('/register', (req, res) => {
   });
 });
 router.post('/register', authRateLimiter, register);
+router.get('/signup/options', getSignupOptions);
 router.post('/signup/request-otp', signupRequestLimiter, requestSignupOtp);
 router.post('/signup/resend-otp', signupRequestLimiter, resendSignupOtp);
 router.post('/signup/verify-otp', signupVerifyLimiter, verifySignupOtp);

@@ -1,0 +1,18 @@
+
+> civic-complaint-backend@1.0.0 test
+> jest --runInBand --detectOpenHandles --runTestsByPath tests/features7to12.test.ts
+
+PASS tests/features7to12.test.ts (7.949 s)
+  Duplicate review, departments, repair evidence, notifications and operations
+    √ rejects role and department fields in a profile update (131 ms)
+    √ restricts mapping edits to administrators and routes new reports without changing status (424 ms)
+    √ warns on nearby same-category reports without exposing other citizens and supports explicit authority confirmation (360 ms)
+    √ requires review for submitted repair evidence and keeps status changes authorized (1110 ms)
+    √ stores role-scoped event notifications and supports read state (152 ms)
+    √ filters actual hotspot cells and calculates completed resolution metrics without inventing a service target (94 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        8.179 s
+Ran all test suites within paths "tests/features7to12.test.ts".

@@ -36,7 +36,7 @@ import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 export const ProfileScreen = ({ navigation }: any) => {
   const { isWide: isDesktop } = useBreakpoint();
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, updateSession } = useAuth();
 
   // Modals
   const { complaints, loading: statsLoading, error: statsError, refresh: refreshStats } = useComplaintSummary('citizen');
@@ -114,7 +114,8 @@ export const ProfileScreen = ({ navigation }: any) => {
     }
     try {
       setUpdatingPassword(true);
-      await authApi.changePassword({ oldPassword, newPassword });
+      const session = await authApi.changePassword({ oldPassword, newPassword });
+      if (session) await updateSession(session);
       setOldPassword('');
       setNewPassword('');
       setChangePasswordVisible(false);

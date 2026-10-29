@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-25",
+  "backend": {
+    "passedTests": 112,
+    "passedSuites": 16,
+    "success": true
+  },
+  "python": {
+    "passed": 25,
+    "deprecationWarnings": 1
+  },
+  "browser": {
+    "authLayouts": 108,
+    "dashboardLayouts": 27,
+    "routeLayouts": 351,
+    "interactions": 6,
+    "otpNotificationGroups": 12,
+    "realYOLOGroups": 8,
+    "operationsGroups": 8,
+    "partialCompletionGroups": 3,
+    "mockedDeliveryGroups": 5
+  },
+  "dependencies": {
+    "backend": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "mobile": {
+      "info": 0,
+      "low": 1,
+      "moderate": 7,
+      "high": 14,
+      "critical": 0,
+      "total": 22
+    }
+  },
+  "modelReadiness": {
+    "loadedModels": 4,
+    "coverage": [
+      {
+        "category": "pothole",
+        "available": true,
+        "models": [
+          "pothole",
+          "road_damage"
+        ],
+        "configurationKey": "POTHOLE_MODEL_PATH"
+      },
+      {
+        "category": "road_damage",
+        "available": false,
+        "models": [],
+        "configurationKey": "ROAD_DAMAGE_MODEL_PATH"
+      },
+      {
+        "category": "garbage",
+        "available": true,
+        "models": [
+          "garbage_overflow"
+        ],
+        "configurationKey": "GARBAGE_MODEL_PATH"
+      },
+      {
+        "category": "garbage_overflow",
+        "available": true,
+        "models": [
+          "garbage_overflow",
+          "dead_animal_broken_tree"
+        ],
+        "configurationKey": "GARBAGE_MODEL_PATH"
+      },
+      {
+        "category": "dead_animal",
+        "available": true,
+        "models": [
+          "dead_animal_broken_tree"
+        ],
+        "configurationKey": "OTHER_CIVIC_MODEL_PATH"
+      },
+      {
+        "category": "broken_tree",
+        "available": true,
+        "models": [
+          "dead_animal_broken_tree"
+        ],
+        "configurationKey": "OTHER_CIVIC_MODEL_PATH"
+      },
+      {
+        "category": "broken_streetlight",
+        "available": false,
+        "models": [],
+        "configurationKey": "STREETLIGHT_MODEL_PATH"
+      },
+      {
+        "category": "water_leakage",
+        "available": false,
+        "models": [],
+        "configurationKey": "WATER_LEAKAGE_MODEL_PATH"
+      },
+      {
+        "category": "drainage_problem",
+        "available": false,
+        "models": [],
+        "configurationKey": "WATER_LEAKAGE_MODEL_PATH"
+      }
+    ],
+    "allRequiredClassesAvailable": false,
+    "accuracyValidated": false
+  },
+  "chatReadiness": {
+    "configured": false,
+    "required": [
+      "CHAT_PROVIDER_URL",
+      "CHAT_PROVIDER_MODEL",
+      "CHAT_PROVIDER_API_KEY (if required by provider)"
+    ],
+    "liveProviderVerified": false
+  },
+  "physicalDeviceTested": false,
+  "realMessagesSent": false
+}
