@@ -1,3 +1,4 @@
+import { Disclosure } from '../../components/Disclosure';
 import { FilterChipGroup } from '../../components/FilterChip';
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -42,7 +43,7 @@ import { TYPOGRAPHY } from '../../theme/typography';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 type Props = NativeStackScreenProps<CitizenTabParamList, 'ReportIssue'>;
-type Step = 'capture' | 'ai_analysis' | 'location' | 'review';
+type Step = 'capture' | 'ai_analysis' | 'description' | 'location' | 'review';
 
 export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
   const { isDesktop, isWide } = useBreakpoint();
@@ -102,7 +103,6 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
   }, []);
 
   useEffect(() => {
-    fetchCurrentLocation();
     if (route.params?.initialCategory) {
       setSelectedCategory(route.params.initialCategory);
     }
@@ -110,7 +110,9 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const animateStepChange = (nextStep: Step) => {
     // using reanimated entering/exiting handles transitions nicely.
+    setErrorMessage(null);
     setCurrentStep(nextStep);
+    if (nextStep === 'location' && !locationConfirmed) void fetchCurrentLocation();
   };
 
   const fetchCurrentLocation = async () => {
@@ -259,8 +261,10 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleBackStep = () => {
     if (currentStep === 'ai_analysis') {
       handleRetake();
-    } else if (currentStep === 'location') {
+    } else if (currentStep === 'description') {
       animateStepChange('ai_analysis');
+    } else if (currentStep === 'location') {
+      animateStepChange('description');
     } else if (currentStep === 'review') {
       animateStepChange('location');
     } else {
@@ -346,9 +350,10 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const stepList: { key: Step; label: string; num: number }[] = [
     { key: 'capture', label: 'Photo', num: 1 },
-    { key: 'ai_analysis', label: 'AI Vision', num: 2 },
-    { key: 'location', label: 'GPS Pin', num: 3 },
-    { key: 'review', label: 'Submit', num: 4 },
+    { key: 'ai_analysis', label: 'Issue', num: 2 },
+    { key: 'description', label: 'Describe', num: 3 },
+    { key: 'location', label: 'Location', num: 4 },
+    { key: 'review', label: 'Review', num: 5 },
   ];
   const currentStepIndex = stepList.findIndex((s) => s.key === currentStep);
 
@@ -363,16 +368,17 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
         </TouchableOpacity>
         <View style={styles.headerTextWrapper}>
           <Text style={styles.headerTitle}>
-            {currentStep === 'capture' && 'Report Civic Hazard'}
-            {currentStep === 'ai_analysis' && 'AI Defect Analysis'}
-            {currentStep === 'location' && 'Confirm GPS Location'}
+            {currentStep === 'capture' && 'Report an issue'}
+            {currentStep === 'ai_analysis' && 'Review the detected issue'}
+            {currentStep === 'description' && 'Describe the issue'}
+            {currentStep === 'location' && 'Confirm location'}
             {currentStep === 'review' && 'Review & Submit Report'}
           </Text>
         </View>
       </View>
 
       {/* Stepper Progress Bar */}
-      <View style={styles.stepperContainer}>
+      <View accessibilityLabel={`Step ${currentStepIndex + 1} of 5: ${stepList[currentStepIndex].label}`} style={styles.stepperContainer}>
         {stepList.map((step, idx) => {
           const isCurrent = currentStep === step.key;
           const isDone = idx < currentStepIndex;
@@ -403,16 +409,14 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          {currentStep === 'capture' && <View style={{ width: '100%', marginBottom: 20 }}></View>}
+
           <View style={[styles.reportWorkspace, isWide && styles.reportWorkspaceWide]}>
-            {isWide && <View style={styles.evidencePane}>
-              <Text style={styles.evidenceEyebrow}>YOUR REPORT / EVIDENCE</Text>
-              <Text style={styles.evidenceTitle}>Make the issue clear.</Text>
-              <Text style={styles.evidenceText}>A photo, an accurate location and your observations help the authority assess the report.</Text>
-              {localImageUri ? <DetectionOverlay imageUri={localImageUri} detections={aiDetections} confidence={aiConfidence} height={360} /> : <View style={styles.evidenceEmpty}><Ionicons name="camera-outline" size={44} color={COLORS.primary} /><Text style={styles.evidenceText}>Your issue photo and detection results will appear here.</Text></View>}
+            {isWide && currentStep !== 'review' && <View style={styles.evidencePane}>
+              {localImageUri ? <DetectionOverlay imageUri={localImageUri} detections={aiDetections} confidence={aiConfidence} height={360} /> : <View style={styles.evidenceEmpty}><View style={styles.photoMark}><Ionicons name="camera-outline" size={42} color={COLORS.primary} /></View><Text style={styles.stageTitle}>A clearer photo. A better report.</Text><Text style={[styles.evidenceText, { textAlign: 'center' }]}>Keep the issue in focus, use good lighting and include enough context to show its location.</Text></View>}
               <Text style={styles.evidenceText}>Experimental severity requires review. You approve the final description; authorities verify the issue and control its status.</Text>
             </View>}
           <View style={[styles.mainWrapper, isWide && styles.mainWrapperWide]}>
+            <View style={styles.stageHeading}><Text style={styles.stageEyebrow}>STEP {currentStepIndex + 1} OF 5</Text><Text style={styles.stageTitle}>{['Add your issue photo', 'Review the evidence', 'Tell us what you observed', 'Pin the issue location', 'Ready to send?'][currentStepIndex]}</Text><Text style={styles.evidenceText}>{['Take a clear photo or choose one from your gallery. Focus on the issue and include the surrounding area.', 'Check the detected category and choose the correct issue type before continuing.', 'Review the AI draft or write your own description. Your approved text will be sent with the report.', 'Confirm where the issue is so the responsible team can locate it.', 'Check the photo, description and location before submitting your complaint.'][currentStepIndex]}</Text></View>
             {errorMessage ? (
               <Animated.View entering={FadeIn.duration(300)} style={styles.errorBanner}>
                 <Ionicons name="alert-circle" size={18} color={COLORS.error} style={{ marginRight: SPACING.xs }} />
@@ -423,13 +427,13 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* STEP 1: CAPTURE */}
             {currentStep === 'capture' && (
               <Animated.View entering={FadeInDown} exiting={FadeOut} style={styles.stepContainer}>
-                <Text style={styles.reviewSectionLabel}>DETECTION MODE</Text>
+                <Disclosure title="Detection options" summary={detectionMode === 'auto' ? 'Automatic detection selected' : detectionMode.replace(/_/g, ' ')}>
                 <FilterChipGroup options={[
                   { label: 'Automatic', value: 'auto' }, { label: 'Pothole', value: 'pothole' }, { label: 'Road damage', value: 'road_damage' },
                   { label: 'Garbage', value: 'garbage' }, { label: 'Streetlight', value: 'broken_streetlight' }, { label: 'Water leakage', value: 'water_leakage' },
                 ]} selectedValue={detectionMode} onSelect={setDetectionMode} />
                 <Text style={styles.evidenceText}>Automatic runs all available models. A selected category requires compatible trained weights. You can always enter details manually.</Text>
-                <Text accessibilityLiveRegion="polite" style={styles.evidenceText}>{modelAvailability}</Text>
+                <Text accessibilityLiveRegion="polite" style={styles.evidenceText}>{modelAvailability}</Text></Disclosure>
                 <ImagePickerCamera imageUri={localImageUri} onImageSelected={handleImageSelected} onRetakeImage={handleRetake} />
               </Animated.View>
             )}
@@ -457,10 +461,21 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                       <DetectionOverlay imageUri={localImageUri} detections={aiDetections} confidence={aiConfidence} height={260} />
                     </Animated.View>
                     <Animated.View entering={FadeInUp.delay(200)}>
-                      {!!modelNotice && <Text accessibilityLiveRegion="polite" style={styles.evidenceText}>{modelNotice}</Text>}
+                      {!!modelNotice && <Disclosure title="Detection details"><Text style={styles.evidenceText}>{modelNotice}</Text></Disclosure>}
                       <TriageSummary severity={severity} />
                       <CategorySelector selectedCategory={selectedCategory} onSelectCategory={handleSelectCategory} customCategory={customCategory} onChangeCustomCategory={setCustomCategory} aiDetected={aiDetected} aiClass={aiDetectedClass} aiConfidence={aiConfidence} />
                     </Animated.View>
+                    <Animated.View entering={FadeInUp.delay(400)} style={styles.buttonRow}>
+                      <Button title="Remove / Replace Photo" onPress={handleRetake} variant="secondary" size="lg" style={{ flexGrow: 1, flexBasis: 160 }} />
+                      <Button title="Continue to description" disabled={regeneratingDescription} onPress={() => { if (selectedCategory === 'other' && !customCategory.trim()) { setErrorMessage('Enter an issue category before continuing.'); return; } animateStepChange('description'); }} variant="default" size="lg" style={{ flexGrow: 1, flexBasis: 220 }} />
+                    </Animated.View>
+                  </>
+                ) : null}
+              </Animated.View>
+            )}
+
+            {currentStep === 'description' && <View style={styles.stepContainer}>
+              <Text style={styles.evidenceText}>Review the draft or write your own observations. Only include details you can confirm.</Text>
                     <Animated.View entering={FadeInUp.delay(300)}>
                       <DescriptionEditor category={selectedCategory} customCategory={customCategory} description={description} onChangeDescription={setDescription} address={address} generatedDescription={generatedDescription} />
                       <Button title={regeneratingDescription ? 'Generating…' : 'Regenerate AI draft'} variant="outline" disabled={regeneratingDescription} onPress={regenerateDescription} />
@@ -470,14 +485,11 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                       }} />}
                     </Animated.View>
 
-                    <Animated.View entering={FadeInUp.delay(400)} style={styles.buttonRow}>
-                      <Button title="Remove / Replace Photo" onPress={handleRetake} variant="secondary" size="lg" style={{ flexGrow: 1, flexBasis: 160 }} />
-                      <Button title="Continue to Location" disabled={regeneratingDescription} onPress={() => animateStepChange('location')} variant="default" size="lg" style={{ flexGrow: 1, flexBasis: 220 }} />
-                    </Animated.View>
-                  </>
-                ) : null}
-              </Animated.View>
-            )}
+              <Button title="Continue to location" disabled={regeneratingDescription} onPress={() => {
+                if (description.trim().length < 5) { setErrorMessage('Describe the issue in at least 5 characters.'); return; }
+                animateStepChange('location');
+              }} />
+            </View>}
 
             {/* STEP 3: LOCATION */}
             {currentStep === 'location' && (
@@ -486,8 +498,8 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                   <Card style={styles.loadingCard}>
                     <CardContent style={styles.loadingContent}>
                       <ActivityIndicator color={COLORS.primary} size="large" style={{ marginBottom: SPACING.md }} />
-                      <Text style={styles.loadingTitle}>Triangulating GPS coordinates...</Text>
-                      <Text style={styles.loadingSubtitle}>Acquiring high-accuracy satellite fix</Text>
+                      <Text style={styles.loadingTitle}>Finding your location…</Text>
+                      <Text style={styles.loadingSubtitle}>Allow location access, or choose the incident location on the map.</Text>
                     </CardContent>
                   </Card>
                 ) : (
@@ -510,9 +522,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                         }}
                         onUseCurrentLocation={fetchCurrentLocation}
                       />
-                    <Animated.View entering={FadeInUp.delay(200)}>
-                      <LocationCard address={address} latitude={latitude} longitude={longitude} onRefreshLocation={fetchCurrentLocation} />
-                    </Animated.View>
+
                     <Animated.View entering={FadeInUp.delay(300)}>
                       <Button title={checkingDuplicates ? 'Checking nearby reports…' : 'Confirm Location & Review'} disabled={!locationConfirmed || checkingDuplicates} loading={checkingDuplicates} onPress={reviewPossibleDuplicates} variant="default" size="lg" style={{ marginTop: SPACING.xs }} />
                     </Animated.View>
@@ -526,7 +536,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
               <Animated.View entering={FadeInDown} exiting={FadeOut} style={styles.stepContainer}>
                 <Card style={styles.reviewCard}>
                   <CardContent style={styles.reviewContent}>
-                    <Text style={styles.reviewCardTitle}>Incident Summary</Text>
+                    <Text accessibilityRole="header" style={styles.reviewCardTitle}>Review your complaint</Text>
                     <TriageSummary severity={severity} />
                     {!!duplicateCheckMessage && <View accessibilityRole="alert" style={{ backgroundColor: COLORS.pendingLight, padding: 12, borderRadius: 8, marginVertical: 12 }}>
                       <Text style={{ color: COLORS.pendingDark, fontWeight: '700' }}>{duplicateMatches.length ? 'Possible duplicate reports nearby' : 'Nearby report check'}</Text>
@@ -548,7 +558,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                     </View>
                     <View style={styles.reviewSection}>
                       <Text style={styles.reviewSectionLabel}>DESCRIPTION</Text>
-                      <Text style={styles.reviewSectionBody}>{description}</Text>
+                      <Text style={styles.reviewSectionBody}>{description}</Text><Button title="Edit description" variant="link" onPress={() => animateStepChange('description')} />
                     </View>
                     <View style={styles.reviewSection}>
                       <Text style={styles.reviewSectionLabel}>INCIDENT LOCATION</Text>
@@ -556,11 +566,13 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
                         <Ionicons name="location-outline" size={16} color={COLORS.primary} style={{ marginRight: SPACING.xs }} />
                         <Text style={styles.reviewLocationText}>{address}</Text>
                       </View>
+                      <Button title="Edit location" variant="link" onPress={() => animateStepChange('location')} />
                     </View>
+                    <Button title="Edit issue category" variant="link" onPress={() => animateStepChange('ai_analysis')} />
                   </CardContent>
                 </Card>
                 <Animated.View entering={FadeInUp.delay(200)}>
-                  <Button title={submitting ? "Submitting Report..." : "SUBMIT COMPLAINT"} onPress={handleSubmitComplaint} variant="default" size="lg" loading={submitting} disabled={submitting} style={{ marginTop: SPACING.xs }} />
+                  <Button title={submitting ? "Submitting Report..." : "Submit complaint"} onPress={handleSubmitComplaint} variant="default" size="lg" loading={submitting} disabled={submitting} style={{ marginTop: SPACING.xs }} />
                 </Animated.View>
               </Animated.View>
             )}
@@ -575,6 +587,7 @@ export const ReportIssueScreen: React.FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
+  stageHeading: { gap: 8, paddingBottom: 16, marginBottom: 16, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight }, stageEyebrow: { color: COLORS.primary, fontSize: 11, fontWeight: '700', letterSpacing: 1 }, stageTitle: { color: COLORS.textPrimary, fontSize: 22, lineHeight: 30, fontWeight: '700' }, photoMark: { width: 80, height: 80, borderRadius: 22, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center' },
   safeArea: { flex: 1, backgroundColor: COLORS.backgroundNeutral },
   headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: SPACING.lg, backgroundColor: COLORS.backgroundNeutral },
   backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.borderLight, marginRight: SPACING.md, ...SHADOWS.sm },
@@ -593,8 +606,8 @@ const styles = StyleSheet.create({
   stepLine: { width: 14, height: 2, backgroundColor: COLORS.borderLight, marginHorizontal: 2, marginBottom: 14, flexShrink: 1 },
   stepLineDone: { backgroundColor: COLORS.primary },
   scrollContent: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: SPACING['5xl'] },
-  scrollContentDesktop: { paddingTop: SPACING['3xl'], paddingBottom: SPACING['7xl'] },
-  reportWorkspace: { width: '100%', maxWidth: 1440, alignSelf: 'center', gap: 28 },
+  scrollContentDesktop: { paddingTop: SPACING.lg, paddingBottom: SPACING['7xl'] },
+  reportWorkspace: { width: '100%', maxWidth: 1280, alignSelf: 'center', gap: 28 },
   reportWorkspaceWide: { flexDirection: 'row', alignItems: 'flex-start' },
   evidencePane: { flex: 1, minWidth: 0, backgroundColor: COLORS.surface, padding: 24, borderWidth: 1, borderColor: COLORS.borderLight, borderRadius: 12, gap: 18 },
   evidenceEyebrow: { color: COLORS.primary, fontSize: 10, letterSpacing: 1, fontWeight: '700' },
@@ -602,7 +615,7 @@ const styles = StyleSheet.create({
   evidenceText: { color: COLORS.textSecondary, fontSize: 13, lineHeight: 21, marginBottom: 12 },
   evidenceEmpty: { minHeight: 240, padding: 28, gap: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primaryLight, borderRadius: 8 },
   mainWrapperWide: { flex: 1.15, maxWidth: 800, minWidth: 0 },
-  mainWrapper: { width: '100%', maxWidth: 640, alignSelf: 'center' },
+  mainWrapper: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: 20, borderRadius: 16, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.borderLight },
   stepContainer: { width: '100%' },
   errorBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.errorLight, padding: SPACING.lg, borderRadius: BORDER_RADIUS.md, marginBottom: SPACING.xl, borderWidth: 1, borderColor: COLORS.errorBorder },
   errorText: { ...TYPOGRAPHY.caption, color: COLORS.errorDark, fontWeight: '600', flex: 1 },

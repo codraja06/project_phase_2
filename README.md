@@ -25,6 +25,28 @@ cross-process live updates, shared MongoDB rate limits, password-session rotatio
 and native secure token storage. Missing trained weights/provider configuration
 and remaining Expo dependency advisories are explicitly listed there.
 
+### Export Operations Analytics to Power BI
+
+Sign in with an administrator account, open **Operations Analytics**, choose the
+filters and select **Apply filters**, then select **Export for Power BI**. The
+download/share is a UTF-8 CSV for Power BI Desktop: choose **Get data → Text/CSV**
+and open the exported file. This creates a data source; Power BI Desktop is used
+to build and save the `.pbix` report. Mobile users can share/save the CSV through
+the device share sheet. An updated native build is required for the file-sharing
+module.
+
+The export uses the applied creation-date, status, category, department and
+search filters and includes up to 50,000 actual matching complaints. Narrow the
+date range if the limit is exceeded. Fields include report identifiers, category,
+department, status, severity, current calculated priority, UTC timestamps,
+resolution hours, verification and coordinates. Unresolved or invalid resolution
+durations are empty; citizen names, contact details, descriptions, addresses and
+image URLs are omitted. The file nevertheless includes precise GPS coordinates.
+Spreadsheet formula-like text fields are escaped. Only administrators can export
+until department-level access controls are implemented across the authority portal.
+The authenticated endpoint is `GET /api/authority/analytics/export` and returns
+the CSV and row count in the normal JSON API envelope.
+
 ---
 
 ## Architecture
@@ -683,3 +705,17 @@ credentials and never generates or displays a code.
 After a successful Gmail OTP, an existing email leads to a clear sign-in action.
 Use the account's existing login method, or change registration details for a new
 email. Optional SMS failure does not block a new account's email verification.
+
+
+## Simplified interface and department access
+
+Reporting now follows Photo → Issue → Description → Location → Review. Advanced detection options and filters expand on demand. Operations Analytics separates overview, categories, geography and resolution reports while preserving the applied-filter Power BI export.
+
+Ordinary officers require a department on their account. Existing administrators can configure it under **Profile & Settings → Department routing & access → Officer department access** using an existing officer email and an enabled routing department. Officers sign in again after an assignment. Unassigned reports remain available to administrators; existing records are not migrated or deleted automatically.
+
+See [UI audit and plan](docs/UI_OPTIMIZATION_PLAN.md) and [verification and limitations](docs/UI_OPTIMIZATION_VERIFICATION.md).
+
+
+## Final enhancement work in progress
+
+The centralized audit foundation is integrated with a durable source outbox and an administrator-only filtered audit viewer under Profile & Settings. Start the backend normally; its audit relay runs every five seconds. No additional provider credentials are required. See [current audit, implementation status and remaining stages](docs/FINAL_ENHANCEMENT_AUDIT.md). The full seven-feature enhancement is not yet complete.

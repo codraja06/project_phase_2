@@ -117,7 +117,7 @@ export const Input: React.FC<InputProps> = ({
       {error ? (
         <View style={styles.errorRow}>
           <Ionicons name="alert-circle" size={14} color={COLORS.error} style={{ marginRight: 6 }} />
-          <Text style={styles.errorText}>{error}</Text>
+          <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.errorText}>{error}</Text>
         </View>
       ) : helperText ? (
         <Text style={styles.helperText}>{helperText}</Text>
@@ -182,7 +182,9 @@ const styles = StyleSheet.create({
   },
   rightIconBtn: {
     position: 'absolute',
-    right: 12,
+    right: 4,
+    width: 44,
+    minHeight: 44,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',

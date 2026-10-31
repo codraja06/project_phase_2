@@ -23,13 +23,13 @@ describe('Partial completion: durable events, shared delivery, sessions and prov
   let server: Server, wss: WebSocketServer;
   const suffix = Date.now(), password = 'PartialTestOnly2026!';
   const auth = (value: string) => ({ Authorization: `Bearer ${value}` });
-  const body = { title: 'Partial completion report', description: 'Observed condition recorded for an isolated test.', category: 'partial_test',
+  const body = { title: 'Partial completion report', description: 'Observed condition recorded for an isolated test.', category: 'partial_test', assignedDepartment: 'Partial test department',
     latitude: 13.1, longitude: 80.2, imageUrl: 'https://example.test/report.jpg' };
   beforeAll(async () => {
     expect(env.MONGODB_URI).toBe('mongodb://127.0.0.1:27017/civictrack_isolated_test');
     await mongoose.connect(env.MONGODB_URI); await Notification.init();
     citizen = await User.create({name:'Partial test citizen',email:`partial-citizen-${suffix}@example.test`,password,role:'citizen'});
-    officer = await User.create({name:'Partial test officer',email:`partial-officer-${suffix}@example.test`,password,role:'authority'});
+    officer = await User.create({name:'Partial test officer',email:`partial-officer-${suffix}@example.test`,password,role:'authority',department:'Partial test department'});
     token = generateToken({userId:String(citizen._id),role:'citizen'});
     officerToken = generateToken({userId:String(officer._id),role:'authority'});
     server = createServer(app); wss = attachLiveNotifications(server,{pollIntervalMs:100});

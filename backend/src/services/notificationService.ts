@@ -1,3 +1,4 @@
+import { Complaint } from '../models/Complaint';
 import { publishNotificationChange } from './liveNotifications';
 import mongoose from 'mongoose';
 import { Notification } from '../models/Notification';
@@ -13,7 +14,8 @@ export async function notifyUser(recipient: mongoose.Types.ObjectId, notice: Not
 
 export async function notifyAuthorities(notice: Notice) {
   try {
-    const authorities = await User.find({ role: 'authority' }).select('_id').lean();
+    const complaint = await Complaint.findById(notice.complaintId).select('assignedDepartment').lean();
+    const authorities = await User.find({ role: 'authority', $or: [{ isAdmin: true }, ...(complaint?.assignedDepartment ? [{ department: complaint.assignedDepartment }] : [])] }).select('_id').lean();
     await Promise.all(authorities.map(user => notifyUser(user._id, notice)));
   } catch { console.error('Authority notification write failed.'); }
 }

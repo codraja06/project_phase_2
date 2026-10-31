@@ -1,3 +1,4 @@
+import { Disclosure } from '../../components/Disclosure';
 import { MapLocationPicker } from '../../components/MapLocationPicker';
 import { RequestError } from '../../components/RequestError';
 import React, { useState, useCallback } from 'react';
@@ -81,7 +82,7 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
     );
   }
   if (loading && !refreshing) {
-    return <LoadingSpinner message="Fetching live complaint dossier..." />;
+    return <LoadingSpinner message="Loading complaint details…" />;
   }
 
   if (!complaint) {
@@ -126,7 +127,7 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
         >
           <Ionicons name="chevron-back" size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Incident Dossier</Text>
+        <Text style={styles.headerTitle}>Complaint details</Text>
         <View style={styles.headerRightBadges}>
           <StatusBadge status={complaint.status} size="sm" />
         </View>
@@ -165,9 +166,9 @@ export const ComplaintDetailScreen: React.FC<Props> = ({ route, navigation }) =>
               <Animated.View entering={FadeInUp.delay(200)} style={styles.metaCard}>
                 <View style={styles.locationHeaderRow}>
                   <Ionicons name="location" size={20} color={COLORS.primary} style={{ marginRight: SPACING.xs }} />
-                  <Text style={styles.metaCardTitle}>Incident Location</Text>
+                  <Text style={styles.metaCardTitle}>Location</Text>
                 </View>
-                <Text style={styles.locationText}>{complaint.address || 'Address logged via device GPS sensor'}</Text>
+                <Text style={styles.locationText}>{complaint.address || 'Address unavailable; see recorded coordinates'}</Text>
                 {Number.isFinite(complaint.latitude) && Number.isFinite(complaint.longitude) && (
                   <Text style={styles.gpsCoordsText}>
                     GPS: {complaint.latitude.toFixed(5)}, {complaint.longitude.toFixed(5)}

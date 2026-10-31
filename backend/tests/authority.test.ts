@@ -36,7 +36,7 @@ describe('Authority API Endpoints & Role Guard', () => {
       email: 'officer@example.com',
       phone: '0987654321',
       password: 'password123',
-      role: 'authority',
+      role: 'authority', isAdmin: true,
     });
 
     citizenToken = generateToken({ userId: citizen._id.toString(), role: 'citizen' });

@@ -28,11 +28,11 @@ export function analyticsFilter(query: z.infer<typeof analyticsQuery>) {
   return filter;
 }
 
-export async function complaintAnalytics(query: z.infer<typeof analyticsQuery>) {
+export async function complaintAnalytics(query: z.infer<typeof analyticsQuery>, scope: { assignedDepartment?: string } = {}) {
   const now = new Date();
   const target = env.RESOLUTION_TARGET_HOURS && Number.isFinite(env.RESOLUTION_TARGET_HOURS) && env.RESOLUTION_TARGET_HOURS > 0 ? env.RESOLUTION_TARGET_HOURS : null;
   const [result] = await Complaint.aggregate([
-    { $match: analyticsFilter(query) },
+    { $match: { $and: [analyticsFilter(query), scope] } },
     { $addFields: { computedPriorityScore: priorityScoreExpression(now) } },
     { $facet: {
       summary: [{ $group: { _id: null, total: { $sum: 1 },
@@ -85,7 +85,7 @@ export async function complaintAnalytics(query: z.infer<typeof analyticsQuery>) 
   let medianResolutionHours: number | null = null;
   if (count) {
     const middle = await Complaint.aggregate([
-      { $match: { ...analyticsFilter(query), status: 'Resolved', resolvedAt: { $type: 'date' }, $expr: { $gte: ['$resolvedAt', '$createdAt'] } } },
+      { $match: { $and: [analyticsFilter(query), scope], status: 'Resolved', resolvedAt: { $type: 'date' }, $expr: { $gte: ['$resolvedAt', '$createdAt'] } } },
       { $project: { hours: { $divide: [{ $subtract: ['$resolvedAt', '$createdAt'] }, 3600000] } } },
       { $sort: { hours: 1, _id: 1 } }, { $skip: Math.floor((count - 1) / 2) }, { $limit: count % 2 ? 1 : 2 },
     ]);

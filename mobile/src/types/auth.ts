@@ -8,6 +8,7 @@ export interface User {
   googleId?: string;
   role: UserRole;
   isAdmin?: boolean;
+  department?: string;
   emailVerifiedAt?: string | null;
   phoneVerifiedAt?: string | null;
   notificationPreferences?: { email: boolean; sms: boolean; smsConsentedAt?: string | null };

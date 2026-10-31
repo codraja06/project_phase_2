@@ -1,3 +1,4 @@
+import { Disclosure } from './Disclosure';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SeverityAssessment } from '../types/ai';
@@ -11,18 +12,19 @@ export const TriageSummary = ({ severity, severityReview, priority, score, prior
   compact?: boolean;
 }) => (
   <View style={styles.container}>
-    {!!severityReview && <Text style={styles.note}>Authority-reviewed severity: {severityReview.level} / {severityReview.reason}</Text>}
+
     <View style={styles.badges}>
-      <Badge label={severity?.level ? `${severity.level} severity · experimental` : 'Severity unavailable · review needed'}
+      <Badge label={severityReview ? `${severityReview.level} severity · reviewed` : severity?.level ? `${severity.level} severity · experimental` : 'Severity unavailable · review needed'}
         variant={severity?.level === 'High' ? 'destructive' : severity?.level === 'Medium' ? 'warning' : 'secondary'}
         style={styles.badge} textStyle={styles.badgeText} />
       {priority && <Badge label={`${priority === 'urgent' ? 'High' : priority[0].toUpperCase() + priority.slice(1)} Priority${score === undefined ? '' : ` · ${score}/100`}`}
         variant={priority === 'high' || priority === 'urgent' ? 'destructive' : 'secondary'} />}
     </View>
-    {!compact && <Text style={styles.note}>{severity?.reason || 'No severity prediction is available for this report. Authority review required.'}</Text>}
-    {!compact && priorityMetadata?.authorityOverride && <Text style={styles.note}>Authority priority override applied. Calculated recommendation: {priorityMetadata.recommendationScore}/100.</Text>}
-    {!compact && priorityMetadata && <Text style={styles.note}>{priorityMetadata.resolved ? 'Resolved reports leave the attention queue.' :
+    {!compact && <Disclosure title="Assessment details"><Text style={styles.note}>{severityReview ? `Authority review: ${severityReview.reason}` : 'Experimental estimate; authority review required.'}</Text><Text style={styles.note}>{severity?.reason || 'No severity prediction is available for this report. Authority review required.'}</Text>
+    {priorityMetadata?.authorityOverride && <Text style={styles.note}>Authority priority override applied. Calculated recommendation: {priorityMetadata.recommendationScore}/100.</Text>}
+    {priorityMetadata && <Text style={styles.note}>{priorityMetadata.resolved ? 'Resolved reports leave the attention queue.' :
       `Priority factors: severity ${priorityMetadata.severityScore}, category ${priorityMetadata.categoryScore}, unresolved age ${priorityMetadata.ageScore}${priorityMetadata.reviewRequired ? '. Severity needs human review.' : '.'}`}</Text>}
+    </Disclosure>}
   </View>
 );
 

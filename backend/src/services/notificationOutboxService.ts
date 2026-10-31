@@ -20,7 +20,7 @@ export async function flushComplaintNotifications(complaintId: unknown) {
   for (const intent of complaint.notificationOutbox || []) {
     if (intent.deliveredAt) continue;
     const recipients = intent.audience === 'authorities'
-      ? await User.find({ role: 'authority' }).select('_id').lean()
+      ? await User.find({ role: 'authority', $or: [{ isAdmin: true }, ...(complaint.assignedDepartment ? [{ department: complaint.assignedDepartment }] : [])] }).select('_id').lean()
       : [{ _id: complaint.createdBy }];
     for (const recipient of recipients) await notifyUser(recipient._id, {
       complaintId: complaint._id, eventKey: intent.eventKey, title: intent.title, message: intent.message,

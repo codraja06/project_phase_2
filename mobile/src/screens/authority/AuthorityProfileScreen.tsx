@@ -1,3 +1,5 @@
+import { AdminAuditPanel } from '../../components/AdminAuditPanel';
+import { Disclosure } from '../../components/Disclosure';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useComplaintSummary } from '../../hooks/useComplaintSummary';
 import React, { useState } from 'react';
@@ -300,7 +302,8 @@ export const AuthorityProfileScreen = ({ navigation }: any) => {
           ))}
         </View>
 
-        {user?.isAdmin && <DepartmentMappingManager />}
+        {user?.isAdmin && <Disclosure title="Audit logs" keepMounted><AdminAuditPanel /></Disclosure>}
+        {user?.isAdmin && <Disclosure title="Department routing & access" keepMounted><DepartmentMappingManager /></Disclosure>}
         <Animated.View entering={FadeInUp.delay(500)}>
           <Text style={styles.sectionHeader}>Session</Text>
           <Card style={{ borderColor: COLORS.errorBorder }}>

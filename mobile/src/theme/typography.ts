@@ -70,20 +70,20 @@ export const TYPOGRAPHY = {
 
   // H1 — page titles
   h1: {
-    fontSize: IS_TABLET ? 28 : 24,
+    fontSize: 24,
     fontWeight: '800' as const,
     color: COLORS.textPrimary,
-    lineHeight: IS_TABLET ? 36 : 32,
+    lineHeight: 32,
     letterSpacing: -0.5,
     ...(Platform.OS === 'web' ? { fontFamily: FONT_FAMILY.bold } : {}),
   },
 
   // H2 — section headers
   h2: {
-    fontSize: IS_TABLET ? 22 : 20,
+    fontSize: 20,
     fontWeight: '700' as const,
     color: COLORS.textPrimary,
-    lineHeight: IS_TABLET ? 30 : 28,
+    lineHeight: 28,
     letterSpacing: -0.3,
     ...(Platform.OS === 'web' ? { fontFamily: FONT_FAMILY.bold } : {}),
   },

@@ -85,7 +85,7 @@ export const LAYOUT = {
   windowHeight: SCREEN_HEIGHT,
   isTablet: IS_TABLET,
   isSmallPhone: IS_SMALL_PHONE,
-  maxContentWidth: 1520,
+  maxContentWidth: 1280,
   maxFormWidth: 460,
   touchTargetMin: 48,
 };

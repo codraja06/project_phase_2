@@ -1,3 +1,4 @@
+import { Disclosure } from '../../components/Disclosure';
 import { RequestError } from '../../components/RequestError';
 import { TriageSummary } from '../../components/TriageSummary';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -104,7 +105,7 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
         onMouseLeave: () => setIsHovered(false),
       } as any)}
     >
-      <TouchableOpacity onPress={onToggleSelect} style={styles.tableCheckboxBtn} activeOpacity={0.8}>
+      <TouchableOpacity accessibilityRole="checkbox" accessibilityLabel={`Select ${complaintCode}`} accessibilityState={{ checked: !!isSelected }} onPress={onToggleSelect} style={styles.tableCheckboxBtn} activeOpacity={0.8}>
         <Ionicons
           name={isSelected ? 'checkbox' : 'square-outline'}
           size={18}
@@ -141,31 +142,12 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
         <Text style={styles.tableTitle} numberOfLines={1}>
           {complaint.title}
         </Text>
-        <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} compact />
-        <Text style={styles.tableDate} numberOfLines={2}>{complaint.description}</Text>
+        <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} compact />
+
       </TouchableOpacity>
 
-      <View style={styles.tableColComparison}>
-        <View style={styles.catCompareItem}>
-          <Text style={styles.catCompareKey}>AI</Text>
-          <Text style={styles.catCompareVal} numberOfLines={1}>{aiLabel}</Text>
-        </View>
-        <View style={styles.catCompareItem}>
-          <Text style={styles.catCompareKey}>USER</Text>
-          <Text style={styles.catCompareVal} numberOfLines={1}>{userCategoryLabel}</Text>
-        </View>
-      </View>
-
-      <View style={styles.tableColCitizen}>
-        <Text style={styles.tableCitizenName} numberOfLines={1}>
-          {citizenName}
-        </Text>
-        {citizenContact ? (
-          <Text style={styles.tableCitizenContact} numberOfLines={1}>
-            {citizenContact}
-          </Text>
-        ) : null}
-      </View>
+      <View style={styles.tableColComparison}><Text style={styles.tableDate}>{userCategoryLabel}</Text></View>
+      <View style={styles.tableColCitizen}><Text style={styles.tableDate} numberOfLines={2}>{complaint.address || 'Location recorded'}</Text></View>
 
       <View style={styles.tableColDate}>
         <Text style={styles.tableDate}>{formattedDate}</Text>
@@ -179,7 +161,7 @@ const DesktopComplaintRow: React.FC<TableRowProps> = ({
         {!isVerified && (
           <Button title="Verify" variant="outline" onPress={() => onVerify(complaint)} size="sm" style={{ marginRight: SPACING.xs, height: 32, paddingHorizontal: SPACING.sm }} />
         )}
-        <Button variant="ghost" onPress={onPress} size="sm" style={{ width: 32, height: 32, paddingHorizontal: 0 }} icon={<Ionicons name="chevron-forward" size={16} color={COLORS.textPrimary} />} />
+        <Button accessibilityLabel={`View details for ${complaintCode}`} variant="ghost" onPress={onPress} size="sm" style={{ width: 32, height: 32, paddingHorizontal: 0 }} icon={<Ionicons name="chevron-forward" size={16} color={COLORS.textPrimary} />} />
       </View>
     </View>
   );
@@ -239,7 +221,7 @@ const MobileAuthorityCard: React.FC<MobileCardProps> = ({
       <CardContent style={{ padding: SPACING.lg }}>
         <View style={styles.mobileCardHeader}>
           <View style={styles.mobileCardHeaderLeft}>
-            <TouchableOpacity onPress={onToggleSelect} style={styles.mobileCheckboxBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <TouchableOpacity accessibilityRole="checkbox" accessibilityLabel={`Select ${complaintCode}`} accessibilityState={{ checked: !!isSelected }} onPress={onToggleSelect} style={styles.mobileCheckboxBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Ionicons name={isSelected ? 'checkbox' : 'square-outline'} size={20} color={isSelected ? COLORS.authorityPrimary : COLORS.textMuted} />
             </TouchableOpacity>
             <Text style={styles.complaintCodeText}>{complaintCode}</Text>
@@ -264,7 +246,7 @@ const MobileAuthorityCard: React.FC<MobileCardProps> = ({
           </View>
         </TouchableOpacity>
 
-        <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} compact />
+        <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} compact />
         <Text style={styles.mobileCardLocation} numberOfLines={3}>{complaint.description}</Text>
         <View style={styles.mobileCompareBanner}>
           <View style={styles.mobileCompareCol}>
@@ -481,7 +463,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
     if (filteredComplaints.length === 0) return null;
     return (
       <View style={styles.bulkToolbar}>
-        <TouchableOpacity onPress={handleSelectAll} style={styles.bulkSelectAllBtn} activeOpacity={0.7}>
+        <TouchableOpacity accessibilityRole="checkbox" accessibilityLabel="Select all complaints on this page" accessibilityState={{ checked: selectedIds.length > 0 && selectedIds.length === filteredComplaints.length }} onPress={handleSelectAll} style={styles.bulkSelectAllBtn} activeOpacity={0.7}>
           <Ionicons
             name={selectedIds.length === filteredComplaints.length && filteredComplaints.length > 0 ? 'checkbox' : 'square-outline'}
             size={18}
@@ -497,7 +479,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
               <Button title="In Progress" accessibilityLabel="Mark selected incidents in progress" variant="secondary" size="sm" onPress={() => handleBulkStatus('In Progress')} disabled={bulkLoading} style={{ height: 32 }} icon={<Ionicons name="time" size={14} />} />
               <Button title="Resolve" accessibilityLabel="Resolve selected incidents" variant="default" size="sm" onPress={() => handleBulkStatus('Resolved')} disabled={bulkLoading} style={{ height: 32 }} icon={<Ionicons name="checkmark-circle" size={14} color="#FFF" />} />
               <Button title="Verify" accessibilityLabel="Verify selected incidents" variant="outline" size="sm" onPress={handleBulkVerify} disabled={bulkLoading} style={{ height: 32 }} icon={<Ionicons name="shield-checkmark" size={14} />} />
-              <TouchableOpacity onPress={() => setSelectedIds([])} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ paddingLeft: 4 }}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Clear selection" onPress={() => setSelectedIds([])} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ paddingLeft: 4 }}>
                 <Ionicons name="close-circle" size={20} color={COLORS.textMuted} />
               </TouchableOpacity>
             </ScrollView>
@@ -517,31 +499,31 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
         <Animated.View entering={FadeInDown.duration(400)} style={styles.desktopHeader}>
 
           <View>
-            <Text style={styles.desktopTitle}>Incident Registry</Text>
+            <Text style={styles.desktopTitle}>Complaint Queue</Text>
             <Text style={styles.desktopSubtitle}>Showing {filteredComplaints.length} of {pagination.total} matching civic issues</Text>
           </View>
           <View style={styles.desktopControls}>
-            <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search by ID, title, citizen..." style={styles.desktopSearch} />
+            <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search ID, issue or location" style={styles.desktopSearch} />
           </View>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.desktopFilterBar}>
           <FilterChipGroup options={statusOptions} selectedValue={statusFilter} onSelect={setStatusFilter} containerStyle={styles.desktopFilterChips} />
-          {priorityControls}
+          <Disclosure title="Priority and sorting" summary={`${priorityFilter === 'all' ? 'All priorities' : priorityFilter + ' priority'} · ${sortBy} first`}>{priorityControls}</Disclosure>
         </Animated.View>
 
         {renderBulkBar()}
 
         <View style={styles.tableHeaderRow}>
           <View style={styles.tableCheckboxHeader}>
-            <TouchableOpacity onPress={handleSelectAll} activeOpacity={0.8}>
+            <TouchableOpacity accessibilityRole="checkbox" accessibilityLabel="Select all complaints on this page" accessibilityState={{ checked: selectedIds.length > 0 && selectedIds.length === filteredComplaints.length }} onPress={handleSelectAll} activeOpacity={0.8}>
               <Ionicons name={selectedIds.length === filteredComplaints.length && filteredComplaints.length > 0 ? 'checkbox' : 'square-outline'} size={18} color={COLORS.textMuted} />
             </TouchableOpacity>
           </View>
           <View style={styles.tableThumbHeader}><Text style={styles.tableHeaderLabel}>IMAGE</Text></View>
-          <View style={styles.tableColTitle}><Text style={styles.tableHeaderLabel}>DOSSIER & CODE</Text></View>
-          <View style={styles.tableColComparison}><Text style={styles.tableHeaderLabel}>AI / USER CATEGORY</Text></View>
-          <View style={styles.tableColCitizen}><Text style={styles.tableHeaderLabel}>CITIZEN CONTACT</Text></View>
+          <View style={styles.tableColTitle}><Text style={styles.tableHeaderLabel}>COMPLAINT</Text></View>
+          <View style={styles.tableColComparison}><Text style={styles.tableHeaderLabel}>CATEGORY</Text></View>
+          <View style={styles.tableColCitizen}><Text style={styles.tableHeaderLabel}>LOCATION</Text></View>
           <View style={styles.tableColDate}><Text style={styles.tableHeaderLabel}>DATE</Text></View>
           <View style={styles.tableColStatus}><Text style={styles.tableHeaderLabel}>STATUS</Text></View>
           <View style={styles.tableColActionsHeader}><Text style={styles.tableHeaderLabel}>ACTIONS</Text></View>
@@ -582,7 +564,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
       <AuthorityMobileHeader
-        title="Incident Registry"
+        title="Complaint Queue"
         rightNode={
           <View style={styles.countPill}>
             <Text style={styles.countPillText}>{filteredComplaints.length}</Text>
@@ -593,7 +575,7 @@ export const AuthorityComplaintsScreen = ({ navigation, route }: any) => {
       <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.filterSection}>
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search incidents..." style={styles.searchBar} />
         <FilterChipGroup options={statusOptions} selectedValue={statusFilter} onSelect={setStatusFilter} containerStyle={styles.filterChips} />
-        {priorityControls}
+        <Disclosure title="Priority and sorting" summary={`${priorityFilter === 'all' ? 'All priorities' : priorityFilter + ' priority'} · ${sortBy} first`}>{priorityControls}</Disclosure>
       </Animated.View>
 
       {renderBulkBar()}
@@ -633,17 +615,17 @@ const styles = StyleSheet.create({
   safeAreaMobile: { flex: 1, backgroundColor: COLORS.background },
 
   // ── Desktop Table ──────────────────────────────────────────────────────────
-  desktopHeader: { position: 'relative', overflow: 'hidden', minHeight: 140, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING['4xl'], paddingTop: SPACING['3xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.background },
+  desktopHeader: { position: 'relative', overflow: 'hidden', minHeight: 96, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: SPACING.xl, backgroundColor: COLORS.background },
   desktopTitle: { ...TYPOGRAPHY.h1, color: COLORS.textPrimary },
   desktopSubtitle: { ...TYPOGRAPHY.bodySmall, color: COLORS.textSecondary, fontWeight: '500', marginTop: SPACING.xs },
   desktopControls: { width: 380 },
   desktopSearch: { marginBottom: 0 },
-  desktopFilterBar: { paddingHorizontal: SPACING['4xl'], paddingBottom: SPACING.xl, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+  desktopFilterBar: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl, backgroundColor: COLORS.background, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
   desktopFilterChips: { paddingVertical: SPACING.xs },
-  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING['4xl'], paddingVertical: SPACING.md, backgroundColor: COLORS.background, borderBottomWidth: 2, borderBottomColor: COLORS.borderLight },
+  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md, backgroundColor: COLORS.background, borderBottomWidth: 2, borderBottomColor: COLORS.borderLight },
   tableThumbHeader: { width: 44, marginRight: 14 },
   tableHeaderLabel: { ...TYPOGRAPHY.overline, color: COLORS.textSecondary },
-  desktopListContent: { paddingHorizontal: SPACING['4xl'], paddingTop: SPACING.md, paddingBottom: SPACING['6xl'] },
+  desktopListContent: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: SPACING['6xl'] },
   tableRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, paddingVertical: SPACING.md, paddingHorizontal: SPACING.xl, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.borderLight, marginBottom: SPACING.sm, ...(Platform.OS === 'web' ? { transition: 'all 0.1s ease-in-out' as any } : {}) },
   tableRowHovered: { borderColor: COLORS.border, backgroundColor: COLORS.backgroundNeutral },
   tableThumbWrapper: { width: 44, marginRight: 14, alignItems: 'center' },

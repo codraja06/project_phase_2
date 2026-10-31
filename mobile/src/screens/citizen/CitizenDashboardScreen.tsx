@@ -1,3 +1,4 @@
+import { PAGE } from '../../theme/layout';
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,27 +18,6 @@ import { formatDate } from '../../utils/date';
 const RED = '#B71C1C';
 const INK = '#17243A';
 const MUTED = '#536176';
-const CATEGORIES = [
-  { id: 'pothole', label: 'Pothole', icon: 'car-outline' },
-  { id: 'road_damage', label: 'Road Damage', icon: 'warning-outline' },
-  { id: 'garbage', label: 'Garbage', icon: 'trash-outline' },
-  { id: 'garbage_overflow', label: 'Garbage Overflow', icon: 'trash-bin-outline' },
-  { id: 'broken_streetlight', label: 'Streetlights', icon: 'bulb-outline' },
-  { id: 'water_leakage', label: 'Water Leakage', icon: 'water-outline' },
-] as const;
-const RANGES = [{ value: 7, label: '7 days' }, { value: 30, label: '30 days' }, { value: 0, label: 'All time' }];
-
-// Equal columns on native and web without percentage widths plus gaps overflowing.
-const Grid = ({ children, columns }: { children: React.ReactNode[]; columns: number }) => (
-  <View style={s.grid}>
-    {Array.from({ length: Math.ceil(children.length / columns) }, (_, row) => (
-      <View key={row} style={s.gridRow}>
-        {children.slice(row * columns, (row + 1) * columns).map((child, i) => <View key={i} style={s.gridCell}>{child}</View>)}
-      </View>
-    ))}
-  </View>
-);
-
 const IncidentSummary = ({ complaint: c, onPress }: { complaint: Complaint; onPress: () => void }) => {
   const [imageFailed, setImageFailed] = useState(false);
   return (
@@ -61,108 +41,48 @@ const IncidentSummary = ({ complaint: c, onPress }: { complaint: Complaint; onPr
 
 export const CitizenDashboardScreen = ({ navigation }: any) => {
   const { user } = useAuth();
+  const { width } = useBreakpoint();
   const { unreadCount } = useUnreadCount();
-  const { width, isDesktop } = useBreakpoint();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
-  const [range, setRange] = useState(30);
-  const twoColumns = width >= 1280;
-  const fourColumns = (twoColumns ? (Math.min(width - 260, 1800) - 80) * 0.60 : width - (isDesktop ? 260 : 0) - 48) >= 600;
+  const [loading, setLoading] = useState(true), [refreshing, setRefreshing] = useState(false), [error, setError] = useState('');
   const fetchData = useCallback(async () => {
     setError('');
-    try {
-      const result = await complaintApi.getMyComplaints();
-      setComplaints([...result.complaints].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)));
-    } catch (e: any) { setError(e.message || 'Your reports could not be loaded. Please try again.'); }
+    try { const result = await complaintApi.getMyComplaints(); setComplaints([...result.complaints].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))); }
+    catch (e: any) { setError(e.message || 'Your complaints could not be loaded.'); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
   useFocusEffect(useCallback(() => { void fetchData(); }, [fetchData]));
-  const periodComplaints = useMemo(() => complaints.filter(c => !range || Date.parse(c.createdAt) >= Date.now() - range * 86400000), [complaints, range]);
-  const stats = { total: periodComplaints.length, pending: periodComplaints.filter(c => c.status === 'Pending').length, inProgress: periodComplaints.filter(c => c.status === 'In Progress').length, resolved: periodComplaints.filter(c => c.status === 'Resolved').length };
-  const matches = useMemo(() => complaints.filter(c => [c.complaintId, c.title, c.description, c.category.replace(/_/g, ' '), c.address].some(v => v?.toLowerCase().includes(query.trim().toLowerCase()))), [complaints, query]);
-  const firstName = user?.name?.split(' ')[0] || 'Citizen';
-  const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
-  const openHistory = (filter = 'all') => navigation.navigate('ComplaintHistory', { filter, days: range });
-  if (loading) return <LoadingSpinner message="Loading your dashboard..." />;
-
-  return (
-    <SafeAreaView style={s.screen} edges={['top', 'left', 'right']}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView
-        testID="citizen-dashboard-scroll"
-        contentContainerStyle={[
-          s.page,
-          {
-            paddingHorizontal: width < 600 ? 16 : 28,
-            paddingTop: width < 600 ? 16 : 28,
-            paddingBottom: width < 600 ? 96 : 48,
-          },
-        ]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void fetchData(); }} colors={[RED]} />}
-      >
-        <View style={s.header}>
-          <View style={s.welcome}>
-            <Text style={s.eyebrow}>YOUR NEIGHBORHOOD. YOUR VOICE.</Text>
-            <Text accessibilityRole="header" style={[s.greeting, width < 600 && { fontSize: 26, lineHeight: 34 }]}>{greeting}, {firstName}.</Text>
-            <View style={s.welcomeMeta}><View style={s.citizenBadge}><Ionicons name="shield-checkmark-outline" size={13} color={RED} /><Text style={s.citizenBadgeText}>Citizen account</Text></View><Text style={s.subtitle}>A better city starts with you.</Text></View>
-          </View>
-          <View style={s.headerActions}>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open notifications" style={s.iconButton} onPress={() => navigation.navigate('Notifications')}><Ionicons name="notifications-outline" size={21} color={INK} /></TouchableOpacity>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open profile" style={[s.iconButton, s.avatar]} onPress={() => navigation.navigate('CitizenProfile')}>
-              <Text style={s.avatarText}>
-                {(user?.name || 'Citizen').split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'C'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+  if (loading) return <LoadingSpinner message="Loading your complaints…" />;
+  return <SafeAreaView style={PAGE.root} edges={['top', 'left', 'right']}>
+    <StatusBar barStyle="dark-content" />
+    <ScrollView testID="citizen-dashboard-scroll" contentContainerStyle={PAGE.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void fetchData(); }} colors={[RED]} />}>
+      <View style={PAGE.header}>
+        <View style={{ flex: 1, minWidth: 160 }}><Text accessibilityRole="header" style={PAGE.title}>Hello, {user?.name?.split(' ')[0] || 'Citizen'}.</Text><Text style={PAGE.body}>Report a local issue and follow its progress.</Text></View>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Notifications: ${unreadCount} unread`} style={s.iconButton} onPress={() => navigation.navigate('Notifications')}><Ionicons name="notifications-outline" size={22} color={INK} />{unreadCount > 0 && <Text style={s.detailLink}>{unreadCount}</Text>}</TouchableOpacity>
+      </View>
+      <View style={[s.reportCard, width >= 1100 && { flexDirection: 'row', alignItems: 'center', gap: 32 }]}>
+        <View style={{ flex: 1, minWidth: 0 }}><View style={s.reportIcon}><Ionicons name="camera-outline" size={28} color={RED} /></View><Text style={s.reportEyebrow}>YOUR NEIGHBORHOOD. YOUR VOICE.</Text><Text accessibilityRole="header" style={s.reportTitle}>Small reports. Meaningful change.</Text><Text style={s.reportDescription}>Spotted a civic issue? Capture a photo, confirm the details and follow the response from your local authority.</Text><Button title="Report an Issue" onPress={() => navigation.navigate('ReportIssue')} icon={<Ionicons name="add" size={20} color="#fff" />} style={{ alignSelf: width >= 600 ? 'flex-start' : 'stretch' }} /></View>
+        {width >= 1100 && <View style={s.heroGuide}>{[{ icon: 'camera-outline', title: 'Capture the issue', detail: 'Add a clear photo of what you see.' }, { icon: 'location-outline', title: 'Confirm the location', detail: 'Help the right team find the issue.' }, { icon: 'checkmark-circle-outline', title: 'Track the response', detail: 'See updates as your report progresses.' }].map((step, i) => <View key={step.title} style={s.guideRow}><View style={s.guideIcon}><Ionicons name={step.icon as any} size={20} color={RED} /></View><View style={{ flex: 1 }}><Text style={s.guideTitle}>{step.title}</Text><Text style={s.caption}>{step.detail}</Text></View></View>)}</View>}
+      </View>
+      {error ? <View accessibilityRole="alert" style={s.error}><Text style={s.errorText}>{error}</Text><Button title="Retry" variant="outline" onPress={fetchData} /></View> : <>
+        <View style={s.statusSummary}>{[
+          { label: 'Pending', status: 'Pending', filter: 'pending' },
+          { label: 'In progress', status: 'In Progress', filter: 'in_progress' },
+          { label: 'Resolved', status: 'Resolved', filter: 'resolved' },
+        ].map(item => { const count = complaints.filter(c => c.status === item.status).length; return <TouchableOpacity key={item.filter} accessibilityRole="button" accessibilityLabel={`${item.label}: ${count}`} onPress={() => navigation.navigate('ComplaintHistory', { filter: item.filter, days: 0 })} style={[s.statusItem, { borderTopColor: item.filter === 'pending' ? '#B7791F' : item.filter === 'in_progress' ? '#3867A6' : '#23815C' }]}><Ionicons name={item.filter === 'pending' ? 'time-outline' : item.filter === 'in_progress' ? 'construct-outline' : 'checkmark-circle-outline'} size={20} color={INK} /><Text style={s.metricValue}>{count}</Text><Text style={s.metricLabel}>{item.label}</Text></TouchableOpacity>; })}</View>
+        <View testID="recent-incidents" style={s.recent}><View style={PAGE.header}><Text accessibilityRole="header" style={PAGE.heading}>Recent complaints</Text><Button title="View all" variant="link" onPress={() => navigation.navigate('ComplaintHistory', { filter: 'all', days: 0 })} /></View>
+          {complaints.length ? complaints.slice(0, 3).map(c => <IncidentSummary key={c._id} complaint={c} onPress={() => navigation.navigate('ComplaintDetail', { complaintId: c._id })} />) : <Text style={PAGE.body}>No complaints yet. Your submitted reports and their updates will appear here.</Text>}
         </View>
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search your reports by issue, ID or location" style={s.search} />
-        <Grid columns={3}>{[
-          { title: 'My Reports', value: error ? '-' : String(complaints.length), icon: 'documents-outline', route: 'ComplaintHistory', caption: 'Your submitted complaints' },
-          { title: 'Nearby Issues', value: 'Map', icon: 'map-outline', route: 'CitizenMap', caption: 'Explore your reported locations' },
-          { title: 'Notifications', value: String(unreadCount), icon: 'notifications-outline', route: 'Notifications', caption: 'Unread complaint updates' },
-        ].map(item => <TouchableOpacity key={item.title} accessibilityRole="button" accessibilityLabel={`${item.title}: ${item.value}`} onPress={() => navigation.navigate(item.route)} style={[s.metric, { minHeight: 108 }]}><Ionicons name={item.icon as any} size={20} color={RED} /><Text style={[s.metricValue, { fontSize: 22 }]}>{item.value}</Text><Text style={s.metricLabel}>{item.title}</Text>{width >= 600 && <Text style={s.caption}>{item.caption}</Text>}</TouchableOpacity>)}</Grid>
-        {!!error && <View accessibilityRole="alert" style={s.error}><Text style={s.errorText}>{error}</Text><Button title="Retry" variant="outline" onPress={fetchData} /></View>}
-        <View style={[s.body, twoColumns && s.bodyWide]}>
-          <View style={[s.main, twoColumns && { flex: 1.5 }]}>
-            <View style={s.reportCard}>
-              <View style={s.reportIcon}><Ionicons name="camera-outline" size={28} color={RED} /></View>
-              <Text style={s.reportEyebrow}>SPOT IT. REPORT IT. TRACK IT.</Text>
-              <Text accessibilityRole="header" style={s.reportTitle}>Small reports.{'\n'}Meaningful change.</Text>
-              <Text style={s.reportDescription}>Take a photo of a civic issue. Let AI help identify it, confirm the location, and send your report.</Text>
-              <Button title="Report an Issue" onPress={() => navigation.navigate('ReportIssue')} icon={<Ionicons name="add" size={20} color="#FFFFFF" />} style={{ alignSelf: width < 480 ? 'stretch' : 'flex-start' }} />
-              <Text style={s.reportFootnote}>Photo  •  AI assistance  •  Location  •  Submit</Text>
-            </View>
-            <View style={s.section}>
-              <View style={s.sectionHeading}><Text accessibilityRole="header" style={s.sectionTitle}>Quick Issue Categories</Text><Text style={s.caption}>Start with an issue type</Text></View>
-              <Grid columns={fourColumns ? 3 : 2}>{CATEGORIES.map(cat => <TouchableOpacity key={cat.id} accessibilityRole="button" accessibilityLabel={`Report ${cat.label}`} style={s.category} onPress={() => navigation.navigate('ReportIssue', { initialCategory: cat.id })}><View style={s.categoryIcon}><Ionicons name={cat.icon} size={23} color={RED} /></View><Text style={s.categoryLabel}>{cat.label}</Text><Ionicons name="arrow-forward" size={16} color={MUTED} /></TouchableOpacity>)}</Grid>
-            </View>
-            <View style={s.section}>
-              <View style={s.sectionHeading}><Text accessibilityRole="header" style={s.sectionTitle}>Activity Overview</Text><View accessibilityRole="radiogroup" accessibilityLabel="Activity date range" style={s.rangeGroup}>{RANGES.map(r => <TouchableOpacity key={r.value} accessibilityRole="button" accessibilityState={{ selected: range === r.value }} accessibilityLabel={r.label} onPress={() => setRange(r.value)} style={[s.rangeButton, range === r.value && s.rangeActive]}><Text style={[s.rangeLabel, range === r.value && s.rangeLabelActive]}>{r.label}</Text></TouchableOpacity>)}</View></View>
-              <Grid columns={fourColumns ? 4 : 2}>{[
-                { label: 'Total Reports', count: stats.total, icon: 'documents-outline', color: INK, filter: 'all' },
-                { label: 'Pending', count: stats.pending, icon: 'time-outline', color: '#946000', filter: 'pending' },
-                { label: 'In Progress', count: stats.inProgress, icon: 'construct-outline', color: '#235DA8', filter: 'in_progress' },
-                { label: 'Resolved', count: stats.resolved, icon: 'checkmark-circle-outline', color: '#187047', filter: 'resolved' },
-              ].map(stat => <TouchableOpacity key={stat.filter} accessibilityRole="button" accessibilityLabel={`${stat.label}: ${stat.count}`} onPress={() => openHistory(stat.filter)} style={s.metric}><Ionicons name={stat.icon as any} size={20} color={stat.color} /><Text style={[s.metricValue, { color: stat.color }]}>{error ? '—' : stat.count}</Text><Text style={s.metricLabel}>{stat.label}</Text></TouchableOpacity>)}</Grid>
-              <View style={s.shortcuts}><Button title="My Reports" variant="link" onPress={() => navigation.navigate('ComplaintHistory', { filter: 'all', days: 0 })} /><Button title="Notifications" variant="link" onPress={() => navigation.navigate('Notifications')} /></View>
-            </View>
-            <View style={s.community}><Ionicons name="leaf-outline" size={28} color="#CBD5E1" /><View style={s.flex}><Text style={s.communityTitle}>Cleaner Neighborhoods. Stronger Communities.</Text><Text style={s.communitySub}>Report • Track • Create Change</Text></View></View>
-          </View>
-          <View testID="recent-incidents" style={[s.recent, twoColumns && { flex: 1 }]}>
-            <View style={s.sectionHeading}><Text accessibilityRole="header" style={s.sectionTitle}>{query.trim() ? 'Search Results' : 'Recent Incidents'}</Text><Button title="See all" variant="link" onPress={() => navigation.navigate('ComplaintHistory', { filter: 'all', days: 0, search: query })} /></View>
-            <Text style={s.recentIntro}>{query.trim() ? `${matches.length} matching reports` : 'Stay up to date with your latest reports.'}</Text>
-            {matches.length ? matches.slice(0, 5).map(c => <IncidentSummary key={c._id} complaint={c} onPress={() => navigation.navigate('ComplaintDetail', { complaintId: c._id })} />) : <View style={s.empty}><View style={s.emptyIcon}><Ionicons name="document-text-outline" size={30} color={RED} /></View><Text style={s.emptyTitle}>{error ? 'Reports unavailable' : query.trim() ? 'No matching reports' : 'Your first report starts here'}</Text><Text style={s.emptyText}>{error ? 'Retry loading your reports to see their latest status.' : query.trim() ? 'Try an issue type, a report ID, or a different location.' : 'Spotted an issue nearby? Report it and follow its progress right here.'}</Text><Button title={error ? 'Retry loading reports' : query.trim() ? 'Clear search' : 'Report your first issue'} variant="outline" onPress={error ? fetchData : query.trim() ? () => setQuery('') : () => navigation.navigate('ReportIssue')} /></View>}
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+      </>}
+    </ScrollView>
+  </SafeAreaView>;
 };
 
 const s = StyleSheet.create({
+  heroGuide: { width: 300, gap: 24, padding: 24, backgroundColor: '#FFFFFF', borderRadius: 14 },
+  guideRow: { flexDirection: 'row', gap: 12, alignItems: 'center' }, guideIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#FFF1F0', alignItems: 'center', justifyContent: 'center' }, guideTitle: { color: INK, fontSize: 14, lineHeight: 21, fontWeight: '600' },
+  statusSummary: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  statusItem: { flex: 1, minWidth: 84, minHeight: 128, gap: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E1E5EB', borderTopWidth: 3, borderRadius: 12, padding: 16 },
   screen: { flex: 1, backgroundColor: '#F5F7FA', minWidth: 0 },
   page: { width: '100%', maxWidth: 1800, alignSelf: 'center', gap: 24, paddingBottom: 36 },
   flex: { flex: 1, minWidth: 0 }, header: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 },
@@ -173,7 +93,7 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 13, color: MUTED }, headerActions: { flexDirection: 'row', gap: 10 }, iconButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DFE4EB', alignItems: 'center', justifyContent: 'center' },
   avatar: { backgroundColor: '#FCEEEE', borderColor: '#F1D8D8' }, avatarText: { fontSize: 14, fontWeight: '700', color: RED }, search: { marginBottom: 0 },
   body: { gap: 24 }, bodyWide: { flexDirection: 'row', alignItems: 'flex-start' }, main: { minWidth: 0, gap: 24 },
-  reportCard: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E6DCDC', borderRadius: 16, padding: 24, borderTopWidth: 4, borderTopColor: RED },
+  reportCard: { backgroundColor: '#FFF5F4', borderWidth: 1, borderColor: '#EFD5D3', borderRadius: 18, padding: 24, borderTopWidth: 3, borderTopColor: RED },
   reportIcon: { width: 52, height: 52, borderRadius: 14, backgroundColor: '#FCF0F0', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }, reportEyebrow: { fontSize: 10, fontWeight: '700', letterSpacing: 1.3, color: RED, marginBottom: 10 }, reportTitle: { fontSize: 29, lineHeight: 36, letterSpacing: -0.6, color: INK, fontWeight: '700' }, reportDescription: { color: MUTED, fontSize: 14, lineHeight: 22, marginTop: 12, marginBottom: 22, maxWidth: 520 }, reportFootnote: { fontSize: 11, color: MUTED, lineHeight: 18, marginTop: 14 },
   section: { gap: 14 }, sectionHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 }, sectionTitle: { fontSize: 17, fontWeight: '700', color: INK, flexShrink: 1 }, caption: { fontSize: 11, lineHeight: 17, color: MUTED },
   grid: { gap: 12 }, gridRow: { flexDirection: 'row', gap: 12 }, gridCell: { flex: 1, minWidth: 0 },

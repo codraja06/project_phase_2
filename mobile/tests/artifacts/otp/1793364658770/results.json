@@ -1,0 +1,48 @@
+{
+  "checks": [
+    "OTP layout at six widths, cooldown disabled, two accessibility scans"
+  ],
+  "widths": [
+    {
+      "width": 320,
+      "height": 568,
+      "scroll": 320
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "scroll": 375
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scroll": 768
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scroll": 1024
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scroll": 1440
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "scroll": 1920
+    }
+  ],
+  "accessibility": [
+    {
+      "width": 320,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "violations": []
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,30 @@
+
+> civic-complaint-backend@1.0.0 test
+> jest --runInBand --detectOpenHandles --silent
+
+PASS tests/partialCompletion.test.ts (9.349 s)
+PASS tests/features7to12.test.ts
+PASS tests/signupVerification.test.ts
+PASS tests/resolutionDelivery.test.ts
+PASS tests/audit20261025.test.ts
+PASS tests/authority.test.ts
+PASS tests/complaint.test.ts
+PASS tests/departmentScope.test.ts
+PASS tests/masterUpgrade.test.ts
+PASS tests/security.test.ts
+PASS tests/features456.test.ts
+PASS tests/aiRateLimit.test.ts
+PASS tests/powerBiExport.test.ts
+PASS tests/phase2.test.ts
+PASS tests/auth.test.ts
+PASS tests/googleAuth.test.ts
+PASS tests/centralAudit.test.ts
+PASS tests/contactDelivery.test.ts
+PASS tests/verificationEmailTemplate.test.ts
+PASS tests/productionUpload.test.ts
+PASS tests/errorDiagnostics.test.ts
+
+Test Suites: 21 passed, 21 total
+Tests:       125 passed, 125 total
+Snapshots:   0 total
+Time:        37.654 s

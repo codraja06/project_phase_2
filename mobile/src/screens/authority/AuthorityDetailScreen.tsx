@@ -1,3 +1,4 @@
+import { Disclosure } from '../../components/Disclosure';
 import { MapLocationPicker } from '../../components/MapLocationPicker';
 import { RequestError } from '../../components/RequestError';
 import { TriageSummary } from '../../components/TriageSummary';
@@ -105,12 +106,12 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
   if (loadError) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} />
         <View style={styles.headerBar}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+            <Ionicons name="chevron-back" size={20} color={COLORS.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Incident Dossier</Text>
+          <Text style={styles.headerTitle}>Complaint details</Text>
         </View>
         <View style={{ flex: 1, backgroundColor: COLORS.backgroundNeutral }}>
           <RequestError message={loadError} onRetry={fetchDetail} />
@@ -121,12 +122,12 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
   if (loading && !refreshing) return <LoadingSpinner message="Loading municipal dossier..." />;
   if (!complaint) return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} />
       <View style={styles.headerBar}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={20} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Incident Dossier</Text>
+        <Text style={styles.headerTitle}>Complaint details</Text>
       </View>
       <View style={{ flex: 1, backgroundColor: COLORS.backgroundNeutral, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl }}>
         <Ionicons name="alert-circle-outline" size={48} color={COLORS.textMuted} style={{ marginBottom: SPACING.md }} />
@@ -160,12 +161,12 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} />
       <Animated.View entering={FadeInDown.duration(400)} style={styles.headerBar}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back" style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={20} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Incident Dossier</Text>
+        <Text style={styles.headerTitle}>Complaint details</Text>
         <Badge label={complaint.status.toUpperCase()} variant={isResolved ? 'success' : isInProgress ? 'default' : 'warning'} />
       </Animated.View>
 
@@ -182,7 +183,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
               <Animated.View entering={FadeInUp.delay(200)}>
                 <Card style={{ marginTop: SPACING.lg }}>
                   <CardContent>
-                    <View style={styles.metaHeaderRow}><Ionicons name="person-circle" size={20} color={COLORS.secondary} /><Text style={styles.metaCardTitle}> Reporting Citizen</Text></View>
+                    <View style={styles.metaHeaderRow}><Ionicons name="person-circle" size={20} color={COLORS.secondary} /><Text style={styles.metaCardTitle}> Citizen contact</Text></View>
                     <Text style={styles.citizenNameText}>{citizenName}</Text>
                     {citizenEmail && <Text style={styles.citizenEmailText}>{citizenEmail}</Text>}
                     {citizenPhone && <Text style={styles.citizenPhoneText}>{citizenPhone}</Text>}
@@ -193,8 +194,8 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
               <Animated.View entering={FadeInUp.delay(300)}>
                 <Card style={{ marginTop: SPACING.lg }}>
                   <CardContent>
-                    <View style={styles.metaHeaderRow}><Ionicons name="location" size={20} color={COLORS.primary} /><Text style={styles.metaCardTitle}> Geographic Verification</Text></View>
-                    <Text style={styles.locationText}>{complaint.address || 'Address registered with device GPS sensor'}</Text>
+                    <View style={styles.metaHeaderRow}><Ionicons name="location" size={20} color={COLORS.primary} /><Text style={styles.metaCardTitle}> Location</Text></View>
+                    <Text style={styles.locationText}>{complaint.address || 'Address unavailable; see recorded coordinates'}</Text>
                     {Number.isFinite(complaint.latitude) && Number.isFinite(complaint.longitude) && <Text style={styles.coordsText}>Lat: {complaint.latitude.toFixed(5)}, Long: {complaint.longitude.toFixed(5)}</Text>}
                   </CardContent>
                 </Card>
@@ -225,7 +226,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
               </Animated.View>
 
               <Animated.View entering={FadeInUp.delay(200)}>
-                <Card style={{ marginBottom: SPACING.lg, backgroundColor: COLORS.surface }}>
+                <Disclosure title="Detection comparison"><Card style={{ marginBottom: SPACING.lg, backgroundColor: COLORS.surface }}>
                   <CardContent style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.compareLabel}>AI PREDICTED</Text>
@@ -239,16 +240,16 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                       <Text style={styles.compareSub}>{complaint.customCategory ? 'Custom' : 'Standard'}</Text>
                     </View>
                   </CardContent>
-                </Card>
+                </Card></Disclosure>
               </Animated.View>
 
               <Animated.View entering={FadeInUp.delay(300)} style={styles.descBlock}>
-                <Text style={styles.descLabel}>NARRATIVE</Text>
+                <Text style={styles.descLabel}>Description</Text>
                 <Text style={styles.descriptionText}>{complaint.description || 'No description provided.'}</Text>
               </Animated.View>
 
               <Animated.View entering={FadeInUp.delay(400)} style={styles.actionsSection}>
-                <Text style={styles.actionsSectionHeader}>MUNICIPAL ACTION PIPELINE</Text>
+                <Text style={styles.actionsSectionHeader}>Update complaint</Text>
                 {!isVerified && <Button title="Verify Incident" onPress={handleVerifyComplaint} variant="secondary" size="lg" loading={actionLoading} style={styles.actionBtn} />}
                 {!isInProgress && !isResolved && <Button title="Mark In Progress" onPress={() => setProgressModalVisible(true)} variant="default" size="lg" loading={actionLoading} style={styles.actionBtn} />}
                 {isInProgress && <Button title="Mark Resolved" onPress={() => setResolveModalVisible(true)} variant="default" size="lg" loading={actionLoading} disabled={!!complaint.completionImageUrl && complaint.completionReview !== 'accepted'} style={styles.actionBtn} />}
@@ -276,7 +277,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
               </Animated.View>
 
               <Animated.View entering={FadeInUp.delay(300)}>
-                <Card style={{ marginBottom: SPACING.lg, backgroundColor: COLORS.surface }}>
+                <Disclosure title="Detection comparison"><Card style={{ marginBottom: SPACING.lg, backgroundColor: COLORS.surface }}>
                   <CardContent style={{ flexDirection: 'row', justifyContent: 'space-between', padding: SPACING.md }}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.compareLabel}>AI PREDICTED</Text>
@@ -288,7 +289,7 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                       <Text style={styles.compareVal}>{citizenCategoryLabel}</Text>
                     </View>
                   </CardContent>
-                </Card>
+                </Card></Disclosure>
               </Animated.View>
 
               <Animated.View entering={FadeInUp.delay(400)}>
@@ -353,10 +354,10 @@ export const AuthorityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0F172A' },
-  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: 10, paddingBottom: 14, backgroundColor: '#0F172A', borderBottomWidth: 2, borderBottomColor: COLORS.gold },
+  safeArea: { flex: 1, backgroundColor: COLORS.surface },
+  headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: 10, paddingBottom: 14, backgroundColor: COLORS.surface, borderBottomWidth: 2, borderBottomColor: COLORS.gold },
   backBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', marginRight: SPACING.md },
-  headerTitle: { ...TYPOGRAPHY.h3, color: '#FFFFFF', flex: 1 },
+  headerTitle: { ...TYPOGRAPHY.h3, color: COLORS.textPrimary, flex: 1 },
   container: { flex: 1, backgroundColor: COLORS.backgroundNeutral },
   scrollContent: { paddingBottom: SPACING['5xl'] },
   desktopScrollContent: { padding: SPACING['5xl'], maxWidth: 1440, alignSelf: 'center', width: '100%' },

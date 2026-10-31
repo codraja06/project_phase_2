@@ -1,0 +1,4 @@
+const {chromium,mockApi,login}=require('./fixtures.cjs');
+const AxeBuilder=require('@axe-core/playwright').default;
+const fs=require('fs');
+(async()=>{const browser=await chromium.launch({channel:'msedge'});try{const results=[];for(const role of ['citizen','authority']){const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});const page=await context.newPage();await mockApi(page,role);await login(page,role);const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();results.push({role,violations:result.violations.map(v=>({id:v.id,impact:v.impact,targets:v.nodes.map(n=>n.target)}))});await page.close();}fs.writeFileSync('tests/artifacts/ui-accessibility.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results));}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

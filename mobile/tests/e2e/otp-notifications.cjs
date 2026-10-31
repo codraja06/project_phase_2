@@ -68,7 +68,7 @@ async function fixture(page, options = {}) {
   await expect(page.getByRole('alert')).toContainText('invalid'); expect(state.events).not.toContain('complete');
   await page.getByLabel('Email verification code', { exact: true }).fill('420731');
   await page.getByLabel('Email verification code', { exact: true }).press('Enter');
-  await expect(page.getByText('Quick Issue Categories', { exact: true }).last()).toBeVisible();
+  await expect(page.getByText('Recent complaints', { exact: true }).last()).toBeVisible();
   expect(state.events.filter(e => e === 'complete')).toHaveLength(1); checks.push('Invalid OTP error then six-digit paste/keyboard submit completes existing dashboard navigation');
   await context.close();
   const unavailableContext = await browser.newContext({viewport:{width:375,height:812},reducedMotion:'reduce'});
@@ -109,17 +109,17 @@ async function fixture(page, options = {}) {
         await p.getByRole('button',{name:'Go to sign in',exact:true}).click();
         await expect(p.getByLabel('Email Address',{exact:true}).filter({visible:true})).toBeVisible();
       } else if (name === 'network') { await expect(p.getByRole('alert')).toBeVisible(); expect(data.events).not.toContain('complete'); }
-      else await expect(p.getByText('Quick Issue Categories',{exact:true}).last()).toBeVisible();
+      else await expect(p.getByText('Recent complaints',{exact:true}).last()).toBeVisible();
     }
     checks.push(`${name} state uses the signup API and preserves account verification rules`); await c.close();
   }
   const c = await browser.newContext({viewport:{width:375,height:812},reducedMotion:'reduce'}), p = await c.newPage();
   p.on('pageerror',e=>errors.push(e.message)); const list = await mockApi(p);
   list.notifications.push({_id:'64f000000000000000000001',title:'Complaint Resolved',message:'Your complaint #CIV-100100 has been resolved. Thank you for helping improve your community.',complaintId:complaints[0]._id,createdAt:new Date().toISOString(),resolution:{category:'pothole',resolvedAt:new Date().toISOString()},deliveries:[{channel:'email',status:'Sent',attempts:1},{channel:'sms',status:'Skipped',errorCode:'sms_consent_absent',attempts:0}]});
-  await login(p); await p.getByRole('button', { name: 'Notifications', exact: true }).first().click();
+  await login(p); await p.getByRole('button', { name: /^Notifications: [0-9]+ unread$/ }).first().click();
   await expect(p.getByText('View complaint details →',{exact:true})).toBeVisible(); await expect(p.getByText(/Email: Accepted by provider/)).toBeVisible(); await expect(p.getByText(/SMS consent is needed/)).toBeVisible();
   await p.screenshot({path:path.join(artifact,'resolution-notification-375.png'),fullPage:true});
-  await p.getByRole('button',{name:'Complaint Resolved',exact:true}).click(); await expect(p.getByText('Incident Dossier',{exact:true})).toBeVisible(); expect(list.notifications[0].readAt).toBeTruthy(); checks.push('Resolution metadata and delivery states render, mark read and open correct complaint'); await c.close();
+  await p.getByRole('button',{name:'Complaint Resolved',exact:true}).click(); await expect(p.getByText('Complaint details',{exact:true})).toBeVisible(); expect(list.notifications[0].readAt).toBeTruthy(); checks.push('Resolution metadata and delivery states render, mark read and open correct complaint'); await c.close();
   expect(errors).toEqual([]);
  } finally {
    await browser.close(); fs.writeFileSync(path.join(artifact,'results.json'),JSON.stringify({checks,widths,accessibility,errors},null,2));

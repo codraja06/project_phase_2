@@ -1,3 +1,4 @@
+import { Disclosure } from '../../components/Disclosure';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -75,9 +76,9 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
 
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Incident Hotspots & Geographic Density</Text>
+            <Text style={styles.title}>Complaint map</Text>
             <Text style={styles.subtitle}>
-              GPS-reported complaints grouped into adjustable geographic grid cells. Click any cluster pin or cell to inspect underlying reports.
+              Select a location group to review its complaints.
             </Text>
           </View>
           <View style={styles.statBadge}>
@@ -88,6 +89,7 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
           </View>
         </View>
 
+        <Disclosure title="Map filters" summary={`${query.status || 'All statuses'} · ${(query.category || 'all').replace(/_/g, ' ')} · ${query.priority || 'all'} priority`}>
         <FilterChipGroup options={[{ label: 'Block / 0.001 degrees', value: '.001' }, { label: 'Neighbourhood / 0.01 degrees', value: '.01' }, { label: 'Area / 0.05 degrees', value: '.05' }]} selectedValue={String(cellDegrees).replace(/^0/, '')} onSelect={value => setCellDegrees(Number(value))} />
         <Text style={{ color: COLORS.textSecondary }}>Geographic grid counts. Default window: last {windowDays} days unless dates are selected. These are observed report concentrations.</Text>
         {/* Filter Bar */}
@@ -144,6 +146,7 @@ export const AuthorityMapScreen = ({ navigation }: any) => {
           </View>
         </View>
 
+        </Disclosure>
         {!!error && (
           <View accessibilityRole="alert" style={styles.errorBox}>
             <Text style={styles.errorText}>{error}</Text>

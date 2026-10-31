@@ -6,7 +6,7 @@ const image = fs.readFileSync(path.join(__dirname, '../../assets/icon.png'));
 const user = { _id: '64a000000000000000000001', name: 'Asha Patel', email: 'citizen.qa@example.test', role: 'citizen', phone: '1234567890' };
 const complaints = [0,1,2,3,4,5].map((n) => ({ _id: `64b00000000000000000000${n}`, complaintId: `CIV-10010${n}`, title: ['Pothole near station','Waste collection needed','Road surface cracked'][n%3], description: ['Pothole near the pedestrian crossing. Please repair the damaged surface.','Uncollected waste is blocking the footpath.','Cracked road surface near the bus stop.'][n%3], category: ['pothole','garbage','road_damage'][n%3], address: 'Station Road, Central neighborhood', imageUrl: 'http://localhost:8081/qa-image.png', status: ['Pending','In Progress','Resolved'][n%3], priority: n===0?'high':'medium', createdAt: new Date(Date.now() - (n===5?70:n)*86400000).toISOString(), updatedAt: new Date().toISOString(), resolvedAt: n%3===2 ? new Date().toISOString() : null, createdBy: user, aiConfidence: .91, boundingBoxes: [], latitude: 12.97, longitude: 77.59, verified: false }));
 async function mockApi(page, role='citizen', options={}) {
- const account = {...user, role, name: role==='citizen'?'Asha Patel':'Officer Asha Patel'};
+ const account = {...user, role, ...(options.isAdmin ? { isAdmin: true } : {}), name: role==='citizen'?'Asha Patel':'Officer Asha Patel'};
  const state={ complaints: structuredClone(complaints), notifications:[], requests:[], fail:false, ...options };
  await page.route('**/qa-image.png', r=>r.fulfill({contentType:'image/png',body:image}));
  await page.route('**/api/**', async r=>{
@@ -49,6 +49,6 @@ async function login(page,role='citizen') {
  await page.getByLabel(role==='citizen'?'Password':'Officer Security Password',{exact:true}).fill('FixturePassword123!');
  const button=page.getByRole('button',{name:role==='citizen'?'Sign In':'Authenticate as Officer',exact:true});
  if(await button.count()) await button.click(); else await page.getByRole('button').filter({hasText:/sign in|authenticate/i}).click();
- await page.getByText(role==='citizen'?'Quick Issue Categories':'Command Center',{exact:true}).last().waitFor();
+ await page.getByText(role==='citizen'?'Recent complaints':'Needs attention',{exact:true}).last().waitFor();
 }
 module.exports={chromium,mockApi,login,complaints,user};

@@ -1,9 +1,9 @@
 export function installWebStyles() {
   const style = document.createElement('style');
   style.textContent = `
-    html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; background: #FAF6F2; }
+    html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; background: #F8FAFC; }
     #root { display: flex; flex-direction: column; min-height: 100dvh; }
-    body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Nirmala UI", "Noto Sans Tamil", Roboto, sans-serif; color: #281E23; }
+    body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Nirmala UI", "Noto Sans Tamil", Roboto, sans-serif; color: #0F172A; }
     input, textarea, button { font-family: inherit; }
     :focus-visible { outline: 3px solid #BE2638 !important; outline-offset: 3px; }
     @media (prefers-reduced-motion: reduce) {

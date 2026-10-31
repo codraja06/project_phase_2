@@ -28,7 +28,7 @@ describe('Duplicate review, departments, repair evidence, notifications and oper
   beforeAll(async () => {
     await mongoose.connect(env.MONGODB_URI);
     const create = (name: string, role: string, isAdmin = false) => User.create({
-      name, email: `features712-${name}@example.test`, phone: '9876543210', password: 'LocalTestOnly123!', role, isAdmin,
+      name, email: `features712-${name}@example.test`, phone: '9876543210', password: 'LocalTestOnly123!', role, isAdmin, department: 'Road Works',
     });
     citizen = await create('citizen', 'citizen'); other = await create('other', 'citizen');
     officer = await create('officer', 'authority'); admin = await create('admin', 'authority', true);
@@ -46,7 +46,7 @@ describe('Duplicate review, departments, repair evidence, notifications and oper
     await User.deleteMany({ _id: { $in: users } });
     await mongoose.disconnect();
   });
-  const base = { title: 'features712 road concern', description: 'Observed road issue in the submitted photo.', category: 'features712_pothole',
+  const base = { title: 'features712 road concern', description: 'Observed road issue in the submitted photo.', category: 'features712_pothole', assignedDepartment: 'Road Works',
     imageUrl: 'http://example.test/road.jpg', latitude: 12.91, longitude: 80.21, address: 'GPS coordinates recorded' };
 
   it('restricts mapping edits to administrators and routes new reports without changing status', async () => {
@@ -87,6 +87,7 @@ describe('Duplicate review, departments, repair evidence, notifications and oper
     expect((await request(app).patch(`/api/management/complaints/${submitted._id}/department`).set(authorized(officerToken)).send({ department: 'Field Repairs', reason: 'Unauthorized reassignment attempt' })).status).toBe(403);
     expect((await request(app).patch(`/api/management/complaints/${submitted._id}/department`).set(authorized(adminToken))
       .send({ department: 'Field Repairs', reason: 'Field team reassigned work' })).body.data.assignedDepartment).toBe('Field Repairs');
+    await User.updateOne({ _id: officer._id }, { $set: { department: 'Field Repairs' } });
     expect((await request(app).patch(`/api/authority/complaints/${submitted._id}/status`).set(authorized(officerToken)).send({ status: 'In Progress' })).status).toBe(200);
     const mocked = jest.spyOn(storage, 'uploadToCloudinary').mockResolvedValue('http://example.test/completed.png');
     const image = await sharp({ create: { width: 2, height: 2, channels: 4, background: '#dddddd' } }).png().toBuffer();
@@ -130,7 +131,7 @@ describe('Duplicate review, departments, repair evidence, notifications and oper
     expect((await request(app).get('/api/management/hotspots').set(authorized(citizenToken))).status).toBe(403);
     const analytics = await request(app).get('/api/authority/analytics?search=features712').set(authorized(officerToken));
     expect(analytics.status).toBe(200);
-    expect(analytics.body.data.summary.unresolved).toBe(2);
+    expect(analytics.body.data.summary.unresolved).toBe(0);
     expect(analytics.body.data.summary.resolved).toBe(1);
     expect(analytics.body.data.summary.averageResolutionHours).toBeGreaterThanOrEqual(0);
     expect(analytics.body.data.resolutionByDepartment.find((d: any) => d.department === 'Field Repairs').resolved).toBe(1);

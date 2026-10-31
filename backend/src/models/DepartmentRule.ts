@@ -1,3 +1,4 @@
+import { durableAuditPlugin } from '../services/auditContext';
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IDepartmentRule extends Document {
@@ -20,4 +21,5 @@ const schema = new Schema<IDepartmentRule>({
   sourceNote: { type: String, trim: true, maxlength: 500, default: '' },
 }, { timestamps: true });
 
+schema.plugin(durableAuditPlugin, { entity: 'DepartmentRule' });
 export const DepartmentRule = mongoose.model<IDepartmentRule>('DepartmentRule', schema);

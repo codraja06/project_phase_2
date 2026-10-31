@@ -1,3 +1,4 @@
+import { durableAuditPlugin } from '../services/auditContext';
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
@@ -13,6 +14,7 @@ export interface IUser extends Document {
   avatar?: string;
   role: UserRole;
   isAdmin?: boolean;
+  department?: string;
   sessionVersion?: number;
   emailVerifiedAt?: Date | null;
   phoneVerifiedAt?: Date | null;
@@ -33,6 +35,7 @@ const UserSchema = new Schema<IUser>(
     avatar: { type: String, default: '' },
     role: { type: String, enum: ['citizen', 'authority'], default: 'citizen' },
     isAdmin: { type: Boolean, default: false },
+    department: { type: String, trim: true, maxlength: 100 },
     sessionVersion: { type: Number, default: 0 },
     emailVerifiedAt: { type: Date, default: null },
     phoneVerifiedAt: { type: Date, default: null },
@@ -70,8 +73,10 @@ UserSchema.set('toJSON', {
   transform: function (_doc, ret: Record<string, any>) {
     delete ret.password;
     delete ret.__v;
+    delete ret.auditPending;
     return ret;
   },
 });
 
+UserSchema.plugin(durableAuditPlugin, { entity: 'User' });
 export const User = mongoose.model<IUser>('User', UserSchema);

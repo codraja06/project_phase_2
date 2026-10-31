@@ -19,7 +19,7 @@ describe('Resolution delivery, durable outbox, privacy and authorization', () =>
   const resolve = (id: any, token = officerToken) => request(app).patch(`/api/authority/complaints/${id}/status`).set(auth(token)).send({ status: 'Resolved' });
   beforeAll(async () => {
     await mongoose.connect(env.MONGODB_URI); await NotificationDelivery.init();
-    for (const role of ['citizen', 'authority', 'citizen']) users.push(await User.create({ name: 'Delivery <Citizen>', email: `delivery-${users.length}@resolution-test.example`, phone: '+919876543210', password: 'DeliveryTest123!', role }));
+    for (const role of ['citizen', 'authority', 'citizen']) users.push(await User.create({ name: 'Delivery <Citizen>', email: `delivery-${users.length}@resolution-test.example`, phone: '+919876543210', password: 'DeliveryTest123!', role, isAdmin: role === 'authority' }));
     [citizen, officer, other] = users;
     citizenToken = generateToken({ userId: String(citizen._id), role: 'citizen' }); officerToken = generateToken({ userId: String(officer._id), role: 'authority' });
   });

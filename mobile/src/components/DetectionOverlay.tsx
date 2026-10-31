@@ -102,7 +102,7 @@ export const DetectionOverlay: React.FC<DetectionOverlayProps> = ({
         {!imageLoaded && !imageError && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Processing Visual AI Feed...</Text>
+            <Text style={styles.loadingText}>Loading issue photo…</Text>
           </View>
         )}
 

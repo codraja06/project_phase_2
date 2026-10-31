@@ -5,6 +5,9 @@ import { AnalyticsData, AnalyticsQuery } from '../types/analytics';
 
 // axiosClient returns response.data = { success, data: ... }
 export const authorityApi = {
+  async exportPowerBi(params: AnalyticsQuery): Promise<{ csv: string; rowCount: number }> {
+    const response: any = await axiosClient.get('/authority/analytics/export', { params }); return response.data;
+  },
   async getAnalytics(params: AnalyticsQuery): Promise<AnalyticsData> {
     const response: any = await axiosClient.get('/authority/analytics', { params }); return response.data;
   },

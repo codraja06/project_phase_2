@@ -1,3 +1,4 @@
+import { Disclosure } from '../../components/Disclosure';
 import { RequestError } from '../../components/RequestError';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
@@ -157,12 +158,12 @@ export const ComplaintHistoryScreen = ({ navigation, route }: any) => {
 
         {/* Desktop Filter Bar */}
         <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.desktopFilterBar}>
-          <FilterChipGroup
+          <Disclosure title="Filter complaints" summary={`Status: ${statusFilter.replace(/_/g, ' ')}${route?.params?.days ? ` · Last ${route.params.days} days` : ''}`}><FilterChipGroup
             options={filterOptions}
             selectedValue={statusFilter}
             onSelect={setStatusFilter}
             containerStyle={styles.desktopFilterChips}
-          />
+          /></Disclosure>
         </Animated.View>
 
         {loading && !refreshing ? (
@@ -228,12 +229,12 @@ export const ComplaintHistoryScreen = ({ navigation, route }: any) => {
           placeholder="Search reports..."
           style={styles.searchBar}
         />
-        <FilterChipGroup
+        <Disclosure title="Filter complaints" summary={`Status: ${statusFilter.replace(/_/g, ' ')}${route?.params?.days ? ` · Last ${route.params.days} days` : ''}`}><FilterChipGroup
           options={filterOptions}
           selectedValue={statusFilter}
           onSelect={setStatusFilter}
           containerStyle={styles.filterChips}
-        />
+        /></Disclosure>
       </Animated.View>
 
       {loading && !refreshing ? (
@@ -284,8 +285,8 @@ const styles = StyleSheet.create({
     gap: 16,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING['4xl'],
-    paddingTop: SPACING['3xl'],
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.lg,
     paddingBottom: SPACING.xl,
     backgroundColor: COLORS.background},
   desktopHeaderLeft: {
@@ -299,11 +300,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginTop: SPACING.xs},
   desktopControls: {
-    width: 380},
+    flex: 1, maxWidth: 380, minWidth: 200},
   desktopSearch: {
     marginBottom: 0},
   desktopFilterBar: {
-    paddingHorizontal: SPACING['4xl'],
+    paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.xl,
     backgroundColor: COLORS.background,
     borderBottomWidth: 1.5,
@@ -311,7 +312,7 @@ const styles = StyleSheet.create({
   desktopFilterChips: {
     paddingVertical: SPACING.xs},
   desktopListContent: {
-    paddingHorizontal: SPACING['4xl'],
+    paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.xl,
     paddingBottom: SPACING['6xl']},
   desktopColumnWrapper: {

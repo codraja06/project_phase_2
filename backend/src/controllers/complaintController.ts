@@ -1,3 +1,4 @@
+import { authorityScope } from '../services/authorityScope';
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { Complaint } from '../models/Complaint';
@@ -83,7 +84,7 @@ export const getMyComplaints = async (req: AuthRequest, res: Response, next: Nex
     }
 
     const { status, category, search } = req.query;
-    const filter: any = { createdBy: req.user._id };
+    const filter: any = { createdBy: req.user._id, ...(req.user.role === 'authority' ? authorityScope(req.user) : {}) };
 
     if (typeof status === 'string' && status !== 'All' && status !== 'all') {
       const s = status.toString().toLowerCase().replace('_', ' ');
@@ -129,7 +130,7 @@ export const getComplaintById = async (req: AuthRequest, res: Response, next: Ne
     }
 
     const { id } = req.params;
-    const complaint = await Complaint.findById(id).populate('createdBy', 'name email phone');
+    const complaint = await Complaint.findOne({ _id: id, ...(req.user.role === 'authority' ? authorityScope(req.user) : {}) }).populate('createdBy', 'name email phone');
 
     if (!complaint) {
       throw new ApiError(404, 'Complaint not found');

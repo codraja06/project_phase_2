@@ -17,7 +17,7 @@ describe('Civic assistance and authority analytics', () => {
   beforeAll(async () => {
     await mongoose.connect(env.MONGODB_URI);
     await User.deleteMany({ email: /features456-.*@example.test/ });
-    const create = (name: string, role: string) => User.create({ name, email: `features456-${name}@example.test`, phone: '9876543210', password: 'LocalTestOnly123!', role });
+    const create = (name: string, role: string) => User.create({ name, email: `features456-${name}@example.test`, phone: '9876543210', password: 'LocalTestOnly123!', role, isAdmin: role === 'authority' });
     citizen = await create('citizen', 'citizen'); other = await create('other', 'citizen'); officer = await create('officer', 'authority');
     token = generateToken({ userId: String(citizen._id), role: 'citizen' }); otherToken = generateToken({ userId: String(other._id), role: 'citizen' }); officerToken = generateToken({ userId: String(officer._id), role: 'authority' });
     const base = { title: 'features456 civic issue', description: 'Observed condition recorded by a citizen.', category: 'garbage', imageUrl: 'http://example.test/test.jpg', latitude: -33.9, longitude: 151.2 };

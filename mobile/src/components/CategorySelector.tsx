@@ -1,3 +1,4 @@
+import { Disclosure } from './Disclosure';
 import React from 'react';
 import {
   View,
@@ -79,10 +80,10 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
         </View>
       )}
 
-      <Text style={styles.sectionTitle}>Select Complaint Category</Text>
+      <Text style={styles.sectionTitle}>Issue category: {CATEGORY_OPTIONS.find(item => item.key === selectedCategory)?.label || selectedCategory.replace(/_/g, ' ')}</Text>
 
       {/* Category Grid */}
-      <View style={styles.grid}>
+      <Disclosure title="Change issue category" defaultExpanded={!aiDetected}><View style={styles.grid}>
         {CATEGORY_OPTIONS.map((item) => {
           const isSelected = selectedCategory === item.key;
           return (
@@ -98,7 +99,6 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
               onPress={() => onSelectCategory(item.key)}
               activeOpacity={0.75}
             >
-              {/pothole|road|garbage|water|streetlight|drain/.test(item.key) && <Image source={categoryPhoto(item.key)} accessible={false} resizeMode="cover" style={{ width: 42, height: 46, borderRadius: 7, marginRight: 8 }} />}
               <View
                 style={[
                   styles.categoryIconCircle,
@@ -129,6 +129,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
         })}
       </View>
 
+      </Disclosure>
       {/* Custom Category Input if 'other' is selected */}
       {selectedCategory === 'other' && (
         <View style={styles.customInputContainer}>

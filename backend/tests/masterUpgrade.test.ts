@@ -21,7 +21,7 @@ describe('Master upgrade: actual delivery, human decisions and visual evidence',
   beforeAll(async () => {
     await mongoose.connect(env.MONGODB_URI);
     citizen = await User.create({ name: 'Master citizen', email: 'master-citizen@example.test', phone: '9876543210', password: 'MasterTest123!', role: 'citizen' });
-    officer = await User.create({ name: 'Master officer', email: 'master-officer@example.test', phone: '9876543210', password: 'MasterTest123!', role: 'authority' });
+    officer = await User.create({ name: 'Master officer', email: 'master-officer@example.test', phone: '9876543210', password: 'MasterTest123!', role: 'authority', isAdmin: true });
     citizenToken = generateToken({ userId: String(citizen._id), role: 'citizen' });
     officerToken = generateToken({ userId: String(officer._id), role: 'authority' });
     complaint = await Complaint.create({ title: 'Master report', description: 'Observed pothole for review.', category: 'pothole', imageUrl: 'https://example.test/original.jpg', latitude: 12.9, longitude: 80.2, address: 'Recorded GPS', createdBy: citizen._id, severity: unavailableSeverity() });

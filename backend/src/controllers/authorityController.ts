@@ -1,3 +1,4 @@
+import { authorityScope } from '../services/authorityScope';
 import { queueResolutionNotifications } from '../services/resolutionDeliveryService';
 import { env } from '../config/env';
 import { analyticsQuery, analyticsFilter } from '../services/analyticsService';
@@ -13,6 +14,7 @@ import { attemptNotificationFlush, notificationIntent } from '../services/notifi
 
 export const getAllComplaints = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    const scope = authorityScope(req.user);
     const { status, category, search, sortBy } = req.query;
     const priority = z.enum(['low', 'medium', 'high', 'all']).optional().parse(req.query.priority);
     const filter: any = {};
@@ -56,6 +58,7 @@ export const getAllComplaints = async (req: AuthRequest, res: Response, next: Ne
     }
     const ordering: any = sortBy === 'priority' ? { priorityScore: -1, createdAt: 1, _id: 1 } : { createdAt: sortBy === 'oldest' ? 1 : -1, _id: 1 };
     const [aggregate] = await Complaint.aggregate([
+      { $match: scope },
       { $addFields: { priorityScore: priorityScoreExpression(now) } },
       { $addFields: { calculatedPriority: { $switch: { branches: [
         { case: { $gte: ['$priorityScore', 65] }, then: 'high' }, { case: { $gte: ['$priorityScore', 30] }, then: 'medium' },
@@ -104,7 +107,7 @@ export const getAllComplaints = async (req: AuthRequest, res: Response, next: Ne
 export const getAuthorityComplaintById = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const complaint = await Complaint.findById(id).populate('createdBy', 'name email phone');
+    const complaint = await Complaint.findOne({ _id: id, ...authorityScope(req.user) }).populate('createdBy', 'name email phone');
 
     if (!complaint) {
       throw new ApiError(404, 'Complaint not found');
@@ -121,7 +124,7 @@ export const updateComplaintStatus = async (req: AuthRequest, res: Response, nex
     const { id } = req.params;
     const { status: targetStatus } = updateStatusSchema.parse(req.body);
 
-    const complaint = await Complaint.findById(id);
+    const complaint = await Complaint.findOne({ _id: id, ...authorityScope(req.user) });
     if (!complaint) {
       throw new ApiError(404, 'Complaint not found');
     }
@@ -161,7 +164,7 @@ export const updateComplaintStatus = async (req: AuthRequest, res: Response, nex
     const changedAt = new Date();
 
     const updated = await Complaint.findOneAndUpdate(
-      { _id: id, status: currentStatus },
+      { _id: id, status: currentStatus, ...authorityScope(req.user) },
       { $set: { status: targetStatus, ...(targetStatus === 'Resolved' ? { resolvedAt: changedAt, resolutionNoticeAt: changedAt, resolutionNoticePending: true } : { notificationOutboxPending: true }) },
         $push: { statusHistory: { status: targetStatus, at: changedAt, by: req.user!._id },
           ...(targetStatus !== 'Resolved' ? { notificationOutbox: notificationIntent(`${complaint._id}:status:${targetStatus}`,
@@ -182,13 +185,13 @@ export const updateComplaintStatus = async (req: AuthRequest, res: Response, nex
 export const deleteComplaint = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const complaint = await Complaint.findById(id);
+    const complaint = await Complaint.findOne({ _id: id, ...authorityScope(req.user) });
 
     if (!complaint) {
       throw new ApiError(404, 'Complaint not found');
     }
 
-    await Complaint.findByIdAndDelete(id);
+    await Complaint.findOneAndDelete({ _id: id, ...authorityScope(req.user) });
 
     res.status(200).json(new ApiResponse('Complaint deleted successfully by authority', { id }));
   } catch (error) {
@@ -199,7 +202,7 @@ export const deleteComplaint = async (req: AuthRequest, res: Response, next: Nex
 export const verifyComplaint = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const complaint = await Complaint.findById(id);
+    const complaint = await Complaint.findOne({ _id: id, ...authorityScope(req.user) });
 
     if (!complaint) {
       throw new ApiError(404, 'Complaint not found');
@@ -210,6 +213,7 @@ export const verifyComplaint = async (req: AuthRequest, res: Response, next: Nex
       complaint.officerId = req.user._id;
     }
 
+    complaint.$where = authorityScope(req.user);
     await complaint.save();
 
     res.status(200).json(new ApiResponse('Complaint verified by authority', withPriority(complaint)));

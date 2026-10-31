@@ -21,11 +21,11 @@ interface NavItem {
 }
 
 const OPERATIONS_NAV: NavItem[] = [
-  { label: 'Command Center', route: 'AuthorityDashboard', icon: 'grid-outline', iconActive: 'grid' },
-  { label: 'All Complaints', route: 'AllComplaints', icon: 'list-outline', iconActive: 'list' },
-  { label: 'Incident Map', route: 'AuthorityMap', icon: 'map-outline', iconActive: 'map' },
+  { label: 'Overview', route: 'AuthorityDashboard', icon: 'grid-outline', iconActive: 'grid' },
+  { label: 'Complaint Queue', route: 'AllComplaints', icon: 'list-outline', iconActive: 'list' },
+  { label: 'Map', route: 'AuthorityMap', icon: 'map-outline', iconActive: 'map' },
   { label: 'Operations Analytics', route: 'AuthorityAnalytics', icon: 'bar-chart-outline', iconActive: 'bar-chart' },
-  { label: 'Alerts & Feed', route: 'AuthorityNotifications', icon: 'notifications-outline', iconActive: 'notifications' },
+  { label: 'Notifications', route: 'AuthorityNotifications', icon: 'notifications-outline', iconActive: 'notifications' },
 ];
 
 const SETTINGS_NAV: NavItem[] = [
@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
   },
   logoArea: {
     paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 24,
+    paddingTop: 16,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
     backgroundColor: '#FFFFFF',
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   navContent: {
     paddingTop: 24,
-    paddingBottom: 24,
+    paddingBottom: 16,
     paddingHorizontal: 16,
   },
   navSectionHeader: {

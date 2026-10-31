@@ -12,6 +12,9 @@ export interface DepartmentRule { category: string; department: string; enabled:
 export interface HotspotCluster { latitude: number; longitude: number; count: number; records: { _id: string; complaintId: string; title: string; status: string; category: string }[] }
 
 export const managementApi = {
+  async setOfficerDepartment(email: string, department: string): Promise<void> {
+    await axiosClient.put('/management/officers/department', { email, department });
+  },
   async checkDuplicates(input: { category: string; latitude: number; longitude: number; uploadToken?: string }): Promise<{ matches: DuplicateMatch[]; reason: string }> {
     const envelope: any = await axiosClient.post('/management/duplicates/check', input); return envelope.data;
   },

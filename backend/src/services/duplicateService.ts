@@ -11,14 +11,14 @@ export function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: n
   return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export async function possibleDuplicates(input: { category: string; latitude: number; longitude: number; imageFingerprint?: unknown }, userId: mongoose.Types.ObjectId, authority = false) {
+export async function possibleDuplicates(input: { category: string; latitude: number; longitude: number; imageFingerprint?: unknown }, userId: mongoose.Types.ObjectId, authority = false, scope: { assignedDepartment?: string } = {}) {
   if (input.category === 'other') return { matches: [], reason: 'Generic issue categories cannot be compared reliably. Authority review is available after submission.' };
   if (!validLocation(input.latitude, input.longitude)) return { matches: [], reason: 'A valid GPS location is needed to check nearby reports.' };
   const radius = Number.isFinite(env.DUPLICATE_RADIUS_METERS) && env.DUPLICATE_RADIUS_METERS > 0 ? Math.min(env.DUPLICATE_RADIUS_METERS, 2000) : 120;
   const days = Number.isFinite(env.DUPLICATE_LOOKBACK_DAYS) && env.DUPLICATE_LOOKBACK_DAYS > 0 ? Math.min(env.DUPLICATE_LOOKBACK_DAYS, 365) : 30;
   const latSpan = radius / 111000;
   const lngSpan = radius / Math.max(10000, 111000 * Math.cos(input.latitude * Math.PI / 180));
-  const candidates = await Complaint.find({ category: input.category, status: { $ne: 'Resolved' },
+  const candidates = await Complaint.find({ ...scope, category: input.category, status: { $ne: 'Resolved' },
     createdAt: { $gte: new Date(Date.now() - days * 86400000) },
     latitude: { $gte: input.latitude - latSpan, $lte: input.latitude + latSpan },
     longitude: { $gte: input.longitude - lngSpan, $lte: input.longitude + lngSpan },

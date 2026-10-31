@@ -330,7 +330,7 @@ export const ProfileScreen = ({ navigation }: any) => {
         </View>
 
         <Animated.View entering={FadeInUp.delay(500)}>
-          <Text style={styles.sectionHeader}>Danger Zone</Text>
+          <Text style={styles.sectionHeader}>Session</Text>
           <Card style={{ borderColor: COLORS.errorBorder }}>
             <TouchableOpacity style={styles.menuItem} onPress={() => setLogoutModalVisible(true)} activeOpacity={0.7}>
               <View style={styles.menuLeft}>
@@ -388,7 +388,7 @@ export const ProfileScreen = ({ navigation }: any) => {
       {/* Change Password Modal */}
       <FormDialog visible={changePasswordVisible} onClose={() => setChangePasswordVisible(false)}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Change Security Password</Text>
+              <Text style={styles.modalTitle}>Change password</Text>
               <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close dialog" onPress={() => setChangePasswordVisible(false)} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="close" size={24} color={COLORS.textSecondary} />
               </TouchableOpacity>

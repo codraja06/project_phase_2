@@ -16,9 +16,9 @@ const CITIZEN = [
   ['CitizenMap', 'Map', 'map-outline'], ['CivicAssistant', 'Civic Assistance', 'chatbubbles-outline'],
 ];
 const AUTHORITY = [
-  ['AuthorityDashboard', 'Command Center', 'grid-outline'], ['AllComplaints', 'All Complaints', 'list-outline'],
-  ['AuthorityMap', 'Incident Map', 'map-outline'], ['AuthorityAnalytics', 'Operations Analytics', 'bar-chart-outline'],
-  ['AuthorityNotifications', 'Alerts & Feed', 'notifications-outline'], ['AuthorityProfile', 'Profile & Settings', 'person-circle-outline'],
+  ['AuthorityDashboard', 'Overview', 'grid-outline'], ['AllComplaints', 'Complaint Queue', 'list-outline'],
+  ['AuthorityMap', 'Map', 'map-outline'], ['AuthorityAnalytics', 'Operations Analytics', 'bar-chart-outline'],
+  ['AuthorityNotifications', 'Notifications', 'notifications-outline'], ['AuthorityProfile', 'Profile & Settings', 'person-circle-outline'],
 ];
 
 export const WorkspaceShell = ({ role, activeRoute, onNavigate, children }: {
@@ -33,17 +33,17 @@ export const WorkspaceShell = ({ role, activeRoute, onNavigate, children }: {
   const profile = role === 'citizen' ? 'CitizenProfile' : 'AuthorityProfile';
   const alerts = role === 'citizen' ? 'Notifications' : 'AuthorityNotifications';
   return <View style={styles.root}>
-    {wide && <View testID="workspace-sidebar" style={[styles.sidebar, { width: expanded ? 260 : 88 }]}>
+    {wide && <View testID="workspace-sidebar" style={[styles.sidebar, { width: expanded ? 232 : 88 }]}>
       <View style={[styles.brand, !expanded && { paddingHorizontal: 8 }]}>
         <CivicTrackLogo size="sm" showText={false} />
         {expanded && <View style={styles.brandText}><Text style={styles.brandName}>CivicTrack</Text><Text style={[styles.brandSub, styles.brandCaption]}>{role === 'citizen' ? 'CITIZEN PORTAL' : 'Municipal Authority'}</Text></View>}
       </View>
-      {expanded && <Text style={styles.workspaceLabel}>{role === 'citizen' ? 'MAIN MENU' : 'MUNICIPAL AUTHORITY'}</Text>}
+
       <ScrollView contentContainerStyle={{ padding: expanded ? 12 : 6, gap: 4 }}>
         {items.map(([route, label, icon]) => {
           const isNotif = route === 'Notifications' || route === 'AuthorityNotifications';
           return (
-            <TouchableOpacity key={route} accessibilityRole="button" accessibilityLabel={label}
+            <React.Fragment key={route}>{expanded && ((role === 'authority' && ['AuthorityDashboard', 'AuthorityAnalytics', 'AuthorityNotifications', 'AuthorityProfile'].includes(route)) || (role === 'citizen' && ['CitizenDashboard', 'CitizenProfile'].includes(route))) && <Text style={[styles.workspaceLabel, { marginTop: 16, marginBottom: 6, paddingHorizontal: 12 }]}>{role === 'authority' ? ({ AuthorityDashboard: 'Operations', AuthorityAnalytics: 'Insights', AuthorityNotifications: 'Updates', AuthorityProfile: 'Account' } as Record<string, string>)[route] : route === 'CitizenDashboard' ? 'Your reports' : 'Account & help'}</Text>}<TouchableOpacity accessibilityRole="button" accessibilityLabel={label}
               accessibilityState={{ selected: route === activeRoute }} onPress={() => onNavigate(route)}
               style={[styles.nav, !expanded && styles.railNav, route === activeRoute && styles.selected]}>
               <View style={{ position: 'relative' }}>
@@ -62,7 +62,7 @@ export const WorkspaceShell = ({ role, activeRoute, onNavigate, children }: {
                   <NotificationBadge count={unreadCount} />
                 </View>
               )}
-            </TouchableOpacity>
+            </TouchableOpacity></React.Fragment>
           );
         })}
       </ScrollView>
@@ -72,18 +72,6 @@ export const WorkspaceShell = ({ role, activeRoute, onNavigate, children }: {
       </TouchableOpacity>
     </View>}
     <View style={styles.main}>
-      {wide && !(role === 'citizen' && activeRoute === 'CitizenDashboard') && <View testID="workspace-header" style={styles.header}>
-        <View style={{ flex: 1, minWidth: 0 }}><Text style={styles.breadcrumb}>{role === 'citizen' ? 'Your civic workspace' : 'Municipal workspace'}</Text><Text style={styles.pageTitle} numberOfLines={1}>{current}</Text></View>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open notifications" style={styles.iconButton} onPress={() => onNavigate(alerts)}>
-          <Ionicons name="notifications-outline" size={21} color={COLORS.textSecondary} />
-          {unreadCount > 0 && (
-            <View style={{ position: 'absolute', top: 4, right: 4 }}>
-              <NotificationBadge count={unreadCount} />
-            </View>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open profile" style={styles.iconButton} onPress={() => onNavigate(profile)}><Ionicons name="person-circle-outline" size={25} color={COLORS.primary} /></TouchableOpacity>
-      </View>}
       <View style={styles.content}>{children}</View>
     </View>
   </View>;
@@ -92,7 +80,7 @@ export const WorkspaceShell = ({ role, activeRoute, onNavigate, children }: {
 const styles = StyleSheet.create({
   root: { flex: 1, flexDirection: 'row', backgroundColor: COLORS.background, minWidth: 0 },
   sidebar: { backgroundColor: COLORS.surface, borderRightWidth: 1, borderRightColor: COLORS.borderLight },
-  brand: { minHeight: 134, paddingHorizontal: 20, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  brand: { minHeight: 96, paddingHorizontal: 20, flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8 },
   brandText: { alignSelf: 'stretch', alignItems: 'center' },
   brandCaption: { textAlign: 'center', lineHeight: 14 },
   mark: { height: 40, width: 40, borderRadius: 10, backgroundColor: COLORS.authorityPrimary, borderWidth: 1, borderColor: '#44695A', justifyContent: 'center', alignItems: 'center' },
@@ -109,5 +97,5 @@ const styles = StyleSheet.create({
   header: { minHeight: 76, paddingHorizontal: 24, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight, borderTopWidth: 0, borderTopColor: COLORS.primary },
   breadcrumb: { color: COLORS.textMuted, fontSize: 11, marginBottom: 4 }, pageTitle: { color: COLORS.textPrimary, fontSize: 17, fontWeight: '600' },
   iconButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderRadius: 8, borderWidth: 1, borderColor: COLORS.borderLight },
-  content: { flex: 1, minWidth: 0, width: '100%', maxWidth: 1800, alignSelf: 'center' },
+  content: { flex: 1, minWidth: 0, width: '100%', maxWidth: 1280, alignSelf: 'center' },
 });

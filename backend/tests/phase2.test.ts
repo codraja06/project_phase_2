@@ -35,7 +35,7 @@ describe('Phase 2 API persistence and authorization', () => {
     await mongoose.connect(env.MONGODB_URI);
     await User.deleteMany({ email: /phase2-.*@example.test/ });
     const citizen = await User.create({ name: 'Phase 2 Citizen', email: 'phase2-citizen@example.test', phone: '1234567890', password: 'Password123!', role: 'citizen' });
-    const officer = await User.create({ name: 'Phase 2 Officer', email: 'phase2-officer@example.test', phone: '1234567890', password: 'Password123!', role: 'authority' });
+    const officer = await User.create({ name: 'Phase 2 Officer', email: 'phase2-officer@example.test', phone: '1234567890', password: 'Password123!', role: 'authority', isAdmin: true });
     citizenId = String(citizen._id);
     citizenToken = generateToken({ userId: citizenId, role: 'citizen' });
     officerToken = generateToken({ userId: String(officer._id), role: 'authority' });

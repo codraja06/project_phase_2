@@ -4,13 +4,14 @@ import { authorizeRoles } from '../middleware/rbac';
 import { upload, validateImageContent } from '../middleware/upload';
 import { checkDuplicates, getDuplicateCandidates, confirmDuplicate, listDepartmentRules, upsertDepartmentRule,
   assignDepartment, submitCompletion, reviewCompletion, getHotspots,
-  getNotifications, markNotificationRead, reviewTriage } from '../controllers/managementController';
+  getNotifications, markNotificationRead, reviewTriage, setOfficerDepartment } from '../controllers/managementController';
 
 const router = Router();
 router.use(authenticate);
 router.post('/duplicates/check', authorizeRoles('citizen'), checkDuplicates);
 router.get('/notifications', getNotifications);
 router.patch('/notifications/:id/read', markNotificationRead);
+router.put('/officers/department', authorizeRoles('authority'), setOfficerDepartment);
 router.get('/departments', authorizeRoles('authority'), listDepartmentRules);
 router.put('/departments/:category', authorizeRoles('authority'), upsertDepartmentRule);
 router.get('/hotspots', authorizeRoles('authority'), getHotspots);

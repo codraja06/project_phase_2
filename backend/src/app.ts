@@ -1,3 +1,5 @@
+import adminRoutes from './routes/adminRoutes';
+import { auditContext, newAuditRequestId } from './services/auditContext';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -37,7 +39,10 @@ app.get(['/health', '/api/health'], (_req, res) => {
   res.status(200).json({ status: 'OK', message: 'Backend API is running.' });
 });
 
+app.use((req, _res, next) => auditContext.run({ req, requestId: newAuditRequestId() }, next));
+
 // API Routes
+app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/authority', authorityRoutes);

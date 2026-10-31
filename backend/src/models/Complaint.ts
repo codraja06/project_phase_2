@@ -1,3 +1,4 @@
+import { durableAuditPlugin } from '../services/auditContext';
 import mongoose, { Schema, Document } from 'mongoose';
 import { SeverityAssessment } from '../services/triageService';
 import { NotificationIntentSchema, NotificationIntent } from './NotificationIntent';
@@ -237,6 +238,7 @@ ComplaintSchema.set('toJSON', {
   virtuals: true,
   transform: function (_doc, ret: Record<string, any>) {
     delete ret.__v;
+    delete ret.auditPending;
     delete ret.notificationOutbox;
     delete ret.notificationOutboxPending;
     return ret;
@@ -246,4 +248,5 @@ ComplaintSchema.set('toJSON', {
 ComplaintSchema.index({ status: 1, resolutionNoticePending: 1 });
 ComplaintSchema.index({ notificationOutboxPending: 1 });
 
+ComplaintSchema.plugin(durableAuditPlugin, { entity: 'Complaint' });
 export const Complaint = mongoose.model<IComplaint>('Complaint', ComplaintSchema);

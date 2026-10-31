@@ -1,3 +1,9 @@
+# Current direction — interface simplification
+
+The October 2026 optimization brief supersedes the dashboard density guidance below. Preserve the red/white identity and existing functions; use compact headers, grouped navigation, five reporting steps and progressive disclosure. Current decisions and verification are in docs/UI_OPTIMIZATION_PLAN.md and docs/UI_OPTIMIZATION_VERIFICATION.md.
+
+## Historical restoration reference
+
 # CivicTrack original UI restoration
 
 The latest request restores the previous CivicTrack interface rather than introducing

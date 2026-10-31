@@ -55,7 +55,7 @@ export const NotificationCenter = ({ navigation, role }: { navigation: any; role
   return <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
     {role === 'authority' && !isWide && <AuthorityMobileHeader title="Notifications" />}
     <FlatList data={items} keyExtractor={item => item._id} contentContainerStyle={{ padding: 16, gap: 10, maxWidth: 1000, width: '100%', alignSelf: 'center' }}
-      ListHeaderComponent={<View style={{ marginBottom: 12 }}><Text accessibilityRole="header" style={{ color: COLORS.textPrimary, fontSize: 28, fontWeight: '700' }}>Notifications</Text>
+      ListHeaderComponent={<View style={{ marginBottom: 12 }}><Text accessibilityRole="header" style={{ color: COLORS.textPrimary, fontSize: 24, fontWeight: '700' }}>Notifications</Text>
         <Text style={{ color: COLORS.textSecondary, marginTop: 4 }}>{unread} unread updates</Text>
         {!!error && <Text accessibilityRole="alert" style={{ color: COLORS.error, marginTop: 8 }}>{error}</Text>}</View>}
       ListEmptyComponent={<Text style={{ color: COLORS.textSecondary, paddingVertical: 32 }}>No notifications yet. Complaint events will appear here.</Text>}

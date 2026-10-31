@@ -2,9 +2,22 @@ import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../utils/apiError';
 import { env } from '../config/env';
 
+// Only fixed route components and known error classes are logged. Never log
+// query strings, record IDs, messages, stack traces, headers or request bodies.
+const routeParts = new Set(['api', 'auth', 'signup', 'request-otp', 'resend-otp', 'verify-otp', 'complete', 'login', 'google', 'link', 'me', 'logout', 'profile', 'change-password', 'notification-preferences', 'complaints', 'my', 'status', 'authority', 'analytics', 'export', 'verify', 'ai', 'detect', 'models', 'uploads', 'image', 'chat', 'conversation', 'messages', 'management', 'duplicates', 'check', 'department', 'departments', 'hotspots', 'triage', 'completion', 'review', 'notifications', 'read']);
+const errorNames = new Set(['Error', 'TypeError', 'RangeError', 'MongoServerError', 'MongoNetworkError', 'MongooseError', 'VersionError', 'AxiosError', 'ApiError', 'ZodError', 'CastError', 'MulterError', 'ValidationError']);
+export function safeErrorDiagnostic(req: Request, error: any, statusCode: number) {
+  const path = String(req.originalUrl || '').split('?')[0].split('/').filter(Boolean).slice(0, 12)
+    .map(part => routeParts.has(part) ? part : ':value').join('/');
+  const name = errorNames.has(error?.name) ? error.name : 'UnknownError';
+  const code = Number.isInteger(error?.code) && error.code >= 0 && error.code <= 999999 ? ` code=${error.code}` : '';
+  const method = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) ? req.method : 'REQUEST';
+  return `[Error Handler] HTTP ${statusCode} ${method} /${path} ${name}${code}`;
+}
+
 export const errorHandler = (
   err: any,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ) => {
@@ -38,7 +51,7 @@ export const errorHandler = (
 
   if (env.NODE_ENV !== 'test') {
     // Raw errors can contain request bodies, provider credentials or database connection strings.
-    console.error(`[Error Handler] HTTP ${statusCode}`);
+    console.error(safeErrorDiagnostic(req, err, statusCode));
   }
 
   res.status(statusCode).json({

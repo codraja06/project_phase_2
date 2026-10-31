@@ -67,14 +67,14 @@ export const ComplaintCard: React.FC<ComplaintCardProps> = ({
       ]}
       onPress={onPress}
       interactive={true}
-      animateEntry={true}
+      animateEntry={false}
       delayMs={index * 50}
       {...({
         onMouseEnter: () => setIsHovered(true),
         onMouseLeave: () => setIsHovered(false),
       } as any)}
     >
-      <CardContent style={{ padding: SPACING.xl }}>
+      <CardContent style={{ padding: SPACING.lg }}>
         {/* ─── Top Header: Complaint ID & Status ─── */}
         <View style={styles.headerRow}>
           <View style={styles.codePillGroup}>
@@ -83,7 +83,7 @@ export const ComplaintCard: React.FC<ComplaintCardProps> = ({
           <StatusBadge status={complaint.status} size="sm" />
         </View>
 
-        <TriageSummary severity={complaint.severity} severityReview={complaint.severityReview} priority={complaint.priority} score={complaint.priorityScore} compact />
+
         {/* ─── Main Content: Thumbnail + Info ─── */}
         <View style={styles.contentRow}>
           {/* Thumbnail with error fallback */}
@@ -122,7 +122,8 @@ export const ComplaintCard: React.FC<ComplaintCardProps> = ({
           </View>
         </View>
 
-        {/* ─── Metadata Footer: Date & Location ─── */}
+        <Text style={{ color: COLORS.primary, fontSize: 13, fontWeight: '600', marginTop: 10 }}>View details →</Text>
+        {/* Metadata */}
         <View style={styles.metaFooter}>
           <View style={styles.metaItem}>
             <Ionicons name="calendar-outline" size={14} color={COLORS.slateMuted} style={styles.metaIcon} />
@@ -178,8 +179,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   thumbnailWrapper: {
-    width: 88,
-    height: 96,
+    width: 64,
+    height: 64,
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
     backgroundColor: COLORS.backgroundNeutral,
